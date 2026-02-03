@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html>
-<body>
+<body> <!-- หน้านี้แก้ได้เลย -->
 
 <h2>Login อาจารย์</h2>
 
