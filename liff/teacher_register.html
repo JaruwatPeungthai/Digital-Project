@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>สมัครอาจารย์ | Q locate</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+    }
+    button {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>สมัครอาจารย์</h2>
+
+<form method="post" action="../api/teacher_register.php">
+
+  <label>
+    ยศ:
+    <select name="title" required>
+      <option value="">-- เลือก --</option>
+      <option value="ผศ.ดร.">ผศ.ดร.</option>
+      <option value="รศ.ดร.">รศ.ดร.</option>
+      <option value="ศ.ดร.">ศ.ดร.</option>
+      <option value="อาจารย์">อาจารย์</option>
+    </select>
+  </label>
+
+  <label>
+    ชื่อ-นามสกุล:
+    <input type="text" name="name" required>
+  </label>
+
+  <label>
+    สาขา:
+    <select name="dept" required>
+      <option value="">-- เลือก --</option>
+      <option value="ธุรกิจ">ธุรกิจ</option>
+      <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+      <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+      <option value="ออกแบบเกม">ออกแบบเกม</option>
+      <option value="นิเทศ">นิเทศ</option>
+    </select>
+  </label>
+
+  <label>
+    Email:
+    <input type="email" name="email" required>
+  </label>
+
+  <label>
+    Password:
+    <input type="password" name="password" required>
+  </label>
+
+  <button type="submit">สมัคร</button>
+</form>
+
+<p style="margin-top:20px">
+  <a href="../index.html">← กลับหน้าแรก</a>
+</p>
+
+</body>
+</html>

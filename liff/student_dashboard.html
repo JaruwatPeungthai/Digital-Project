@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Dashboard</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<style>
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+</style>
+</head>
+<body>
+
+<h2>ข้อมูลนักศึกษา</h2>
+
+<div id="profile">
+  รหัสนักศึกษา: <b id="code"></b><br>
+  ชื่อ-นามสกุล:
+  <input id="name">
+  <button onclick="updateName()">บันทึก</button><br>
+  สาขา: <b id="major"></b>
+</div>
+
+<hr>
+
+<h2>ประวัติการเข้าเรียน</h2>
+
+<table>
+<thead>
+<tr>
+  <th>วิชา</th>
+  <th>ห้อง</th>
+  <th>เวลา</th>
+  <th>สถานะ</th>
+  <th>หมายเหตุ</th>
+</tr>
+</thead>
+<tbody id="logs"></tbody>
+</table>
+
+<script>
+const LIFF_ID = "2008718294-WzVz06TP";
+let lineUserId = "";
+
+async function init() {
+  await liff.init({ liffId: LIFF_ID });
+
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
+  }
+
+  const profile = await liff.getProfile();
+  lineUserId = profile.userId;
+
+  loadProfile();
+  loadHistory();
+}
+
+async function loadProfile() {
+  const res = await fetch("../api/student_profile.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ line_user_id: lineUserId })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("code").innerText = data.student_code;
+  document.getElementById("name").value = data.full_name;
+  document.getElementById("major").innerText = data.class_group;
+}
+
+async function loadHistory() {
+  const res = await fetch("../api/attendance_history.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ line_user_id: lineUserId })
+  });
+
+  const rows = await res.json();
+  const tbody = document.getElementById("logs");
+  tbody.innerHTML = "";
+
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${r.subject_name}</td>
+      <td>${r.room_name}</td>
+      <td>${r.checkin_time}</td>
+      <td>${r.status}</td>
+      <td>${r.reason ?? "-"}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function updateName() {
+  const name = document.getElementById("name").value;
+
+  const res = await fetch("../api/update_student_name.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      line_user_id: lineUserId,
+      full_name: name
+    })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+}
+
+init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Check-in</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+<h2>เช็คชื่อเข้าเรียน</h2>
+<button onclick="checkin()">เช็คชื่อ</button>
+
+<script>
+    const token = new URLSearchParams(location.search).get("token");
+async function checkin() {
+
+  await liff.init({ liffId: "2008718294-WzVz06TP" });
+  await liff.ready;
+  
+
+  const token = new URLSearchParams(location.search).get("token");
+   if (!token) {
+     alert("QR ไม่ถูกต้อง");
+     return;
+   }
+
+  if (!navigator.geolocation) {
+    alert("อุปกรณ์นี้ไม่รองรับ GPS");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+
+      const profile = await liff.getProfile();
+
+      const res = await fetch("../api/checkin.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: token,
+          line_user_id: profile.userId,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy
+        })
+      });
+      const text = await res.text();
+
+if (!text) {
+  alert("Server ไม่ส่งข้อมูลกลับ");
+  return;
+}
+
+let data;
+try {
+  data = JSON.parse(text);
+} catch {
+  alert("Response ไม่ใช่ JSON:\n" + text);
+  return;
+}
+
+alert(data.message);
+
+    },
+    () => alert("กรุณาอนุญาตแชร์ตำแหน่ง"),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Q locate</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+}
+button {
+  padding: 10px 20px;
+  margin: 8px;
+  font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📍 Q locate</h1>
+
+<!-- ===== หน้า Home ===== -->
+<div id="home" style="display:none">
+  <h3>เมนูหลัก</h3>
+
+  <button onclick="location.href='teacher_register.html'">
+    สมัครอาจารย์
+  </button><br>
+
+  <button onclick="location.href='teacher_login.php'">
+    Login อาจารย์
+  </button><br>
+
+  <button onclick="studentLogin()">
+    Login นักศึกษา (LINE)
+  </button>
+</div>
+
+<script>
+const LIFF_ID = "2008718294-WzVz06TP";
+const token = new URLSearchParams(location.search).get("token");
+
+async function init() {
+  await liff.init({ liffId: LIFF_ID });
+
+  /* ==============================
+     กรณีเข้าเว็บจาก QR Code
+     ============================== */
+  if (token) {
+
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+
+    const profile = await liff.getProfile();
+
+    const res = await fetch("../api/check_user.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ line_user_id: profile.userId })
+    });
+
+    const data = await res.json();
+
+    if (data.registered) {
+      location.href = "checkin.html?token=" + encodeURIComponent(token);
+    } else {
+      location.href = "student_register.html?token=" + encodeURIComponent(token);
+    }
+
+    return;
+  }
+
+  /* ==============================
+     กรณีเข้าเว็บปกติ
+     ============================== */
+  document.getElementById("home").style.display = "block";
+}
+
+/* ==============================
+   Login นักศึกษา (เข้าเว็บเอง)
+   ============================== */
+async function studentLogin() {
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
+  }
+
+  const profile = await liff.getProfile();
+
+  const res = await fetch("../api/check_user.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ line_user_id: profile.userId })
+  });
+
+  const data = await res.json();
+
+  if (data.registered) {
+    location.href = "student_dashboard.html";
+  } else {
+    location.href = "student_register.html";
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>สมัครนักศึกษา</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+<h2>สมัครนักศึกษา</h2>
+
+<input id="code" placeholder="รหัสนักศึกษา"><br><br>
+<input id="name" placeholder="ชื่อ-นามสกุล"><br><br>
+
+<select id="major">
+  <option value="">-- เลือกสาขา --</option>
+  <option value="ธุรกิจ">ธุรกิจ</option>
+  <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+  <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+  <option value="ออกแบบเกม">ออกแบบเกม</option>
+  <option value="นิเทศ">นิเทศ</option>
+</select><br><br>
+
+<button onclick="register()">สมัคร</button>
+
+<script>
+const LIFF_ID = "2008718294-WzVz06TP";
+
+async function register() {
+  await liff.init({ liffId: LIFF_ID });
+
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
+  }
+
+  const profile = await liff.getProfile();
+
+  const data = {
+    line_user_id: profile.userId,
+    code: document.getElementById("code").value,
+    name: document.getElementById("name").value,
+    major: document.getElementById("major").value
+  };
+
+  const res = await fetch("../api/register_student.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+  alert(result.message);
+
+  if (result.success) {
+    location.href = "student_dashboard.html";
+  }
+}
+</script>
+
+</body>
+</html>
