@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html> <!--อย่าพึ่งทำหน้านี้ มันต้องรัน ngrok อธิบายยาก555-->
 <head>
 <meta charset="UTF-8">
 <title>สร้าง QR</title>

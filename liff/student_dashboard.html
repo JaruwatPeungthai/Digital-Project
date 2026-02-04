@@ -33,7 +33,6 @@ th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
   <th>ห้อง</th>
   <th>เวลา</th>
   <th>สถานะ</th>
-  <th>หมายเหตุ</th>
 </tr>
 </thead>
 <tbody id="logs"></tbody>
@@ -89,8 +88,7 @@ async function loadHistory() {
       <td>${r.subject_name}</td>
       <td>${r.room_name}</td>
       <td>${r.checkin_time}</td>
-      <td>${r.status}</td>
-      <td>${r.reason ?? "-"}</td>
+      <td>${r.status === "present" ? "✅ เช็คชื่อแล้ว" : "❌ ขาด"}</td>
     `;
     tbody.appendChild(tr);
   });

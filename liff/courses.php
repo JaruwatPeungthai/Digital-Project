@@ -30,7 +30,7 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
 </style>
 </head>
 
-<body>
+<body> <!--อย่าพึ่งทำหน้านี้ มันต้องรัน ngrok อธิบายยาก555-->
 
 <h2>📚 รายวิชา</h2>
 
@@ -47,6 +47,7 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
 
 <tr>
   <th>ชื่อวิชา</th>
+  <th>ดูรายชื่อนักศึกษา</th>
   <th>จัดการ</th>
 </tr>
 
@@ -59,8 +60,6 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
     </a>
   </td>
   <td>
-  <a href="subject_students.php?id=<?= $row['subject_id'] ?>">👥 นักศึกษา</a>
-  |
   <button onclick="confirmDelete(
     <?= $row['subject_id'] ?>,
     '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>'
