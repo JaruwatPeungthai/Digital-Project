@@ -1,0 +1,60 @@
+/* Styles for session_attendance.php */
+@import url('default_page.css');
+/* session attendance view */
+/* wrapper ให้เลื่อนแนวนอนได้บนมือถือ */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+/* ตารางหลัก */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+/* หัวตาราง */
+.attendance-table th {
+  background: #f2f2f2;
+  border: 1px solid #e6eef6;
+  padding: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* cell ข้อมูล */
+.attendance-table td {
+  border: 1px solid #e6eef6;
+  padding: 10px;
+  vertical-align: middle;
+}
+
+/* hover แถว */
+.attendance-table .table-row:hover {
+  background: #f9fbfd;
+}
+
+/* สถานะ */
+.status-present {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.status-denied {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+/* form inline */
+.inline-form {
+  display: inline;
+}
+
+/* footer ปุ่มกลับ */
+.footer-section {
+  margin-top: 18px;
+  text-align: left;
+}
+.btn:hover{
+    cursor: pointer;
+}

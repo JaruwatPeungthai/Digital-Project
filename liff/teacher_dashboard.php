@@ -12,22 +12,44 @@ $teacherId = $_SESSION['teacher_id'];
 
 <!DOCTYPE html>
 <html>
+<head>
+  <meta charset="UTF-8">
+  <!-- Front-end: edit styles in liff/css/teacher_dashboard.css -->
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/teacher_dashboard.css">
+</head>
 <body>
 
-<h2>👨‍🏫 Dashboard อาจารย์</h2>
+<!-- Include sidebar navigation -->
+<?php include('sidebar.php'); ?>
 
-<p>สวัสดี <?= htmlspecialchars($_SESSION['teacher_name']) ?></p>
+<!-- Main content wrapper -->
+<div class="main-wrapper">
+  <!-- Page header with title -->
+  <div class="header">
+    <h2 id="page-title">👨‍🏫 Dashboard อาจารย์</h2>
+  </div>
 
-<hr>
+  <!-- Content area -->
+  <div class="content-area">
+    <!-- Container for main content -->
+    <div class="container">
+      
+      <!-- Greeting section -->
+      <div class="greeting-section">
+        <p id="greeting-text">สวัสดี <?= htmlspecialchars($_SESSION['teacher_name']) ?></p>
+      </div>
 
-<ul>
-  <li><a href="create_session.php">📌 สร้าง QR เช็คชื่อ</a></li>
-  <li><a href="sessions.php">📋 รายการ QR ที่เคยสร้าง</a></li>
-  <li><a href="courses.php">📚 รายวิชา</a></li>
-  <li><a href="advisor_students.php">👨‍🎓 รายชื่อที่ปรึกษา</a></li>
-  <li><a href="advisor_requests.php">📝 คำขอแก้ไขข้อมูลนักศึกษา</a></li>
-  <li><a href="teacher_logout.php">🚪 Logout</a></li>
-</ul>
+      <!-- Info section -->
+      <div class="card">
+        <h3 class="section-header">🎯 เว้นตรงนั้ไว้</h3>
+        <p>เดี๋ยวเอาไว้ทำ แสดงข้อมูลอาจารย์และแก้ไข</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
 
 </body>
 </html>

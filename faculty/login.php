@@ -20,18 +20,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>Login คณะ</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>Login คณะ</title>
+  <!-- Front-end: edit styles in faculty/css/login.css -->
+  <link rel="stylesheet" href="css/login.css">
+</head>
 <body>
 
-<h2>Login คณะ</h2>
+<!-- Page container -->
+<div class="login-container">
+  
+  <!-- Page title -->
+  <h1 id="page-title" class="page-title">Login คณะ</h1>
 
-<?php if (!empty($error)) echo "<p style='color:red'>$error</p>"; ?>
+  <!-- Error alert message -->
+  <?php if (!empty($error)): ?>
+  <div class="alert alert-error" id="error-message">
+    <?= htmlspecialchars($error) ?>
+  </div>
+  <?php endif; ?>
 
-<form method="post">
-  Username: <input name="username"><br><br>
-  Password: <input type="password" name="password"><br><br>
-  <button>Login</button>
-</form>
+  <!-- Login form -->
+  <!-- Front-end: Style .login-form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } -->
+  <form method="post" class="login-form">
+    
+    <!-- Username field -->
+    <div class="form-group">
+      <label for="username" class="form-label">Username:</label>
+      <input type="text" id="username" name="username" class="form-input" required>
+    </div>
+
+    <!-- Password field -->
+    <div class="form-group">
+      <label for="password" class="form-label">Password:</label>
+      <input type="password" id="password" name="password" class="form-input" required>
+    </div>
+
+    <!-- Submit button -->
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Login</button>
+    </div>
+  </form>
+
+</div>
 
 </body>
 </html>

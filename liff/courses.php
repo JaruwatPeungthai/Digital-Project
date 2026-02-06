@@ -24,64 +24,90 @@ $subjects = $stmt->get_result();
 <head>
 <meta charset="UTF-8">
 <title>รายวิชา</title>
+<!-- Front-end: edit styles in liff/css/courses.css -->
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/courses.css">
 <style>
 table { border-collapse: collapse; width:100%; }
 th, td { border:1px solid #ccc; padding:8px; text-align:center; }
 </style>
 </head>
 
-<body> <!--อย่าพึ่งทำหน้านี้ มันต้องรัน ngrok อธิบายยาก555-->
+<body>
 
-<h2>📚 รายวิชา</h2>
+<!-- Include sidebar navigation -->
+<?php include('sidebar.php'); ?>
 
-<form method="post" action="../api/subject_create.php">
-  ชื่อรายวิชา:
-  <input name="subject_name" required>
-  <button>➕ สร้างรายวิชา</button>
-</form>
+<!-- Main content wrapper -->
+<div class="main-wrapper">
+  <!-- Page header with title -->
+  <div class="header">
+    <h2 id="page-title">📚 รายวิชา</h2>
+  </div>
 
-<hr>
+  <!-- Content area -->
+  <div class="content-area">
+    <!-- Container for main content -->
+    <div class="container">
 
-<table>
+      <div class="card">
+        <h3 class="section-header">สร้างรายวิชาใหม่</h3>
+        <form method="post" action="../api/subject_create.php" class="form-section">
+          <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+            <label class="form-label" style="margin-right: 8px;">ชื่อรายวิชา:</label>
+            <input name="subject_name" class="form-input" required style="flex:1; min-width:180px;">
+            <button type="submit" class="btn btn-primary form-input" style="margin-left: 10px; white-space:nowrap;" >➕ สร้างรายวิชา</button>
+          </div>
+        </form>
+      </div>
 
+      <div class="card">
+        <h3 class="section-header">รายวิชาของฉัน</h3>
+        
+        <div style="overflow-x: auto;">
+          <table>
+            <tr>
+              <th>ชื่อวิชา</th>
+              <th>ดูรายชื่อนักศึกษา</th>
+              <th>จัดการ</th>
+            </tr>
 
-<tr>
-  <th>ชื่อวิชา</th>
-  <th>ดูรายชื่อนักศึกษา</th>
-  <th>จัดการ</th>
-</tr>
+            <?php while ($row = $subjects->fetch_assoc()): ?>
+            <tr>
+              <td><?= htmlspecialchars($row['subject_name']) ?></td>
+              <td>
+                <a href="subject_students.php?id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px;">
+                  👥 นักศึกษา
+                </a>
+              </td>
+              <td>
+              <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px;" onclick="confirmDelete(
+                <?= $row['subject_id'] ?>,
+                '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>'
+              )">❌ ลบ</button>
+            </td>
+            </tr>
+            <?php endwhile; ?>
 
-<?php while ($row = $subjects->fetch_assoc()): ?>
-<tr>
-  <td><?= htmlspecialchars($row['subject_name']) ?></td>
-  <td>
-    <a href="subject_students.php?id=<?= $row['subject_id'] ?>">
-      👥 นักศึกษา
-    </a>
-  </td>
-  <td>
-  <button onclick="confirmDelete(
-    <?= $row['subject_id'] ?>,
-    '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>'
-  )">❌ ลบ</button>
-</td>
+            <?php if ($subjects->num_rows === 0): ?>
+            <tr><td colspan="3">ยังไม่มีรายวิชา</td></tr>
+            <?php endif; ?>
+          </table>
+        </div>
+      </div>
 
-</tr>
-<?php endwhile; ?>
+    </div>
+  </div>
 
-<?php if ($subjects->num_rows === 0): ?>
-<tr><td colspan="2">ยังไม่มีรายวิชา</td></tr>
-<?php endif; ?>
+</div>
 
-</table>
-
-<p><a href="teacher_dashboard.php">⬅ กลับ</a></p>
 <!-- MODAL -->
 <div id="deleteModal" style="
 display:none;
 position:fixed;
 top:0;left:0;width:100%;height:100%;
 background:rgba(0,0,0,0.5);
+z-index:1000;
 ">
   <div style="
     background:#fff;
@@ -89,6 +115,7 @@ background:rgba(0,0,0,0.5);
     margin:100px auto;
     padding:20px;
     text-align:center;
+    border-radius: 8px;
   ">
     <h3>⚠️ ยืนยันการลบรายวิชา</h3>
     <p id="modalText"></p>
@@ -98,11 +125,11 @@ background:rgba(0,0,0,0.5);
       จะถูกลบออกทั้งหมด
     </p>
 
-    <form method="post" action="../api/subject_delete.php">
+    <form method="post" action="../api/subject_delete.php" style="margin-top: 20px;">
       <input type="hidden" name="subject_id" id="deleteSubjectId">
 
-      <button type="button" onclick="closeModal()">ยกเลิก</button>
-      <button id="confirmBtn" disabled>
+      <button type="button" class="btn" onclick="closeModal()" style="margin-right: 8px;">ยกเลิก</button>
+      <button type="submit" id="confirmBtn" class="btn btn-delete" disabled>
         ลบ (3)
       </button>
     </form>

@@ -1,9 +1,25 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=utf-8");
+
+if (!file_exists(__DIR__ . "/../config.php")) {
+  die(json_encode(["error" => "Config file not found"]));
+}
+
 require __DIR__ . "/../config.php";
+
+if (!isset($conn) || !$conn) {
+  die(json_encode(["error" => "Database connection failed"]));
+}
 
 $data = json_decode(file_get_contents("php://input"), true);
 $lineId = $data['line_user_id'] ?? '';
+
+if (empty($lineId)) {
+  echo json_encode(["error" => "Missing line_user_id"]);
+  exit;
+}
 
 $stmt = $conn->prepare("
   SELECT 
@@ -20,8 +36,16 @@ $stmt = $conn->prepare("
   ORDER BY a.checkin_time DESC
 ");
 
+if (!$stmt) {
+  echo json_encode(["error" => "Database prepare failed"]);
+  exit;
+}
+
 $stmt->bind_param("s", $lineId);
-$stmt->execute();
+if (!$stmt->execute()) {
+  echo json_encode(["error" => "Database execute failed"]);
+  exit;
+}
 
 $res = $stmt->get_result();
 $rows = [];
@@ -31,3 +55,4 @@ while ($row = $res->fetch_assoc()) {
 }
 
 echo json_encode($rows);
+?>

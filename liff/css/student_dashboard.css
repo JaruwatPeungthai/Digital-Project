@@ -1,0 +1,55 @@
+/* Styles for student_dashboard.html */
+@import url('default_page.css');
+
+/* Button styling */
+.btn {
+	display: inline-block;
+	padding: 8px 12px;
+	background: #1976d2;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	text-decoration: none;
+	cursor: pointer;
+	font-size: 14px;
+}
+
+.btn:hover {
+	opacity: 0.9;
+}
+
+.btn-primary {
+	background: #28a745 !important;
+}
+
+.btn-primary:hover {
+	background: #218838 !important;
+}
+
+/* Form styling */
+input[type="text"],
+input[type="datetime-local"],
+select {
+	width: 100%;
+	max-width: 100%;
+	padding: 8px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-family: Arial, sans-serif;
+	box-sizing: border-box;
+}
+
+input:focus,
+select:focus {
+	outline: none;
+	border-color: #1976d2;
+	box-shadow: 0 0 4px rgba(25, 118, 210, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+	.profile-row label {
+		display: block;
+		margin-bottom: 5px;
+	}
+}

@@ -52,8 +52,10 @@ $requests = $stmt->get_result();
 <head>
 <meta charset="UTF-8">
 <title>คำขอแก้ไขข้อมูลนักศึกษา</title>
+<!-- Front-end: edit styles in liff/css/advisor_requests.css -->
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/advisor_requests.css">
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
   table { border-collapse: collapse; width: 100%; margin-top: 20px; }
   th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
   th { background-color: #f2f2f2; }
@@ -73,28 +75,47 @@ $requests = $stmt->get_result();
 </head>
 <body>
 
-<h2>📋 คำขอแก้ไขข้อมูลนักศึกษา</h2>
+<!-- Include sidebar navigation -->
+<?php include('sidebar.php'); ?>
 
-<div class="search-section">
-  <form method="GET">
-    <input type="text" name="search" placeholder="ค้นหา Request ID" value="<?= htmlspecialchars($searchId) ?>">
-    <button type="submit">ค้นหา</button>
-  </form>
-</div>
+<!-- Main content wrapper -->
+<div class="main-wrapper">
+  <!-- Page header with title -->
+  <div class="header">
+    <h2 id="page-title">📝 คำขอแก้ไขข้อมูลนักศึกษา</h2>
+  </div>
 
-<table>
-<thead>
-<tr>
-  <th>Request ID</th>
-  <th>ชื่อนักศึกษา</th>
-  <th>ข้อมูลเก่า</th>
-  <th>ข้อมูลใหม่</th>
-  <th>สถานะ</th>
-  <th>วันที่</th>
-  <th>จัดการ</th>
-</tr>
-</thead>
-<tbody>
+  <!-- Content area -->
+  <div class="content-area">
+    <!-- Container for main content -->
+    <div class="container">
+
+      <!-- Search section -->
+      <div class="card search-section">
+        <h3 class="section-header">🔍 ค้นหาคำขอ</h3>
+        <form method="GET">
+          <input type="text" name="search" placeholder="ค้นหา Request ID" value="<?= htmlspecialchars($searchId) ?>">
+          <button type="submit" class="btn">ค้นหา</button>
+        </form>
+      </div>
+
+      <!-- Requests table -->
+      <div class="card">
+        <h3 class="section-header">📋 รายการคำขอแก้ไข</h3>
+        <div style="overflow-x: auto;">
+          <table>
+          <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>ชื่อนักศึกษา</th>
+            <th>ข้อมูลเก่า</th>
+            <th>ข้อมูลใหม่</th>
+            <th>สถานะ</th>
+            <th>วันที่</th>
+            <th>จัดการ</th>
+          </tr>
+          </thead>
+          <tbody>
 <?php while ($row = $requests->fetch_assoc()): ?>
 <tr class="<?= $row['status'] ?>">
   <td><strong><?= htmlspecialchars($row['request_id']) ?></strong></td>
@@ -171,6 +192,15 @@ async function rejectRequest(requestId) {
   location.reload();
 }
 </script>
+
+        </tbody>
+        </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

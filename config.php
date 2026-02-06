@@ -6,7 +6,7 @@ $dbname = "attendance";
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
-    echo json_encode(["message"=>"Database connection failed"]);
-    exit;
+    die(json_encode(["error" => "Database connection failed: " . $conn->connect_error]));
 }
+?>
 

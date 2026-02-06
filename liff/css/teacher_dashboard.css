@@ -1,0 +1,17 @@
+/* Styles for teacher_dashboard.php */
+@import url('default_page.css');
+
+/* Dashboard specific styling */
+.greeting-section {
+  background: #f0f8ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 4px solid #1976d2;
+}
+
+.greeting-section p {
+  margin: 0;
+  font-size: 16px;
+  color: #222;
+}

@@ -40,10 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html> <!--อย่าพึ่งทำหน้านี้ มันต้องรัน ngrok อธิบายยาก555-->
+<html>
 <head>
 <meta charset="UTF-8">
 <title>สร้าง QR</title>
+<!-- Front-end: edit styles in liff/css/create_session.css -->
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/create_session.css">
 
 <link rel="stylesheet"
  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -57,35 +60,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
 
-<h2>📌 สร้าง QR เช็คชื่อ</h2>
+<!-- Include sidebar navigation -->
+<?php include('sidebar.php'); ?>
 
-<form method="post">
-  วิชา: <input name="subject" required><br><br>
-  ห้อง: <input name="room" required><br><br>
-  เวลาเริ่ม: <input type="datetime-local" name="start" required><br><br>
-  เวลาหมด: <input type="datetime-local" name="end" required><br><br>
+<!-- Main content wrapper -->
+<div class="main-wrapper">
+  <!-- Page header with title -->
+  <div class="header">
+    <h2 id="page-title">📌 สร้าง QR เช็คชื่อ</h2>
+  </div>
 
-  <h3>เลือกตำแหน่งห้องเรียน</h3>
-  <div id="map"></div><br>
+  <!-- Content area -->
+  <div class="content-area">
+    <!-- Container for main content -->
+    <div class="container">
 
-  Lat: <input id="lat" name="lat" readonly required>
-  Lng: <input id="lng" name="lng" readonly required><br><br>
+      <div class="card">
+        <h3 class="section-header">สร้าง QR Code ใหม่</h3>
+        
+        <form method="post" class="form-section">
+          <div class="form-group">
+            <label class="form-label">วิชา:</label>
+            <input name="subject" class="form-input" required>
+          </div>
 
-  รัศมี (เมตร):
-  <input id="radius" name="radius" value="50"><br><br>
+          <div class="form-group">
+            <label class="form-label">รายละเอียด session:</label>
+            <input name="room" class="form-input" required>
+          </div>
 
-  <button type="button" onclick="useMyLocation()">📍 ใช้ตำแหน่งปัจจุบัน</button>
-  <br><br>
+          <div class="form-group">
+            <label class="form-label">เวลาเริ่ม:</label>
+            <input type="datetime-local" name="start" class="form-input" required>
+          </div>
 
-  <button>✅ สร้าง QR</button>
-</form>
+          <div class="form-group">
+            <label class="form-label">เวลาหมด:</label>
+            <input type="datetime-local" name="end" class="form-input" required>
+          </div>
 
-<?php if ($qr_url): ?>
-<hr>
-<h3>QR Code</h3>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= urlencode($qr_url) ?>">
-<p><?= $qr_url ?></p>
-<?php endif; ?>
+          <div class="form-group">
+            <label class="form-label">เลือกตำแหน่งห้องเรียน</label>
+            <div id="map" style="height: 400px; border-radius: 8px; margin-bottom: 16px;"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ละติจูด (Lat):</label>
+            <input id="lat" name="lat" class="form-input" readonly style="background-color: #f0f0f0; cursor: not-allowed;" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ลองจิจูด (Lng):</label>
+            <input id="lng" name="lng" class="form-input" readonly style="background-color: #f0f0f0; cursor: not-allowed;" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">รัศมี (เมตร):</label>
+            <input id="radius" name="radius" class="form-input" value="50">
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn" onclick="useMyLocation()">📍 ใช้ตำแหน่งปัจจุบัน</button>
+            <button type="submit" class="btn btn-primary">✅ สร้าง QR</button>
+          </div>
+        </form>
+      </div>
+
+      <?php if ($qr_url): ?>
+      <div class="card">
+        <h3 class="section-header">✅ QR Code สำเร็จ</h3>
+        <div style="text-align: center; padding: 20px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= urlencode($qr_url) ?>" style="border: 2px solid #1976d2; border-radius: 8px;">
+          <p style="margin-top: 16px; font-size: 12px; color: #666; word-break: break-all;"><?= htmlspecialchars($qr_url) ?></p>
+        </div>
+      </div>
+      <?php endif; ?>
+
+    </div>
+  </div>
+
+</div>
 
 <script>
 let map = L.map('map').setView([13.7563, 100.5018], 18);

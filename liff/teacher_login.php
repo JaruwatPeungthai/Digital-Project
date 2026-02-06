@@ -35,9 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html>
+<head>
+  <meta charset="UTF-8">
+  <!-- Front-end: edit styles in liff/css/teacher_login.css -->
+  <link rel="stylesheet" href="css/teacher_login.css">
+</head>
 <body>
 
-<h2>Login อาจารย์</h2>
+<div class="header"><h2>Login อาจารย์</h2></div>
 
 <form method="post">
   Email:<br>

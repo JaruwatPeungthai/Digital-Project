@@ -1,6 +1,17 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=utf-8");
+
+if (!file_exists(__DIR__ . "/../config.php")) {
+  die(json_encode(["error" => "Config file not found"]));
+}
+
 require __DIR__ . "/../config.php";
+
+if (!isset($conn) || !$conn) {
+  die(json_encode(["error" => "Database connection failed"]));
+}
 
 session_start();
 if (!isset($_SESSION['teacher_id'])) {
@@ -18,8 +29,18 @@ $stmt = $conn->prepare("
   SELECT * FROM student_edit_requests
   WHERE request_id = ? AND requested_by = ?
 ");
-$stmt->bind_param("ss", $requestId, "advisor_" . $teacherId);
-$stmt->execute();
+
+if (!$stmt) {
+  echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
+  exit;
+}
+
+$advisorPrefix = "advisor_" . $_SESSION['teacher_id'];
+$stmt->bind_param("ss", $requestId, $advisorPrefix);
+if (!$stmt->execute()) {
+  echo json_encode(["status" => "error", "message" => "Database execute failed"]);
+  exit;
+}
 $request = $stmt->get_result()->fetch_assoc();
 
 if (!$request) {
@@ -34,6 +55,12 @@ if ($action === "approve") {
     SET student_code = ?, full_name = ?, class_group = ?
     WHERE user_id = ?
   ");
+  
+  if (!$updateStmt) {
+    echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
+    exit;
+  }
+  
   $updateStmt->bind_param(
     "sssi",
     $request['new_student_code'],
@@ -43,7 +70,7 @@ if ($action === "approve") {
   );
 
   if (!$updateStmt->execute()) {
-    echo json_encode(["status" => "error", "message" => "เกิดข้อผิดพลาดในการอัปเดต"]);
+    echo json_encode(["status" => "error", "message" => "Failed to update student data"]);
     exit;
   }
 } 
@@ -55,7 +82,13 @@ $updateRequestStmt = $conn->prepare("
   SET status = ?, reviewed_at = NOW(), reviewed_by = ?
   WHERE request_id = ?
 ");
-$updateRequestStmt->bind_param("sis", $statusValue, $teacherId, $requestId);
+
+if (!$updateRequestStmt) {
+  echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
+  exit;
+}
+
+$updateRequestStmt->bind_param("sis", $statusValue, $_SESSION['teacher_id'], $requestId);
 
 if ($updateRequestStmt->execute()) {
   echo json_encode([
@@ -63,6 +96,6 @@ if ($updateRequestStmt->execute()) {
     "message" => ($action === "approve") ? "ยืนยันการแก้ไขสำเร็จ" : "ปฏิเสธการแก้ไขสำเร็จ"
   ]);
 } else {
-  echo json_encode(["status" => "error", "message" => "เกิดข้อผิดพลาด"]);
+  echo json_encode(["status" => "error", "message" => "Failed to update request status"]);
 }
 ?>

@@ -54,61 +54,80 @@ $result = $stmt->get_result();
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>รายชื่อผู้เข้าเรียน</title>
-<style>
-    table { border-collapse: collapse; width: 100%; }
-    td, th { border:1px solid #ccc; padding:6px; text-align:center; }
-    button { padding:4px 8px; cursor:pointer; }
-    .present { color:green; }
-    .denied { color:red; }
-</style>
+    <meta charset="UTF-8">
+    <title>รายชื่อผู้เข้าเรียน</title>
+    <!-- Front-end: edit styles in liff/css/session_attendance.css -->
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/session_attendance.css">
 </head>
 <body>
 
-<h2>👥 รายชื่อผู้เข้าเรียน</h2>
+<?php $currentPage = 'sessions.php'; include('sidebar.php'); ?>
 
-<table>
-<tr>
-    <th>รหัสนักศึกษา</th>
-    <th>ชื่อ - นามสกุล</th>
-    <th>สาขา</th>
-    <th>สถานะ</th>
-    <th>เวลาเช็คชื่อ</th>
-    <th>จัดการแบบ Mannual</th>
-</tr>
+<div class="main-wrapper">
+    <div class="header">
+        <h2 id="page-title">👥 รายชื่อผู้เข้าเรียน</h2>
+    </div>
 
-<?php while ($row = $result->fetch_assoc()): ?>
-<tr>
-    <td><?= htmlspecialchars($row['student_code']) ?></td>
-    <td><?= htmlspecialchars($row['full_name']) ?></td>
-    <td><?= htmlspecialchars($row['class_group']) ?></td>
+    <div class="content-area">
+        <div class="container">
+            <div class="card">
 
-    <td class="<?= $row['status'] === 'present' ? 'present' : 'denied' ?>">
-        <?= $row['status'] === 'present' ? '✅ เช็คชื่อแล้ว' : '❌ ขาด' ?>
-    </td>
+                <div class="table-wrapper">
+                    <table class="table attendance-table">
+                        <thead>
+                            <tr class="table-header">
+                                <th>รหัสนักศึกษา</th>
+                                <th>ชื่อ - นามสกุล</th>
+                                <th>สาขา</th>
+                                <th>สถานะ</th>
+                                <th>เวลาเช็คชื่อ</th>
+                                <th>จัดการแบบ Manual</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr class="table-row">
+                                <td><?= htmlspecialchars($row['student_code']) ?></td>
+                                <td><?= htmlspecialchars($row['full_name']) ?></td>
+                                <td><?= htmlspecialchars($row['class_group']) ?></td>
+                                <td class="<?= $row['status'] === 'present' ? 'status-present' : 'status-denied' ?>">
+                                    <?= $row['status'] === 'present' ? '✅ เช็คชื่อแล้ว' : '❌ ขาด' ?>
+                                </td>
+                                <td>
+                                    <?= $row['checkin_time'] ? htmlspecialchars($row['checkin_time']) : '-' ?>
+                                </td>
+                                <td style="text-align:center;">
+                                    <form method="post" class="inline-form">
+                                        <input type="hidden" name="log_id" value="<?= $row['log_id'] ?>">
+                                        <?php if ($row['status'] === 'present'): ?>
+                                            <input type="hidden" name="new_status" value="denied">
+                                            <button type="submit" class="btn btn-delete" style="background:#e53935; color:#fff;">
+                                                ยกเลิกเช็คชื่อ
+                                            </button>
+                                        <?php else: ?>
+                                            <input type="hidden" name="new_status" value="present">
+                                            <button type="submit" class="btn btn-confirm">
+                                                เช็คชื่อ
+                                            </button>
+                                        <?php endif; ?>
+                                    </form>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
 
-    <td><?= $row['checkin_time'] ? htmlspecialchars($row['checkin_time']) : '-' ?></td>
+                <div class="footer-section">
+                    <a href="sessions.php" class="btn btn-cancel">⬅ กลับ</a>
+                </div>
 
-    <td>
-        <form method="post" style="display:inline;">
-            <input type="hidden" name="log_id" value="<?= $row['log_id'] ?>">
+            </div>
+        </div>
+    </div>
+</div>
 
-            <?php if ($row['status'] === 'present'): ?>
-                <input type="hidden" name="new_status" value="denied">
-                <button type="submit">ยกเลิกเช็คชื่อ</button>
-            <?php else: ?>
-                <input type="hidden" name="new_status" value="present">
-                <button type="submit">เช็คชื่อ</button>
-            <?php endif; ?>
-        </form>
-    </td>
-</tr>
-<?php endwhile; ?>
-
-</table>
-
-<p><a href="sessions.php">⬅ กลับ</a></p>
 
 </body>
 </html>

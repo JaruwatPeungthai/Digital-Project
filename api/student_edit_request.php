@@ -1,12 +1,28 @@
 <?php
+error_reporting(0);
+ini_set('display_errors', 0);
 header("Content-Type: application/json; charset=utf-8");
+
+if (!file_exists(__DIR__ . "/../config.php")) {
+  die(json_encode(["error" => "Config file not found"]));
+}
+
 require __DIR__ . "/../config.php";
+
+if (!isset($conn) || !$conn) {
+  die(json_encode(["error" => "Database connection failed"]));
+}
 
 $data = json_decode(file_get_contents("php://input"), true);
 $lineId = $data['line_user_id'] ?? '';
 $newCode = $data['student_code'] ?? '';
 $newName = $data['full_name'] ?? '';
 $newClass = $data['class_group'] ?? '';
+
+if (empty($lineId)) {
+  echo json_encode(["status" => "error", "message" => "Missing line_user_id"]);
+  exit;
+}
 
 // ดึงข้อมูลนักศึกษา
 $stmt = $conn->prepare("
@@ -15,8 +31,18 @@ $stmt = $conn->prepare("
   JOIN students st ON u.id = st.user_id
   WHERE u.line_user_id = ?
 ");
+
+if (!$stmt) {
+  echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
+  exit;
+}
+
 $stmt->bind_param("s", $lineId);
-$stmt->execute();
+if (!$stmt->execute()) {
+  echo json_encode(["status" => "error", "message" => "Database execute failed"]);
+  exit;
+}
+
 $student = $stmt->get_result()->fetch_assoc();
 
 if (!$student) {
@@ -35,10 +61,15 @@ $insertStmt = $conn->prepare("
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 ");
 
+if (!$insertStmt) {
+  echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
+  exit;
+}
+
 $requestedBy = $student['advisor_id'] ? "advisor_" . $student['advisor_id'] : "faculty";
 
 $insertStmt->bind_param(
-  "sissssss",
+  "sisssssss",
   $requestId,
   $student['user_id'],
   $requestedBy,
@@ -57,6 +88,6 @@ if ($insertStmt->execute()) {
     "request_id" => $requestId
   ]);
 } else {
-  echo json_encode(["status" => "error", "message" => "เกิดข้อผิดพลาด: " . $conn->error]);
+  echo json_encode(["status" => "error", "message" => "Database insert failed"]);
 }
 ?>

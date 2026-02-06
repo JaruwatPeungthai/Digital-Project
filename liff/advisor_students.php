@@ -74,8 +74,10 @@ unset($_SESSION['error']);
 <head>
 <meta charset="UTF-8">
 <title>รายชื่อที่ปรึกษา</title>
+<!-- Front-end: edit styles in liff/css/advisor_students.css -->
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/advisor_students.css">
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; }
   table { border-collapse: collapse; width:100%; margin-top: 15px; }
   th, td { border:1px solid #ccc; padding:8px; text-align:center; }
   th { background-color: #f2f2f2; }
@@ -88,128 +90,331 @@ unset($_SESSION['error']);
   .assigned-section { color: #ff9800; }
   .success { color: green; padding: 10px; background-color: #e8f5e9; border-radius: 4px; margin-bottom: 10px; }
   .error { color: red; padding: 10px; background-color: #ffebee; border-radius: 4px; margin-bottom: 10px; }
+  .upload-section { background-color: #fffacd; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #daa; }
+  .upload-section input[type="file"], .upload-section button { padding: 8px 12px; }
+  .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+  .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
+  .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+  .close:hover { color: black; }
+  .import-status { padding: 10px; border-radius: 4px; margin: 10px 0; }
 </style>
 </head>
 <body>
 
-<h2>👥 รายชื่อที่ปรึกษา</h2>
+<!-- Include sidebar navigation -->
+<?php include('sidebar.php'); ?>
 
-<?php if ($successMsg): ?>
-<div class="success"><?= htmlspecialchars($successMsg) ?></div>
-<?php endif; ?>
+<!-- Main content wrapper -->
+<div class="main-wrapper">
+  <!-- Page header with title -->
+  <div class="header">
+    <h2 id="page-title">👥 รายชื่อที่ปรึกษา</h2>
+  </div>
 
-<?php if ($errorMsg): ?>
-<div class="error"><?= htmlspecialchars($errorMsg) ?></div>
-<?php endif; ?>
+  <!-- Content area -->
+  <div class="content-area">
+    <!-- Container for main content -->
+    <div class="container page-container">
 
-<!-- ส่วนรายชื่อลูกศิษย์ของอาจารย์คนนี้ -->
-<h3 class="my-advisees-section">✅ ลูกศิษย์ของคุณ (<?= count($my_advisees) ?>)</h3>
-<table>
-<tr>
-  <th>รหัสนักศึกษา</th>
-  <th>ชื่อ-นามสกุล</th>
-  <th>สาขา</th>
-  <th>จัดการ</th>
-</tr>
+  <!-- Alert/Status messages -->
+  <?php if ($successMsg): ?>
+  <div class="alert alert-success" id="success-msg"><?= htmlspecialchars($successMsg) ?></div>
+  <?php endif; ?>
 
-<?php if (count($my_advisees) > 0): ?>
-  <?php foreach ($my_advisees as $st): ?>
-  <tr>
-    <td><?= htmlspecialchars($st['student_code']) ?></td>
-    <td><?= htmlspecialchars($st['full_name']) ?></td>
-    <td><?= htmlspecialchars($st['class_group']) ?></td>
-    <td>
-      <a href="advisee_profile.php?id=<?= $st['user_id'] ?>">👁️ ดู</a> |
-      <a href="../api/advisor_student_remove.php?student=<?= $st['user_id'] ?>">
-        ❌ ลบ
-      </a>
-    </td>
-  </tr>
-  <?php endforeach; ?>
-<?php else: ?>
-  <tr>
-    <td colspan="4">ยังไม่มีลูกศิษย์</td>
-  </tr>
-<?php endif; ?>
-</table>
+  <?php if ($errorMsg): ?>
+  <div class="alert alert-error" id="error-msg"><?= htmlspecialchars($errorMsg) ?></div>
+  <?php endif; ?>
 
-<!-- ส่วนรายชื่อที่ยังไม่มีที่ปรึกษา -->
-<h3 class="available-section">➕ รายชื่อที่ยังไม่มีที่ปรึกษา (<?= count($not_assigned) ?>)</h3>
+  <!-- Excel import section (card container) -->
+  <div class="card import-card">
+    <div class="upload-section">
+      <h3 class="section-title">📁 นำเข้ารายชื่อนักศึกษาจากไฟล์ Excel</h3>
+      <p class="section-description">เลือกไฟล์ .xlsx ที่มีรหัสนักศึกษาในคอลัมน์ B</p>
+      <input type="file" id="excelFile" class="file-input" accept=".xlsx" />
+      <button onclick="importExcel()" class="btn btn-import">📤 อ่านไฟล์</button>
+      <div id="uploadStatus" class="upload-status"></div>
+    </div>
+  </div>
 
-<div class="filter-section">
-  <label for="departmentFilter">กรองตามสาขา (Department):</label>
-  <select id="departmentFilter" onchange="filterStudents()">
-    <option value="">-- ทั้งหมด --</option>
-    <option value="ธุรกิจ">ธุรกิจ</option>
-    <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
-    <option value="ออกแบบแอพ">ออกแบบแอพ</option>
-    <option value="ออกแบบเกม">ออกแบบเกม</option>
-    <option value="นิเทศ">นิเทศ</option>
-  </select>
+  <!-- My advisees section (card container) -->
+  <div class="card advisees-card">
+    <h3 class="section-header my-advisees-section">✅ ลูกศิษย์ของคุณ (<?= count($my_advisees) ?>)</h3>
+    <!-- Front-end: Style .advisees-table { width: 100%; border-collapse: collapse; } -->
+    <table class="advisees-table">
+      <thead>
+        <tr class="table-header">
+          <th class="col-code">รหัสนักศึกษา</th>
+          <th class="col-name">ชื่อ-นามสกุล</th>
+          <th class="col-dept">สาขา</th>
+          <th class="col-actions">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (count($my_advisees) > 0): ?>
+          <?php foreach ($my_advisees as $st): ?>
+          <tr class="table-row">
+            <td class="col-code"><?= htmlspecialchars($st['student_code']) ?></td>
+            <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
+            <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
+            <td class="col-actions">
+              <a href="advisee_profile.php?id=<?= $st['user_id'] ?>" class="btn btn-primary" style="margin-right:6px;">👁️ ดู</a>
+              <a href="../api/advisor_student_remove.php?student=<?= $st['user_id'] ?>" class="btn btn-danger" onclick="return confirm('ยืนยันลบ?')">❌ ลบ</a>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr class="table-row empty-row">
+            <td colspan="4" class="empty-cell">ยังไม่มีลูกศิษย์</td>
+          </tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
 
-  <label for="searchInput">ค้นหา (ชื่อ/รหัส):</label>
-  <input type="text" id="searchInput" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา" onkeyup="filterStudents()">
+  <!-- Available students to add (card container) -->
+  <div class="card available-card">
+    <h3 class="section-header available-section">➕ รายชื่อที่ยังไม่มีที่ปรึกษา (<?= count($not_assigned) ?>)</h3>
+
+    <!-- Filters section -->
+    <!-- Front-end: Style .filters-section { margin-bottom: 15px; padding: 10px; background: #f9f9f9; border-radius: 4px; } -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="departmentFilter" class="filter-label">กรองตามสาขา (Department):</label>
+        <select id="departmentFilter" class="filter-select" onchange="filterStudents()">
+          <option value="">-- ทั้งหมด --</option>
+          <option value="ธุรกิจ">ธุรกิจ</option>
+          <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+          <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+          <option value="ออกแบบเกม">ออกแบบเกม</option>
+          <option value="นิเทศ">นิเทศ</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="searchInput" class="filter-label">ค้นหา (ชื่อ/รหัส):</label>
+        <input type="text" id="searchInput" class="filter-input" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา" onkeyup="filterStudents()">
+      </div>
+    </div>
+
+    <!-- Students table -->
+    <!-- Front-end: Style #studentTable .student-row:hover { background: #f5f5f5; cursor: pointer; } -->
+    <table id="studentTable" class="students-table">
+      <thead>
+        <tr class="table-header">
+          <th class="col-code">รหัสนักศึกษา</th>
+          <th class="col-name">ชื่อ-นามสกุล</th>
+          <th class="col-dept">สาขา</th>
+          <th class="col-actions">จัดการ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (count($not_assigned) > 0): ?>
+          <?php foreach ($not_assigned as $st): ?>
+          <tr class="student-row" data-code="<?= htmlspecialchars($st['student_code']) ?>" 
+              data-name="<?= htmlspecialchars($st['full_name']) ?>" 
+              data-class="<?= htmlspecialchars($st['class_group']) ?>">
+            <td class="col-code"><?= htmlspecialchars($st['student_code']) ?></td>
+            <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
+            <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
+            <td class="col-actions">
+              <a href="../api/advisor_student_add.php?student=<?= $st['user_id'] ?>" class="btn btn-success">➕ เพิ่ม</a>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr class="table-row empty-row">
+            <td colspan="4" class="empty-cell">ไม่มีนักศึกษาที่ยังไม่มีที่ปรึกษา</td>
+          </tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Already-assigned section (card container) -->
+  <div class="card assigned-card">
+    <h3 class="section-header assigned-section">👤 นักศึกษาที่มีที่ปรึกษาแล้ว (<?= count($already_assigned) ?>)</h3>
+    <table class="assigned-table">
+      <thead>
+        <tr class="table-header">
+          <th class="col-code">รหัสนักศึกษา</th>
+          <th class="col-name">ชื่อ-นามสกุล</th>
+          <th class="col-dept">สาขา</th>
+          <th class="col-advisor">ที่ปรึกษา</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (count($already_assigned) > 0): ?>
+          <?php foreach ($already_assigned as $st): ?>
+          <tr class="table-row">
+            <td class="col-code"><?= htmlspecialchars($st['student_code']) ?></td>
+            <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
+            <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
+            <td class="col-advisor"><?= htmlspecialchars($advisorNames[$st['advisor_id']] ?? 'ไม่ทราบ') ?></td>
+          </tr>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <tr class="table-row empty-row">
+            <td colspan="4" class="empty-cell">ไม่มีนักศึกษา</td>
+          </tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Back link -->
+  <div class="footer-section">
+    <p><a href="teacher_dashboard.php" class="back-link">⬅ กลับหน้า Dashboard</a></p>
+  </div>
+
 </div>
 
-<table id="studentTable">
-<tr>
-  <th>รหัสนักศึกษา</th>
-  <th>ชื่อ-นามสกุล</th>
-  <th>สาขา</th>
-  <th>จัดการ</th>
-</tr>
-
-<?php if (count($not_assigned) > 0): ?>
-  <?php foreach ($not_assigned as $st): ?>
-  <tr class="student-row" data-code="<?= htmlspecialchars($st['student_code']) ?>" 
-      data-name="<?= htmlspecialchars($st['full_name']) ?>" 
-      data-class="<?= htmlspecialchars($st['class_group']) ?>">
-    <td><?= htmlspecialchars($st['student_code']) ?></td>
-    <td><?= htmlspecialchars($st['full_name']) ?></td>
-    <td><?= htmlspecialchars($st['class_group']) ?></td>
-    <td>
-      <a href="../api/advisor_student_add.php?student=<?= $st['user_id'] ?>">
-        ➕ เพิ่ม
-      </a>
-    </td>
-  </tr>
-  <?php endforeach; ?>
-<?php else: ?>
-  <tr>
-    <td colspan="4">ไม่มีนักศึกษาที่ยังไม่มีที่ปรึกษา</td>
-  </tr>
-<?php endif; ?>
-</table>
-
-<!-- ส่วนรายชื่อที่มีที่ปรึกษาแล้ว (ของอาจารย์คนอื่น) -->
-<h3 class="assigned-section">👤 นักศึกษาที่มีที่ปรึกษาแล้ว (<?= count($already_assigned) ?>)</h3>
-<table>
-<tr>
-  <th>รหัสนักศึกษา</th>
-  <th>ชื่อ-นามสกุล</th>
-  <th>สาขา</th>
-  <th>ที่ปรึกษา</th>
-</tr>
-
-<?php if (count($already_assigned) > 0): ?>
-  <?php foreach ($already_assigned as $st): ?>
-  <tr>
-    <td><?= htmlspecialchars($st['student_code']) ?></td>
-    <td><?= htmlspecialchars($st['full_name']) ?></td>
-    <td><?= htmlspecialchars($st['class_group']) ?></td>
-    <td><?= htmlspecialchars($advisorNames[$st['advisor_id']] ?? 'ไม่ทราบ') ?></td>
-  </tr>
-  <?php endforeach; ?>
-<?php else: ?>
-  <tr>
-    <td colspan="4">ไม่มีนักศึกษา</td>
-  </tr>
-<?php endif; ?>
-</table>
-
-<p><a href="teacher_dashboard.php">⬅ กลับหน้า Dashboard</a></p>
+<!-- Modal dialog for import preview -->
+<!-- Front-end: Style #importModal { display: none; position: fixed; z-index: 100; } and .modal-content { ... } -->
+<div id="importModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-title" class="modal-title">📋 ตรวจสอบรายชื่อที่จะนำเข้า</h2>
+      <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close">&times;</span>
+    </div>
+    
+    <div id="importPreview" class="modal-body preview-section"></div>
+    
+    <div class="modal-footer">
+      <button onclick="confirmImport()" class="btn btn-confirm">✅ ยืนยันการนำเข้า</button>
+      <button onclick="closeImportModal()" class="btn btn-cancel">❌ ยกเลิก</button>
+    </div>
+  </div>
+</div>
 
 <script>
+let importData = null;
+
+async function importExcel() {
+  const fileInput = document.getElementById('excelFile');
+  if (!fileInput.files.length) {
+    alert('กรุณาเลือกไฟล์');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('excel_file', fileInput.files[0]);
+
+  try {
+    const res = await fetch('../api/import_students_from_excel.php', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('uploadStatus').innerHTML = 
+        '<div class="import-status error">❌ ' + data.error + '</div>';
+      return;
+    }
+
+    importData = {
+      matched: data.matched,
+      notFound: data.not_found
+    };
+
+    // Show modal with preview
+    showImportPreview(data);
+    document.getElementById('importModal').style.display = 'block';
+    document.getElementById('uploadStatus').innerHTML = '';
+
+  } catch (error) {
+    document.getElementById('uploadStatus').innerHTML = 
+      '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
+  }
+}
+
+function showImportPreview(data) {
+  let html = '<h3>พบ ' + data.found_count + ' คน, ไม่พบ ' + data.not_found_count + ' คน</h3>';
+  
+  if (data.matched.length > 0) {
+    html += '<h4 style="color: green;">✅ นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
+    html += '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th></tr>';
+    
+    data.matched.forEach(student => {
+      html += '<tr><td style="border: 1px solid #ccc; padding: 8px;">' + student.student_code + '</td>';
+      html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.full_name + '</td>';
+      html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.class_group + '</td></tr>';
+    });
+    
+    html += '</table>';
+  }
+  
+  if (data.not_found.length > 0) {
+    html += '<h4 style="color: red;">❌ รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
+    html += '<table style="width: 100%; border-collapse: collapse;">';
+    html += '<tr style="background-color: #f8d7da;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ (จากไฟล์)</th></tr>';
+    
+    data.not_found.forEach(item => {
+      html += '<tr><td style="border: 1px solid #ccc; padding: 8px;">' + item.student_code + '</td>';
+      html += '<td style="border: 1px solid #ccc; padding: 8px;">' + (item.excel_name || '-') + '</td></tr>';
+    });
+    
+    html += '</table>';
+  }
+  
+  document.getElementById('importPreview').innerHTML = html;
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').style.display = 'none';
+  importData = null;
+}
+
+async function confirmImport() {
+  if (!importData || !importData.matched.length) {
+    alert('ไม่มีนักศึกษาที่จะนำเข้า');
+    return;
+  }
+
+  const studentIds = importData.matched.map(s => s.user_id);
+
+  try {
+    const res = await fetch('../api/confirm_import_students.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'advisor',
+        target_id: 0,
+        student_ids: studentIds
+      })
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      document.getElementById('uploadStatus').innerHTML = 
+        '<div class="import-status success">✅ เพิ่มลูกศิษย์ ' + result.added + ' คนสำเร็จ (ซ้ำ ' + result.skipped + ' คน)</div>';
+      closeImportModal();
+      document.getElementById('excelFile').value = '';
+      
+      // Reload page after 2 seconds
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
+    } else {
+      document.getElementById('uploadStatus').innerHTML = 
+        '<div class="import-status error">❌ ' + (result.error || 'การนำเข้าล้มเหลว') + '</div>';
+    }
+  } catch (error) {
+    document.getElementById('uploadStatus').innerHTML = 
+      '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
+  }
+}
+
+window.onclick = function(event) {
+  const modal = document.getElementById('importModal');
+  if (event.target === modal) {
+    closeImportModal();
+  }
+}
+
 function filterStudents() {
   const departmentFilter = document.getElementById('departmentFilter').value;
   const searchInput = document.getElementById('searchInput').value.toLowerCase();
@@ -227,6 +432,10 @@ function filterStudents() {
   });
 }
 </script>
+
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

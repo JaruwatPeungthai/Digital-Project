@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
+
+</style>
+</head>
+<body>
+
+
 <meta charset="UTF-8">
 <title>Student Dashboard</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
+<!-- Front-end: edit styles in liff/css/student_dashboard.css -->
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/student_dashboard.css">
+
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-table { border-collapse: collapse; width: 100%; }
+.sidebar-header h2 { font-size: 14px; }
+table { border-collapse: collapse; width: 100%; margin-top: 15px; }
 th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
 th { background-color: #f2f2f2; }
 .profile-section { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
 .profile-row { margin: 10px 0; }
-.profile-row label { font-weight: bold; display: inline-block; width: 150px; }
-input, select { padding: 5px; margin-right: 10px; }
-button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-button:hover { background-color: #0056b3; }
+.profile-row label { font-weight: bold; display: inline-block; min-width: 150px; }
+input, select { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: Arial, sans-serif; }
 .advisor-info { background-color: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
-.modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
-.modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+.modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
 .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
 .close:hover { color: black; }
 .request-status { padding: 10px; border-radius: 4px; margin: 10px 0; }
@@ -29,29 +37,59 @@ button:hover { background-color: #0056b3; }
 </head>
 <body>
 
-<h2>ข้อมูลนักศึกษา</h2>
+<!-- Student Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h2 id="sidebarTitle">👨‍🎓 นักศึกษา</h2>
+  </div>
+  
+  <nav class="sidebar-menu">
+    <ul class="menu-list">
+      <li class="menu-item active">
+        <a href="#profile" class="menu-link" onclick="showProfile(event)">
+          👤 ข้อมูลของฉัน
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="#attendance" class="menu-link" onclick="showAttendance(event)">
+          📋 ประวัติการเข้าเรียน
+        </a>
+      </li>
+      <li class="menu-item">
+        <a href="#requests" class="menu-link" onclick="showRequests(event)">
+          📝 คำขอแก้ไขข้อมูล
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>
 
-<div class="profile-section">
+<!-- Main Content -->
+<div class="main-wrapper">
+  <div class="header">
+    <h2 id="page-title">👨‍🎓 Dashboard นักศึกษา</h2>
+  </div>
+
+  <div class="content-area">
+    <div class="container">
+
+      <!-- Profile Section (Default View) -->
+      <div id="profileContent" class="card profile-section">
+        <h3 class="section-header">👤 ข้อมูลของฉัน</h3>
+        
   <div class="profile-row">
     <label>รหัสนักศึกษา:</label>
-    <input type="text" id="code" readonly>
-    <span id="codeDisplay"></span>
+    <span id="codeDisplay" style="font-weight: bold;"></span>
   </div>
   
   <div class="profile-row">
     <label>ชื่อ-นามสกุล:</label>
-    <input type="text" id="name">
+    <span id="nameDisplay" style="font-weight: bold;"></span>
   </div>
 
   <div class="profile-row">
     <label>สาขา:</label>
-    <select id="major">
-      <option value="ธุรกิจ">ธุรกิจ</option>
-      <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
-      <option value="ออกแบบแอพ">ออกแบบแอพ</option>
-      <option value="ออกแบบเกม">ออกแบบเกม</option>
-      <option value="นิเทศ">นิเทศ</option>
-    </select>
+    <span id="majorDisplay" style="font-weight: bold;"></span>
   </div>
 
   <div class="profile-row">
@@ -59,37 +97,90 @@ button:hover { background-color: #0056b3; }
     <span id="advisorInfo" style="color: #666;">ยังไม่มีที่ปรึกษา</span>
   </div>
 
-  <div class="profile-row">
-    <button onclick="toggleEdit()">✏️ แก้ไขข้อมูล</button>
-    <button onclick="openRequestsModal()" style="background-color: #28a745;">📋 ดูคำขอแก้ไข</button>
-  </div>
+        <div class="profile-row" style="margin-top: 20px;">
+          <button onclick="openEditModal()" class="btn">✏️ แก้ไขข้อมูล</button>
+        </div>
 
-  <div id="editStatus"></div>
+        <div id="editStatus"></div>
+      </div>
+
+      <!-- Attendance History Section -->
+      <div id="attendanceContent" class="card" style="display: none;">
+        <h3 class="section-header">📋 ประวัติการเข้าเรียน</h3>
+        
+        <div style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>วิชา</th>
+                <th>รายละเอียด session</th>
+                <th>เวลา</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="logs">
+              <tr><td colspan="4">กำลังโหลด...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Requests Section -->
+      <div id="requestsContent" class="card" style="display: none;">
+        <h3 class="section-header">📝 คำขอแก้ไขข้อมูล</h3>
+        
+        <div style="margin-bottom: 15px;">
+          <input 
+            type="text" 
+            id="searchRequestId" 
+            placeholder="ค้นหา Request ID" 
+            onkeyup="searchRequests()"
+            style="width: 100%; max-width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+          >
+        </div>
+
+        <div id="requestsList">
+          <p>กำลังโหลด...</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
-<hr>
-
-<h2>ประวัติการเข้าเรียน</h2>
-
-<table>
-<thead>
-<tr>
-  <th>วิชา</th>
-  <th>ห้อง</th>
-  <th>เวลา</th>
-  <th>สถานะ</th>
-</tr>
-</thead>
-<tbody id="logs"></tbody>
-</table>
-
-<!-- Modal for viewing requests -->
-<div id="requestsModal" class="modal">
+<!-- Modal for editing profile -->
+<div id="editModal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeRequestsModal()">&times;</span>
-    <h2>คำขอแก้ไขข้อมูล</h2>
-    <input type="text" id="searchRequestId" placeholder="ค้นหา Request ID" onkeyup="searchRequests()">
-    <div id="requestsList"></div>
+    <span class="close" onclick="closeEditModal()">&times;</span>
+    <h2>แก้ไขข้อมูลนักศึกษา</h2>
+    
+    <div class="profile-row">
+      <label>รหัสนักศึกษา:</label>
+      <input type="text" id="editCode">
+    </div>
+    
+    <div class="profile-row">
+      <label>ชื่อ-นามสกุล:</label>
+      <input type="text" id="editName">
+    </div>
+
+    <div class="profile-row">
+      <label>สาขา:</label>
+      <select id="editMajor">
+        <option value="ธุรกิจ">ธุรกิจ</option>
+        <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+        <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+        <option value="ออกแบบเกม">ออกแบบเกม</option>
+        <option value="นิเทศ">นิเทศ</option>
+      </select>
+    </div>
+
+    <div id="editModalStatus"></div>
+
+    <div class="profile-row" style="margin-top: 20px;">
+      <button onclick="submitEditRequest()" class="btn btn-primary" style="margin-right: 8px;">✓ ยืนยัน</button>
+      <button onclick="closeEditModal()" class="btn" style="background: #6c757d;">✕ ยกเลิก</button>
+    </div>
   </div>
 </div>
 
@@ -97,7 +188,43 @@ button:hover { background-color: #0056b3; }
 const LIFF_ID = "2008718294-WzVz06TP";
 let lineUserId = "";
 let studentData = {};
-let editMode = false;
+
+// Sidebar menu management
+function showProfile(e) {
+  if (e) e.preventDefault();
+  setActiveMenu(0);
+  document.getElementById("profileContent").style.display = "block";
+  document.getElementById("attendanceContent").style.display = "none";
+  document.getElementById("requestsContent").style.display = "none";
+  document.getElementById("page-title").innerText = "👨‍🎓 ข้อมูลของฉัน";
+}
+
+function showAttendance(e) {
+  if (e) e.preventDefault();
+  setActiveMenu(1);
+  document.getElementById("profileContent").style.display = "none";
+  document.getElementById("attendanceContent").style.display = "block";
+  document.getElementById("requestsContent").style.display = "none";
+  document.getElementById("page-title").innerText = "📋 ประวัติการเข้าเรียน";
+  loadHistory();
+}
+
+function showRequests(e) {
+  if (e) e.preventDefault();
+  setActiveMenu(2);
+  document.getElementById("profileContent").style.display = "none";
+  document.getElementById("attendanceContent").style.display = "none";
+  document.getElementById("requestsContent").style.display = "block";
+  document.getElementById("page-title").innerText = "📝 คำขอแก้ไขข้อมูล";
+  loadRequests("");
+}
+
+function setActiveMenu(index) {
+  const items = document.querySelectorAll(".sidebar-menu .menu-item");
+  items.forEach((item, i) => {
+    item.classList.toggle("active", i === index);
+  });
+}
 
 async function init() {
   await liff.init({ liffId: LIFF_ID });
@@ -111,155 +238,229 @@ async function init() {
   lineUserId = profile.userId;
 
   loadProfile();
-  loadHistory();
 }
 
 async function loadProfile() {
-  const res = await fetch("../api/student_profile.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ line_user_id: lineUserId })
-  });
+  try {
+    const res = await fetch("../api/student_profile.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ line_user_id: lineUserId })
+    });
 
-  const data = await res.json();
-  studentData = data;
+    if (!res.ok) {
+      console.error("HTTP error:", res.status);
+      document.getElementById("codeDisplay").innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+      return;
+    }
 
-  document.getElementById("codeDisplay").innerText = data.student_code;
-  document.getElementById("code").value = data.student_code;
-  document.getElementById("name").value = data.full_name;
-  document.getElementById("major").value = data.class_group;
+    const text = await res.text();
+    if (!text) {
+      console.error("Empty response from student_profile.php");
+      document.getElementById("codeDisplay").innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+      return;
+    }
 
-  // แสดงข้อมูลที่ปรึกษา
-  if (data.advisor_name) {
-    document.getElementById("advisorInfo").innerHTML = 
-      '<span class="advisor-info">👨‍🏫 ' + data.advisor_name + '</span>';
+    const data = JSON.parse(text);
+    
+    if (data.error) {
+      console.error("API error:", data.error);
+      document.getElementById("codeDisplay").innerText = "ไม่พบข้อมูล: " + data.error;
+      return;
+    }
+
+    studentData = data;
+
+    document.getElementById("codeDisplay").innerText = data.student_code;
+    document.getElementById("nameDisplay").innerText = data.full_name;
+    document.getElementById("majorDisplay").innerText = data.class_group;
+
+    // แสดงข้อมูลที่ปรึกษา
+    if (data.advisor_name) {
+      document.getElementById("advisorInfo").innerHTML = 
+        '<span class="advisor-info">👨‍🏫 ' + data.advisor_name + '</span>';
+    }
+    // Set sidebar title to the logged-in student's name
+    var st = document.getElementById('sidebarTitle');
+    if (st) st.innerText = '👨‍🎓 ' + (data.full_name || 'นักศึกษา');
+  } catch (error) {
+    console.error("loadProfile error:", error);
+    document.getElementById("codeDisplay").innerText = "เกิดข้อผิดพลาด: " + error.message;
   }
 }
 
 async function loadHistory() {
-  const res = await fetch("../api/attendance_history.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ line_user_id: lineUserId })
-  });
+  try {
+    const res = await fetch("../api/attendance_history.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ line_user_id: lineUserId })
+    });
 
-  const rows = await res.json();
-  const tbody = document.getElementById("logs");
-  tbody.innerHTML = "";
+    if (!res.ok) {
+      console.error("HTTP error:", res.status);
+      document.getElementById("logs").innerHTML = "<tr><td colspan='4'>เกิดข้อผิดพลาด</td></tr>";
+      return;
+    }
 
-  if (rows.length === 0) {
-    tbody.innerHTML = "<tr><td colspan='4'>ไม่มีประวัติการเข้าเรียน</td></tr>";
-    return;
+    const text = await res.text();
+    if (!text) {
+      console.error("Empty response from attendance_history.php");
+      document.getElementById("logs").innerHTML = "<tr><td colspan='4'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+      return;
+    }
+
+    const rows = JSON.parse(text);
+    const tbody = document.getElementById("logs");
+    tbody.innerHTML = "";
+
+    if (!Array.isArray(rows) || rows.length === 0) {
+      tbody.innerHTML = "<tr><td colspan='4'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+      return;
+    }
+
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.subject_name}</td>
+        <td>${r.room_name}</td>
+        <td>${r.checkin_time}</td>
+        <td>${r.status === "present" ? "✅ เช็คชื่อแล้ว" : "❌ ขาด"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (error) {
+    console.error("loadHistory error:", error);
+    document.getElementById("logs").innerHTML = "<tr><td colspan='4'>เกิดข้อผิดพลาด</td></tr>";
   }
-
-  rows.forEach(r => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.subject_name}</td>
-      <td>${r.room_name}</td>
-      <td>${r.checkin_time}</td>
-      <td>${r.status === "present" ? "✅ เช็คชื่อแล้ว" : "❌ ขาด"}</td>
-    `;
-    tbody.appendChild(tr);
-  });
 }
 
-function toggleEdit() {
-  editMode = !editMode;
-  document.getElementById("code").readOnly = !editMode;
-  document.getElementById("name").readOnly = !editMode;
-  document.getElementById("major").disabled = !editMode;
+function openEditModal() {
+  // โหลดข้อมูลปัจจุบันเข้าไปในฟอร์ม
+  document.getElementById("editCode").value = studentData.student_code;
+  document.getElementById("editName").value = studentData.full_name;
+  document.getElementById("editMajor").value = studentData.class_group;
+  document.getElementById("editModalStatus").innerHTML = "";
   
-  if (!editMode) {
-    // Reset values
-    document.getElementById("code").value = studentData.student_code;
-    document.getElementById("name").value = studentData.full_name;
-    document.getElementById("major").value = studentData.class_group;
-    document.getElementById("editStatus").innerHTML = "";
-  }
+  document.getElementById("editModal").style.display = "block";
 }
 
-async function updateName() {
-  const newCode = document.getElementById("code").value;
-  const newName = document.getElementById("name").value;
-  const newClass = document.getElementById("major").value;
+function closeEditModal() {
+  document.getElementById("editModal").style.display = "none";
+}
+
+async function submitEditRequest() {
+  const newCode = document.getElementById("editCode").value;
+  const newName = document.getElementById("editName").value;
+  const newClass = document.getElementById("editMajor").value;
 
   // ตรวจสอบว่ามีการเปลี่ยนแปลง
   if (newCode === studentData.student_code && 
       newName === studentData.full_name && 
       newClass === studentData.class_group) {
-    document.getElementById("editStatus").innerHTML = 
+    document.getElementById("editModalStatus").innerHTML = 
       '<div class="request-status">ไม่มีการเปลี่ยนแปลงข้อมูล</div>';
     return;
   }
 
-  const res = await fetch("../api/student_edit_request.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      line_user_id: lineUserId,
-      student_code: newCode,
-      full_name: newName,
-      class_group: newClass
-    })
-  });
+  try {
+    const res = await fetch("../api/student_edit_request.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        line_user_id: lineUserId,
+        student_code: newCode,
+        full_name: newName,
+        class_group: newClass
+      })
+    });
 
-  const data = await res.json();
-  
-  if (data.status === "success") {
-    document.getElementById("editStatus").innerHTML = 
-      '<div class="request-status pending">✓ ส่งคำขอแล้ว (Request ID: ' + data.request_id + ')</div>';
-    editMode = false;
-    toggleEdit();
-  } else {
-    document.getElementById("editStatus").innerHTML = 
-      '<div class="request-status rejected">✗ ' + data.message + '</div>';
+    if (!res.ok) {
+      console.error("HTTP error:", res.status);
+      document.getElementById("editModalStatus").innerHTML = 
+        '<div class="request-status rejected">✗ เกิดข้อผิดพลาด (HTTP ' + res.status + ')</div>';
+      return;
+    }
+
+    const text = await res.text();
+    if (!text) {
+      console.error("Empty response from student_edit_request.php");
+      document.getElementById("editModalStatus").innerHTML = 
+        '<div class="request-status rejected">✗ เกิดข้อผิดพลาดในเซิร์ฟเวอร์</div>';
+      return;
+    }
+
+    const data = JSON.parse(text);
+    
+    if (data.status === "success") {
+      document.getElementById("editModalStatus").innerHTML = 
+        '<div class="request-status pending">✓ ส่งคำขอแล้ว (Request ID: ' + data.request_id + ')</div>';
+      setTimeout(() => {
+        closeEditModal();
+      }, 2000);
+    } else {
+      document.getElementById("editModalStatus").innerHTML = 
+        '<div class="request-status rejected">✗ ' + data.message + '</div>';
+    }
+  } catch (error) {
+    console.error("submitEditRequest error:", error);
+    document.getElementById("editModalStatus").innerHTML = 
+      '<div class="request-status rejected">✗ เกิดข้อผิดพลาด: ' + error.message + '</div>';
   }
-}
-
-function openRequestsModal() {
-  document.getElementById("requestsModal").style.display = "block";
-  loadRequests("");
-}
-
-function closeRequestsModal() {
-  document.getElementById("requestsModal").style.display = "none";
 }
 
 async function loadRequests(searchId) {
-  const res = await fetch("../api/get_student_requests.php?line_user_id=" + lineUserId + 
-    (searchId ? "&search=" + searchId : ""), {
-    method: "GET",
-    headers: { "Content-Type": "application/json" }
-  });
+  try {
+    const res = await fetch("../api/get_student_requests.php?line_user_id=" + lineUserId + 
+      (searchId ? "&search=" + searchId : ""), {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
 
-  const requests = await res.json();
-  const list = document.getElementById("requestsList");
-  
-  if (requests.length === 0) {
-    list.innerHTML = "<p>ไม่มีคำขอแก้ไข</p>";
-    return;
+    if (!res.ok) {
+      console.error("HTTP error:", res.status);
+      document.getElementById("requestsList").innerHTML = "<p>เกิดข้อผิดพลาด</p>";
+      return;
+    }
+
+    const text = await res.text();
+    if (!text) {
+      console.error("Empty response from get_student_requests.php");
+      document.getElementById("requestsList").innerHTML = "<p>ไม่มีคำขอแก้ไข</p>";
+      return;
+    }
+
+    const requests = JSON.parse(text);
+    const list = document.getElementById("requestsList");
+    
+    if (!Array.isArray(requests) || requests.length === 0) {
+      list.innerHTML = "<p>ไม่มีคำขอแก้ไข</p>";
+      return;
+    }
+
+    let html = "";
+    requests.forEach(req => {
+      const statusClass = req.status === "pending" ? "pending" : 
+                         (req.status === "approved" ? "approved" : "rejected");
+      const statusText = req.status === "pending" ? "⏳ รอดำเนินการ" : 
+                        (req.status === "approved" ? "✅ ยืนยันแล้ว" : "❌ ปฏิเสธ");
+
+      html += `
+        <div class="request-status ${statusClass}">
+          <strong>Request ID: ${req.request_id}</strong><br>
+          วันที่: ${req.created_at}<br>
+          สถานะ: ${statusText}<br>
+          <strong>ข้อมูลเก่า:</strong> ${req.old_student_code} / ${req.old_full_name} / ${req.old_class_group}<br>
+          <strong>ข้อมูลใหม่:</strong> ${req.new_student_code} / ${req.new_full_name} / ${req.new_class_group}
+        </div>
+      `;
+    });
+
+    list.innerHTML = html;
+  } catch (error) {
+    console.error("loadRequests error:", error);
+    document.getElementById("requestsList").innerHTML = "<p>เกิดข้อผิดพลาด: " + error.message + "</p>";
   }
-
-  let html = "";
-  requests.forEach(req => {
-    const statusClass = req.status === "pending" ? "pending" : 
-                       (req.status === "approved" ? "approved" : "rejected");
-    const statusText = req.status === "pending" ? "⏳ รอดำเนินการ" : 
-                      (req.status === "approved" ? "✅ ยืนยันแล้ว" : "❌ ปฏิเสธ");
-
-    html += `
-      <div class="request-status ${statusClass}">
-        <strong>Request ID: ${req.request_id}</strong><br>
-        วันที่: ${req.created_at}<br>
-        สถานะ: ${statusText}<br>
-        <strong>ข้อมูลเก่า:</strong> ${req.old_student_code} / ${req.old_full_name} / ${req.old_class_group}<br>
-        <strong>ข้อมูลใหม่:</strong> ${req.new_student_code} / ${req.new_full_name} / ${req.new_class_group}
-      </div>
-    `;
-  });
-
-  list.innerHTML = html;
 }
 
 function searchRequests() {
@@ -268,9 +469,10 @@ function searchRequests() {
 }
 
 window.onclick = function(event) {
-  const modal = document.getElementById("requestsModal");
-  if (event.target === modal) {
-    modal.style.display = "none";
+  const editModal = document.getElementById("editModal");
+  
+  if (event.target === editModal) {
+    editModal.style.display = "none";
   }
 }
 
