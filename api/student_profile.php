@@ -6,9 +6,10 @@ $data = json_decode(file_get_contents("php://input"), true);
 $lineId = $data['line_user_id'] ?? '';
 
 $stmt = $conn->prepare("
-  SELECT s.student_code, s.full_name, s.class_group
+  SELECT s.student_code, s.full_name, s.class_group, s.advisor_id, t.full_name as advisor_name
   FROM users u
   JOIN students s ON u.id = s.user_id
+  LEFT JOIN teachers t ON s.advisor_id = t.id
   WHERE u.line_user_id=?
 ");
 $stmt->bind_param("s", $lineId);

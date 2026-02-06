@@ -6,20 +6,65 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
+body { font-family: Arial, sans-serif; margin: 20px; }
 table { border-collapse: collapse; width: 100%; }
 th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+th { background-color: #f2f2f2; }
+.profile-section { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+.profile-row { margin: 10px 0; }
+.profile-row label { font-weight: bold; display: inline-block; width: 150px; }
+input, select { padding: 5px; margin-right: 10px; }
+button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+button:hover { background-color: #0056b3; }
+.advisor-info { background-color: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+.modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+.modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; }
+.close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.close:hover { color: black; }
+.request-status { padding: 10px; border-radius: 4px; margin: 10px 0; }
+.pending { background-color: #fff3cd; color: #856404; }
+.approved { background-color: #d4edda; color: #155724; }
+.rejected { background-color: #f8d7da; color: #721c24; }
 </style>
 </head>
 <body>
 
 <h2>ข้อมูลนักศึกษา</h2>
 
-<div id="profile">
-  รหัสนักศึกษา: <b id="code"></b><br>
-  ชื่อ-นามสกุล:
-  <input id="name">
-  <button onclick="updateName()">บันทึก</button><br>
-  สาขา: <b id="major"></b>
+<div class="profile-section">
+  <div class="profile-row">
+    <label>รหัสนักศึกษา:</label>
+    <input type="text" id="code" readonly>
+    <span id="codeDisplay"></span>
+  </div>
+  
+  <div class="profile-row">
+    <label>ชื่อ-นามสกุล:</label>
+    <input type="text" id="name">
+  </div>
+
+  <div class="profile-row">
+    <label>สาขา:</label>
+    <select id="major">
+      <option value="ธุรกิจ">ธุรกิจ</option>
+      <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+      <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+      <option value="ออกแบบเกม">ออกแบบเกม</option>
+      <option value="นิเทศ">นิเทศ</option>
+    </select>
+  </div>
+
+  <div class="profile-row">
+    <label>ที่ปรึกษา:</label>
+    <span id="advisorInfo" style="color: #666;">ยังไม่มีที่ปรึกษา</span>
+  </div>
+
+  <div class="profile-row">
+    <button onclick="toggleEdit()">✏️ แก้ไขข้อมูล</button>
+    <button onclick="openRequestsModal()" style="background-color: #28a745;">📋 ดูคำขอแก้ไข</button>
+  </div>
+
+  <div id="editStatus"></div>
 </div>
 
 <hr>
@@ -38,9 +83,21 @@ th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
 <tbody id="logs"></tbody>
 </table>
 
+<!-- Modal for viewing requests -->
+<div id="requestsModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeRequestsModal()">&times;</span>
+    <h2>คำขอแก้ไขข้อมูล</h2>
+    <input type="text" id="searchRequestId" placeholder="ค้นหา Request ID" onkeyup="searchRequests()">
+    <div id="requestsList"></div>
+  </div>
+</div>
+
 <script>
 const LIFF_ID = "2008718294-WzVz06TP";
 let lineUserId = "";
+let studentData = {};
+let editMode = false;
 
 async function init() {
   await liff.init({ liffId: LIFF_ID });
@@ -65,10 +122,18 @@ async function loadProfile() {
   });
 
   const data = await res.json();
+  studentData = data;
 
-  document.getElementById("code").innerText = data.student_code;
+  document.getElementById("codeDisplay").innerText = data.student_code;
+  document.getElementById("code").value = data.student_code;
   document.getElementById("name").value = data.full_name;
-  document.getElementById("major").innerText = data.class_group;
+  document.getElementById("major").value = data.class_group;
+
+  // แสดงข้อมูลที่ปรึกษา
+  if (data.advisor_name) {
+    document.getElementById("advisorInfo").innerHTML = 
+      '<span class="advisor-info">👨‍🏫 ' + data.advisor_name + '</span>';
+  }
 }
 
 async function loadHistory() {
@@ -82,6 +147,11 @@ async function loadHistory() {
   const tbody = document.getElementById("logs");
   tbody.innerHTML = "";
 
+  if (rows.length === 0) {
+    tbody.innerHTML = "<tr><td colspan='4'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+    return;
+  }
+
   rows.forEach(r => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -94,20 +164,114 @@ async function loadHistory() {
   });
 }
 
-async function updateName() {
-  const name = document.getElementById("name").value;
+function toggleEdit() {
+  editMode = !editMode;
+  document.getElementById("code").readOnly = !editMode;
+  document.getElementById("name").readOnly = !editMode;
+  document.getElementById("major").disabled = !editMode;
+  
+  if (!editMode) {
+    // Reset values
+    document.getElementById("code").value = studentData.student_code;
+    document.getElementById("name").value = studentData.full_name;
+    document.getElementById("major").value = studentData.class_group;
+    document.getElementById("editStatus").innerHTML = "";
+  }
+}
 
-  const res = await fetch("../api/update_student_name.php", {
+async function updateName() {
+  const newCode = document.getElementById("code").value;
+  const newName = document.getElementById("name").value;
+  const newClass = document.getElementById("major").value;
+
+  // ตรวจสอบว่ามีการเปลี่ยนแปลง
+  if (newCode === studentData.student_code && 
+      newName === studentData.full_name && 
+      newClass === studentData.class_group) {
+    document.getElementById("editStatus").innerHTML = 
+      '<div class="request-status">ไม่มีการเปลี่ยนแปลงข้อมูล</div>';
+    return;
+  }
+
+  const res = await fetch("../api/student_edit_request.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       line_user_id: lineUserId,
-      full_name: name
+      student_code: newCode,
+      full_name: newName,
+      class_group: newClass
     })
   });
 
   const data = await res.json();
-  alert(data.message);
+  
+  if (data.status === "success") {
+    document.getElementById("editStatus").innerHTML = 
+      '<div class="request-status pending">✓ ส่งคำขอแล้ว (Request ID: ' + data.request_id + ')</div>';
+    editMode = false;
+    toggleEdit();
+  } else {
+    document.getElementById("editStatus").innerHTML = 
+      '<div class="request-status rejected">✗ ' + data.message + '</div>';
+  }
+}
+
+function openRequestsModal() {
+  document.getElementById("requestsModal").style.display = "block";
+  loadRequests("");
+}
+
+function closeRequestsModal() {
+  document.getElementById("requestsModal").style.display = "none";
+}
+
+async function loadRequests(searchId) {
+  const res = await fetch("../api/get_student_requests.php?line_user_id=" + lineUserId + 
+    (searchId ? "&search=" + searchId : ""), {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }
+  });
+
+  const requests = await res.json();
+  const list = document.getElementById("requestsList");
+  
+  if (requests.length === 0) {
+    list.innerHTML = "<p>ไม่มีคำขอแก้ไข</p>";
+    return;
+  }
+
+  let html = "";
+  requests.forEach(req => {
+    const statusClass = req.status === "pending" ? "pending" : 
+                       (req.status === "approved" ? "approved" : "rejected");
+    const statusText = req.status === "pending" ? "⏳ รอดำเนินการ" : 
+                      (req.status === "approved" ? "✅ ยืนยันแล้ว" : "❌ ปฏิเสธ");
+
+    html += `
+      <div class="request-status ${statusClass}">
+        <strong>Request ID: ${req.request_id}</strong><br>
+        วันที่: ${req.created_at}<br>
+        สถานะ: ${statusText}<br>
+        <strong>ข้อมูลเก่า:</strong> ${req.old_student_code} / ${req.old_full_name} / ${req.old_class_group}<br>
+        <strong>ข้อมูลใหม่:</strong> ${req.new_student_code} / ${req.new_full_name} / ${req.new_class_group}
+      </div>
+    `;
+  });
+
+  list.innerHTML = html;
+}
+
+function searchRequests() {
+  const searchId = document.getElementById("searchRequestId").value;
+  loadRequests(searchId);
+}
+
+window.onclick = function(event) {
+  const modal = document.getElementById("requestsModal");
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
 }
 
 init();
@@ -115,3 +279,4 @@ init();
 
 </body>
 </html>
+

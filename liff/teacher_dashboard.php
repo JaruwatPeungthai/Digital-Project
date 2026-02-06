@@ -24,6 +24,8 @@ $teacherId = $_SESSION['teacher_id'];
   <li><a href="create_session.php">📌 สร้าง QR เช็คชื่อ</a></li>
   <li><a href="sessions.php">📋 รายการ QR ที่เคยสร้าง</a></li>
   <li><a href="courses.php">📚 รายวิชา</a></li>
+  <li><a href="advisor_students.php">👨‍🎓 รายชื่อที่ปรึกษา</a></li>
+  <li><a href="advisor_requests.php">📝 คำขอแก้ไขข้อมูลนักศึกษา</a></li>
   <li><a href="teacher_logout.php">🚪 Logout</a></li>
 </ul>
 
