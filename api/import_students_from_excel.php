@@ -128,7 +128,10 @@ try {
   // Match student codes with database
   $matched = []; // Found in system
   $notFound = []; // Not found in system
+  $duplicates = []; // Duplicate codes in system
 
+  // ตรวจสอบรหัสที่ซ้ำกันในระบบ
+  $codeToIds = [];
   foreach ($students as $row => $student) {
     $code = $student['code'];
     $name = $student['name'];
@@ -141,16 +144,30 @@ try {
     if ($stmt) {
       $stmt->bind_param("s", $code);
       $stmt->execute();
-      $result = $stmt->get_result()->fetch_assoc();
+      $result = $stmt->get_result();
       
-      if ($result) {
-        $matched[] = [
-          "user_id" => $result['user_id'],
-          "student_code" => $result['student_code'],
-          "full_name" => $result['full_name'],
-          "class_group" => $result['class_group'],
-          "status" => "found"
-        ];
+      if ($result->num_rows > 0) {
+        // ดึงทุกรหัสที่ซ้ำ
+        if ($result->num_rows > 1) {
+          $allRecords = [];
+          while ($rec = $result->fetch_assoc()) {
+            $allRecords[] = $rec;
+          }
+          $duplicates[] = [
+            "student_code" => $code,
+            "records" => $allRecords,
+            "count" => count($allRecords)
+          ];
+        } else {
+          $resultData = $result->fetch_assoc();
+          $matched[] = [
+            "user_id" => $resultData['user_id'],
+            "student_code" => $resultData['student_code'],
+            "full_name" => $resultData['full_name'],
+            "class_group" => $resultData['class_group'],
+            "status" => "found"
+          ];
+        }
       } else {
         $notFound[] = [
           "student_code" => $code,
@@ -165,9 +182,11 @@ try {
     "success" => true,
     "matched" => $matched,
     "not_found" => $notFound,
+    "duplicates" => $duplicates,
     "total" => count($students),
     "found_count" => count($matched),
-    "not_found_count" => count($notFound)
+    "not_found_count" => count($notFound),
+    "duplicate_count" => count($duplicates)
   ]);
 
 } catch (Exception $e) {

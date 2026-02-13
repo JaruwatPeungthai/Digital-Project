@@ -27,7 +27,7 @@ $teacherId = $_SESSION['teacher_id'];
 <div class="main-wrapper">
   <!-- Page header with title -->
   <div class="header">
-    <h2 id="page-title">👨‍🏫 Dashboard อาจารย์</h2>
+    <h2 id="page-title">👨‍🏫 Home อาจารย์ </h2>
   </div>
 
   <!-- Content area -->

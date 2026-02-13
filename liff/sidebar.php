@@ -11,7 +11,7 @@ if (!isset($currentPage)) {
 $menuItems = [
   [
     'url' => 'teacher_dashboard.php',
-    'title' => '📌 Dashboard',
+    'title' => '📌 Home',
     'icon' => 'dashboard'
   ],
   [

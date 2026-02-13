@@ -69,6 +69,7 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
             <tr>
               <th>ชื่อวิชา</th>
               <th>ดูรายชื่อนักศึกษา</th>
+              <th>ดูเซสชัน QR</th>
               <th>จัดการ</th>
             </tr>
 
@@ -78,6 +79,11 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
               <td>
                 <a href="subject_students.php?id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px;">
                   👥 นักศึกษา
+                </a>
+              </td>
+              <td>
+                <a href="sessions_by_subject.php?subject_name=<?= urlencode($row['subject_name']) ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px;">
+                  📋 เซสชัน
                 </a>
               </td>
               <td>

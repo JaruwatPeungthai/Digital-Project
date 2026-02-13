@@ -145,6 +145,8 @@ unset($_SESSION['error']);
               </div>
             </div>
 
+            <a href="courses.php" class="back-link" style="margin-bottom: 15px; display: inline-block;">⬅ กลับหน้ารายวิชา</a>
+
             <!-- Enrolled students section -->
             <div class="card advisees-card">
               <h3 class="section-header enrolled-section">✅ นักศึกษาในวิชานี้ (<?= count($enrolled_students) ?>)</h3>
@@ -305,18 +307,37 @@ unset($_SESSION['error']);
       }
 
       function showImportPreview(data) {
-        let html = '<h3>พบ ' + data.found_count + ' คน, ไม่พบ ' + data.not_found_count + ' คน</h3>';
+        let html = '<h3>พบ ' + data.found_count + ' คน, ไม่พบ ' + data.not_found_count + ' คน' + (data.duplicate_count ? ', ซ้ำ ' + data.duplicate_count + ' คน' : '') + '</h3>';
+        
+        // แสดงรหัสที่ซ้ำกัน
+        if (data.duplicates && data.duplicates.length > 0) {
+          html += '<h4 style="color: orange;">⚠️ รหัสที่ซ้ำกันในระบบ - เลือกคนที่ต้องการเพิ่ม (' + data.duplicates.length + ')</h4>';
+          data.duplicates.forEach(dup => {
+            html += '<div style="border: 2px solid #ffc107; padding: 12px; margin-bottom: 12px; border-radius: 5px; background-color: #fffbf0;">';
+            html += '<strong>รหัส: ' + dup.student_code + '</strong> (พบ ' + dup.count + ' คน)<br>';
+            dup.records.forEach((record, recIdx) => {
+              html += '<label style="display: block; padding: 8px; margin: 5px 0; background-color: #fff; border: 1px solid #ddd; border-radius: 3px; cursor: pointer;">';
+              html += '<input type="radio" name="dup_' + dup.student_code + '" value="' + record.user_id + '" data-student-code="' + dup.student_code + '" data-user-id="' + record.user_id + '" data-name="' + record.full_name + '" data-class="' + record.class_group + '" onchange="selectFromDuplicate(this)"> ';
+              html += record.full_name + ' (' + record.class_group + ')';
+              html += '</label>';
+            });
+            html += '</div>';
+          });
+        }
+        
         if (data.matched.length > 0) {
           html += '<h4 style="color: green;">✅ นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
-          html += '<table style="width: 100%; border-collapse: collapse;">';
-          html += '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th></tr>';
-          data.matched.forEach(student => {
-            html += '<tr><td style="border: 1px solid #ccc; padding: 8px;">' + student.student_code + '</td>';
+          html += '<table id="matchedTable" style="width: 100%; border-collapse: collapse;">';
+          html += '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th><th style="border: 1px solid #ccc; padding: 8px; width: 40px;">ลบ</th></tr>';
+          data.matched.forEach((student, idx) => {
+            html += '<tr data-index="' + idx + '" data-user-id="' + student.user_id + '" style="background-color: #f1f8f4;"><td style="border: 1px solid #ccc; padding: 8px;">' + student.student_code + '</td>';
             html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.full_name + '</td>';
-            html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.class_group + '</td></tr>';
+            html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.class_group + '</td>';
+            html += '<td style="border: 1px solid #ccc; padding: 8px; text-align: center;"><button class="btn-remove-item" onclick="removeMatchedItem(' + idx + ')" style="background-color: #ff6b6b; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">✕</button></td></tr>';
           });
           html += '</table>';
         }
+        
         if (data.not_found.length > 0) {
           html += '<h4 style="color: red;">❌ รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
           html += '<table style="width: 100%; border-collapse: collapse;">';
@@ -328,6 +349,58 @@ unset($_SESSION['error']);
           html += '</table>';
         }
         document.getElementById('importPreview').innerHTML = html;
+      }
+      
+      function removeMatchedItem(index) {
+        if (importData && importData.matched && importData.matched[index]) {
+          importData.matched.splice(index, 1);
+          // Redraw matched table
+          const table = document.getElementById('matchedTable');
+          if (table) {
+            let html = '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th><th style="border: 1px solid #ccc; padding: 8px; width: 40px;">ลบ</th></tr>';
+            importData.matched.forEach((student, idx) => {
+              html += '<tr data-index="' + idx + '" style="background-color: #f1f8f4;"><td style="border: 1px solid #ccc; padding: 8px;">' + student.student_code + '</td>';
+              html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.full_name + '</td>';
+              html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.class_group + '</td>';
+              html += '<td style="border: 1px solid #ccc; padding: 8px; text-align: center;"><button class="btn-remove-item" onclick="removeMatchedItem(' + idx + ')" style="background-color: #ff6b6b; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">✕</button></td></tr>';
+            });
+            table.innerHTML = html;
+          }
+        }
+      }
+      
+      function selectFromDuplicate(radioBtn) {
+        const studentCode = radioBtn.getAttribute('data-student-code');
+        const userId = radioBtn.getAttribute('data-user-id');
+        const fullName = radioBtn.getAttribute('data-name');
+        const classGroup = radioBtn.getAttribute('data-class');
+        
+        if (importData && importData.matched) {
+          // ลบรายการที่มีรหัสเดียวกันออกจาก matched ถ้ามี
+          importData.matched = importData.matched.filter(s => s.student_code !== studentCode);
+          
+          // เพิ่มรายการที่เลือก
+          importData.matched.push({
+            user_id: userId,
+            student_code: studentCode,
+            full_name: fullName,
+            class_group: classGroup,
+            status: "found"
+          });
+          
+          // Redraw matched table
+          const table = document.getElementById('matchedTable');
+          if (table) {
+            let html = '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th><th style="border: 1px solid #ccc; padding: 8px; width: 40px;">ลบ</th></tr>';
+            importData.matched.forEach((student, idx) => {
+              html += '<tr data-index="' + idx + '" style="background-color: #f1f8f4;"><td style="border: 1px solid #ccc; padding: 8px;">' + student.student_code + '</td>';
+              html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.full_name + '</td>';
+              html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.class_group + '</td>';
+              html += '<td style="border: 1px solid #ccc; padding: 8px; text-align: center;"><button class="btn-remove-item" onclick="removeMatchedItem(' + idx + ')" style="background-color: #ff6b6b; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;">✕</button></td></tr>';
+            });
+            table.innerHTML = html;
+          }
+        }
       }
 
       function closeImportModal() {
@@ -379,139 +452,6 @@ unset($_SESSION['error']);
       </body>
       </html>
     
-    row.style.display = (matchDept && matchSearch) ? '' : 'none';
-  });
-}
-
-let importData = null;
-const subjectIdGlobal = null;
-
-async function importExcel(subjectId) {
-  const fileInput = document.getElementById('excelFile');
-  if (!fileInput.files.length) {
-    alert('กรุณาเลือกไฟล์');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('excel_file', fileInput.files[0]);
-
-  try {
-    const res = await fetch('../api/import_students_from_excel.php', {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (data.error) {
-      document.getElementById('uploadStatus').innerHTML = 
-        '<div class="import-status error">❌ ' + data.error + '</div>';
-      return;
-    }
-
-    importData = {
-      subjectId: subjectId,
-      matched: data.matched,
-      notFound: data.not_found
-    };
-
-    // Show modal with preview
-    showImportPreview(data);
-    document.getElementById('importModal').style.display = 'block';
-    document.getElementById('uploadStatus').innerHTML = '';
-
-  } catch (error) {
-    document.getElementById('uploadStatus').innerHTML = 
-      '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
-  }
-}
-
-function showImportPreview(data) {
-  let html = '<h3>พบ ' + data.found_count + ' คน, ไม่พบ ' + data.not_found_count + ' คน</h3>';
-  
-  if (data.matched.length > 0) {
-    html += '<h4 style="color: green;">✅ นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
-    html += '<table style="width: 100%; border-collapse: collapse;">';
-    html += '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th></tr>';
-    
-    data.matched.forEach(student => {
-      html += '<tr><td style="border: 1px solid #ccc; padding: 8px;">' + student.student_code + '</td>';
-      html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.full_name + '</td>';
-      html += '<td style="border: 1px solid #ccc; padding: 8px;">' + student.class_group + '</td></tr>';
-    });
-    
-    html += '</table>';
-  }
-  
-  if (data.not_found.length > 0) {
-    html += '<h4 style="color: red;">❌ รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
-    html += '<table style="width: 100%; border-collapse: collapse;">';
-    html += '<tr style="background-color: #f8d7da;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ (จากไฟล์)</th></tr>';
-    
-    data.not_found.forEach(item => {
-      html += '<tr><td style="border: 1px solid #ccc; padding: 8px;">' + item.student_code + '</td>';
-      html += '<td style="border: 1px solid #ccc; padding: 8px;">' + (item.excel_name || '-') + '</td></tr>';
-    });
-    
-    html += '</table>';
-  }
-  
-  document.getElementById('importPreview').innerHTML = html;
-}
-
-function closeImportModal() {
-  document.getElementById('importModal').style.display = 'none';
-  importData = null;
-}
-
-async function confirmImport() {
-  if (!importData || !importData.matched.length) {
-    alert('ไม่มีนักศึกษาที่จะนำเข้า');
-    return;
-  }
-
-  const studentIds = importData.matched.map(s => s.user_id);
-
-  try {
-    const res = await fetch('../api/confirm_import_students.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'subject',
-        target_id: importData.subjectId,
-        student_ids: studentIds
-      })
-    });
-
-    const result = await res.json();
-
-    if (result.success) {
-      document.getElementById('uploadStatus').innerHTML = 
-        '<div class="import-status success">✅ นำเข้า ' + result.added + ' คนสำเร็จ (ซ้ำ ' + result.skipped + ' คน)</div>';
-      closeImportModal();
-      document.getElementById('excelFile').value = '';
-      
-      // Reload page after 2 seconds
-      setTimeout(() => {
-        location.reload();
-      }, 2000);
-    } else {
-      document.getElementById('uploadStatus').innerHTML = 
-        '<div class="import-status error">❌ ' + (result.error || 'การนำเข้าล้มเหลว') + '</div>';
-    }
-  } catch (error) {
-    document.getElementById('uploadStatus').innerHTML = 
-      '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
-  }
-}
-
-window.onclick = function(event) {
-  const modal = document.getElementById('importModal');
-  if (event.target === modal) {
-    closeImportModal();
-  }
-}
 </script>
 
 </body>

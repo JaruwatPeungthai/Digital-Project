@@ -1,6 +1,10 @@
 <?php
+// Prevent any output before JSON by setting headers immediately
 header("Content-Type: application/json; charset=utf-8");
+header("Cache-Control: no-cache, no-store, must-revalidate");
 
+// Disable all output buffering to ensure clean response
+ob_clean();
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
@@ -39,16 +43,17 @@ if (!$session) response(["message"=>"QR ไม่ถูกต้อง"]);
 
 $now = (new DateTime('now', new DateTimeZone('Asia/Bangkok')))->format('Y-m-d H:i:s');
 
-// Compare using DateTime objects in the same timezone to avoid mismatches
+// ให้เช็คชื่อได้ตั้งแต่ checkin_start ถึง checkout_deadline (ไม่ใช่ checkin_deadline)
 try {
   $nowDt = new DateTime($now, new DateTimeZone('Asia/Bangkok'));
-  $startDt = new DateTime($session['start_time'], new DateTimeZone('Asia/Bangkok'));
-  $endDt   = new DateTime($session['end_time'], new DateTimeZone('Asia/Bangkok'));
-  if ($nowDt < $startDt || $nowDt > $endDt) {
+  $checkinStartDt = new DateTime($session['checkin_start'] ?: $session['start_time'], new DateTimeZone('Asia/Bangkok'));
+  $checkoutDeadlineDt = new DateTime($session['checkout_deadline'] ?: $session['end_time'], new DateTimeZone('Asia/Bangkok'));
+  
+  if ($nowDt < $checkinStartDt || $nowDt > $checkoutDeadlineDt) {
     response(["message"=>"ไม่อยู่ในช่วงเวลาเช็คชื่อ"]);
   }
 } catch (Exception $e) {
-  // If parsing fails, fallback to previous string comparison
+  // If parsing fails, fall back to start_time and end_time
   if ($now < $session['start_time'] || $now > $session['end_time']) {
     response(["message"=>"ไม่อยู่ในช่วงเวลาเช็คชื่อ"]);
   }
@@ -67,7 +72,7 @@ $student = $stmt->get_result()->fetch_assoc();
 if (!$student) response(["message"=>"ยังไม่ได้ลงทะเบียน"]);
 
 $stmt = $conn->prepare("
-  SELECT id, status FROM attendance_logs
+  SELECT id, status, checkin_time FROM attendance_logs
   WHERE session_id=? AND student_id=?
 ");
 $stmt->bind_param("ii", $session['id'], $student['user_id']);
@@ -77,7 +82,7 @@ if ($existing) {
   $existingStatus = strtolower(trim($existing['status'] ?? ''));
   // allow re-checkin when previous record was explicitly denied/rejected
   if ($existingStatus !== 'denied' && $existingStatus !== 'rejected') {
-    response(["message"=>"คุณเช็คชื่อไปแล้ว"]);
+    response(["message"=>"คุณเช็คชื่อเข้าแล้ว"]);
   }
   // otherwise (denied/rejected) allow insertion of a new check-in record
 }
@@ -107,38 +112,47 @@ if ($dist > $session['radius_meter']) {
 $status = "present";
 $reason = null;
 
+// Determine if check-in is on-time or late based on checkin_deadline
+try {
+  $nowDt = new DateTime($now, new DateTimeZone('Asia/Bangkok'));
+  $deadlineDt = new DateTime($session['checkin_deadline'] ?: $session['start_time'], new DateTimeZone('Asia/Bangkok'));
+  $checkinStatus = ($nowDt > $deadlineDt) ? 'late' : 'on-time';
+} catch (Exception $e) {
+  $checkinStatus = 'on-time';
+}
+
 if ($existing) {
   // existing record present and was denied/rejected - update it to present
   $eid = intval($existing['id']);
   $update = $conn->prepare(
-    "UPDATE attendance_logs SET checkin_time=?, latitude=?, longitude=?, status=?, reason=? WHERE id=?"
+    "UPDATE attendance_logs SET checkin_time=?, latitude=?, longitude=?, status=?, reason=?, checkin_status=? WHERE id=?"
   );
   if (!$update) response(["message"=>"Prepare failed (update)"]);
-  $update->bind_param("sssssi", $now, $lat, $lng, $status, $reason, $eid);
+  $update->bind_param("ssssssi", $now, $lat, $lng, $status, $reason, $checkinStatus, $eid);
   if (!$update->execute()) {
     response(["message"=>"ไม่สามารถอัปเดตข้อมูลได้"]);
   }
-  response(["message"=>"เช็คชื่อสำเร็จ ✅"]);
+  response(["message"=>"เช็คชื่อเข้าสำเร็จ ✅", "checkin_status"=>$checkinStatus, "session_id"=>$session['id']]);
 } else {
   $stmt = $conn->prepare("
     INSERT INTO attendance_logs
-    (session_id, student_id, checkin_time, latitude, longitude, status, reason)
-    VALUES (?,?,?,?,?,?,?)
+    (session_id, student_id, checkin_time, latitude, longitude, status, reason, checkin_status)
+    VALUES (?,?,?,?,?,?,?,?)
   ");
   if (!$stmt) response(["message"=>"Prepare failed (insert)"]);
   $stmt->bind_param(
-    "iisssss",
+    "iissssss",
     $session['id'],
     $student['user_id'],
     $now,
     $lat,
     $lng,
     $status,
-    $reason
+    $reason,
+    $checkinStatus
   );
   if (!$stmt->execute()) {
     response(["message"=>"ไม่สามารถบันทึกข้อมูลได้"]);
   }
-  response(["message"=>"เช็คชื่อสำเร็จ ✅"]);
+  response(["message"=>"เช็คชื่อเข้าสำเร็จ ✅", "checkin_status"=>$checkinStatus, "session_id"=>$session['id']]);
 }
-

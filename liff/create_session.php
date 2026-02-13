@@ -8,35 +8,70 @@ if (!isset($_SESSION['teacher_id'])) {
 }
 
 $qr_url = null;
+$teacher_id = $_SESSION['teacher_id'];
+
+// Fetch subjects for this teacher
+$subjectStmt = $conn->prepare("SELECT subject_id, subject_name FROM subjects WHERE teacher_id = ? ORDER BY subject_name ASC");
+$subjectStmt->bind_param("i", $teacher_id);
+$subjectStmt->execute();
+$subjectResult = $subjectStmt->get_result();
+
+$error_msg = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $token = bin2hex(random_bytes(16));
-  $teacher_id = $_SESSION['teacher_id'];
+  
+  // Convert datetime-local format (YYYY-MM-DDTHH:MM) to MySQL format (YYYY-MM-DD HH:MM:SS)
+  $checkin_start = str_replace('T', ' ', $_POST['checkin_start']) . ':00';
+  $checkin_deadline = str_replace('T', ' ', $_POST['checkin_deadline']) . ':00';
+  $checkout_start = str_replace('T', ' ', $_POST['checkout_start']) . ':00';
+  $checkout_deadline = str_replace('T', ' ', $_POST['checkout_deadline']) . ':00';
 
-  $stmt = $conn->prepare("
-    INSERT INTO attendance_sessions
-    (teacher_id, subject_name, room_name, start_time, end_time,
-     latitude, longitude, radius_meter, qr_token)
-    VALUES (?,?,?,?,?,?,?,?,?)
-  ");
+  // ตรวจสอบเงื่อนไขเวลา: checkin_start < checkin_deadline < checkout_start < checkout_deadline
+  $startTime = strtotime($checkin_start);
+  $deadlineTime = strtotime($checkin_deadline);
+  $checkoutStartTime = strtotime($checkout_start);
+  $checkoutDeadlineTime = strtotime($checkout_deadline);
 
-  $stmt->bind_param(
-    "issssddis",
-    $teacher_id,
-    $_POST['subject'],
-    $_POST['room'],
-    $_POST['start'],
-    $_POST['end'],
-    $_POST['lat'],
-    $_POST['lng'],
-    $_POST['radius'],
-    $token
-  );
+  if ($startTime >= $deadlineTime) {
+    $error_msg = "เวลาหมดเขตเช็คเข้าต้องมาหลังเวลาเริ่มเช็คเข้า";
+  } elseif ($deadlineTime >= $checkoutStartTime) {
+    $error_msg = "เวลาเริ่มเช็คออกต้องมาหลังเวลาหมดเขตเช็คเข้า";
+  } elseif ($checkoutStartTime >= $checkoutDeadlineTime) {
+    $error_msg = "เวลาหมดเขตเช็คออกต้องมาหลังเวลาเริ่มเช็คออก";
+  } else {
+    $stmt = $conn->prepare("
+      INSERT INTO attendance_sessions
+      (teacher_id, subject_name, room_name, start_time, end_time,
+       latitude, longitude, radius_meter, qr_token,
+       checkin_start, checkin_deadline, checkout_start, checkout_deadline)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ");
 
-  $stmt->execute();
+    $stmt->bind_param(
+      "issssddisssss",
+      $teacher_id,
+      $_POST['subject'],
+      $_POST['room'],
+      $checkin_start,
+      $checkout_deadline,
+      $_POST['lat'],
+      $_POST['lng'],
+      $_POST['radius'],
+      $token,
+      $checkin_start,
+      $checkin_deadline,
+      $checkout_start,
+      $checkout_deadline
+    );
 
-  $qr_url = "https://liff.line.me/2008718294-WzVz06TP?token=$token";
+    if (!$stmt->execute()) {
+      $error_msg = "เกิดข้อผิดพลาด: " . $stmt->error;
+    } else {
+      $qr_url = "https://liff.line.me/2008718294-WzVz06TP?token=$token";
+    }
+  }
 }
 ?>
 <!DOCTYPE html>
@@ -75,13 +110,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Container for main content -->
     <div class="container">
 
+      <?php if ($error_msg): ?>
+      <div style="background: #ffebee; border-left: 4px solid #c62828; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+        ❌ <?= htmlspecialchars($error_msg) ?>
+      </div>
+      <?php endif; ?>
+
       <div class="card">
         <h3 class="section-header">สร้าง QR Code ใหม่</h3>
         
         <form method="post" class="form-section">
           <div class="form-group">
             <label class="form-label">วิชา:</label>
-            <input name="subject" class="form-input" required>
+            <select name="subject" class="form-input" required>
+              <option value="">-- เลือกรายวิชา --</option>
+              <?php while ($subject = $subjectResult->fetch_assoc()): ?>
+                <option value="<?= htmlspecialchars($subject['subject_name']) ?>">
+                  <?= htmlspecialchars($subject['subject_name']) ?>
+                </option>
+              <?php endwhile; ?>
+            </select>
           </div>
 
           <div class="form-group">
@@ -89,14 +137,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input name="room" class="form-input" required>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">เวลาเริ่ม:</label>
-            <input type="datetime-local" name="start" class="form-input" required>
-          </div>
+          <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 15px; margin-bottom: 15px;">
+            <h4 style="color: #1976d2; margin-bottom: 15px;">⏰ กำหนดเวลาเช็คเข้า/ออก</h4>
+            
+            <div class="form-group">
+              <label class="form-label">เวลาเปิดช่องเช็คชื่อเข้า:</label>
+              <input type="datetime-local" name="checkin_start" class="form-input" required>
+              <small style="color: #999;">เมื่อไหร่ให้นักศึกษาสามารถเช็คชื่อเข้นได้</small>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label">เวลาหมด:</label>
-            <input type="datetime-local" name="end" class="form-input" required>
+            <div class="form-group">
+              <label class="form-label">เวลาปิดช่องเช็คชื่อเข้า (ตรงเวลา/สาย):</label>
+              <input type="datetime-local" name="checkin_deadline" class="form-input" required>
+              <small style="color: #999;">หลังเวลานี้ = สาย</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">เวลาเปิดช่องเช็คชื่อออก:</label>
+              <input type="datetime-local" name="checkout_start" class="form-input" required>
+              <small style="color: #999;">เมื่อไหร่ให้นักศึกษาสามารถเช็คชื่อออกได้</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">เวลาปิดช่องเช็คชื่อออก:</label>
+              <input type="datetime-local" name="checkout_deadline" class="form-input" required>
+              <small style="color: #999;">หลังเวลานี้ = ไม่ได้เช็คชื่อออก</small>
+            </div>
           </div>
 
           <div class="form-group">
@@ -121,8 +187,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <div class="form-actions">
             <button type="button" class="btn" onclick="useMyLocation()">📍 ใช้ตำแหน่งปัจจุบัน</button>
-            <button type="submit" class="btn btn-primary">✅ สร้าง QR</button>
+            <button type="submit" id="submitBtn" class="btn btn-primary">✅ สร้าง QR</button>
           </div>
+          
+          <!-- ข้อความเตือน -->
+          <div id="submitWarning" style="display:none; background:#fff3e0; border-left:4px solid #ff9800; color:#e65100; padding:12px 15px; border-radius:4px; margin-top:15px; font-size:14px;"></div>
         </form>
       </div>
 
@@ -175,6 +244,84 @@ function useMyLocation() {
     map.fire('click', { latlng: L.latLng(lat, lng) });
   });
 }
+
+// Validation สำหรับเวลา
+function validateTimes() {
+  const checkinStartInput = document.querySelector('input[name="checkin_start"]');
+  const checkinDeadlineInput = document.querySelector('input[name="checkin_deadline"]');
+  const checkoutStartInput = document.querySelector('input[name="checkout_start"]');
+  const checkoutDeadlineInput = document.querySelector('input[name="checkout_deadline"]');
+
+  const checkinStart = new Date(checkinStartInput.value);
+  const checkinDeadline = new Date(checkinDeadlineInput.value);
+  const checkoutStart = new Date(checkoutStartInput.value);
+  const checkoutDeadline = new Date(checkoutDeadlineInput.value);
+
+  let errorMsg = '';
+
+  if (checkinStart >= checkinDeadline) {
+    errorMsg = '⏰ เวลาหมดเขตเช็คเข้าต้องมาหลังเวลาเริ่มเช็คเข้า';
+  } else if (checkinDeadline >= checkoutStart) {
+    errorMsg = '⏰ เวลาเริ่มเช็คออกต้องมาหลังเวลาหมดเขตเช็คเข้า';
+  } else if (checkoutStart >= checkoutDeadline) {
+    errorMsg = '⏰ เวลาหมดเขตเช็คออกต้องมาหลังเวลาเริ่มเช็คออก';
+  }
+
+  const errorContainer = document.getElementById('timeError');
+  if (!errorContainer) {
+    const form = document.querySelector('form');
+    const div = document.createElement('div');
+    div.id = 'timeError';
+    div.style.cssText = 'display:none; background:#ffebee; border-left:4px solid #c62828; color:#c62828; padding:15px; border-radius:4px; margin-bottom:20px;';
+    form.insertBefore(div, form.querySelector('.form-group'));
+  }
+
+  const errorDiv = document.getElementById('timeError');
+  const submitBtn = document.getElementById('submitBtn');
+  const submitWarning = document.getElementById('submitWarning');
+
+  if (errorMsg) {
+    errorDiv.style.display = 'block';
+    errorDiv.innerHTML = '❌ ' + errorMsg;
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.5';
+    submitBtn.style.cursor = 'not-allowed';
+    submitWarning.style.display = 'block';
+    submitWarning.innerHTML = '⚠️ ' + errorMsg;
+  } else {
+    errorDiv.style.display = 'none';
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = '1';
+    submitBtn.style.cursor = 'pointer';
+    submitWarning.style.display = 'none';
+  }
+
+  return !errorMsg;
+}
+
+// Validate on input change
+document.querySelectorAll('input[name="checkin_start"], input[name="checkin_deadline"], input[name="checkout_start"], input[name="checkout_deadline"]').forEach(input => {
+  input.addEventListener('change', validateTimes);
+  input.addEventListener('input', validateTimes);
+});
+
+// Initial validation on page load
+document.addEventListener('DOMContentLoaded', validateTimes);
+
+// Validate on form submit
+document.querySelector('form').addEventListener('submit', function(e) {
+  if (!validateTimes()) {
+    e.preventDefault();
+    return false;
+  }
+  
+  // ตรวจสอบว่ามีการเลือดตำแหน่งแล้ว
+  if (!document.getElementById('lat').value || !document.getElementById('lng').value) {
+    alert('กรุณาเลือกตำแหน่งห้องเรียนบนแผนที่');
+    e.preventDefault();
+    return false;
+  }
+});
 </script>
 
 </body>
