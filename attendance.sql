@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 06, 2026 at 10:05 AM
+-- Generation Time: Feb 17, 2026 at 12:18 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -24,28 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `student_edit_requests`
---
-
-CREATE TABLE `student_edit_requests` (
-  `request_id` varchar(20) NOT NULL,
-  `student_id` int(11) NOT NULL,
-  `requested_by` varchar(50) DEFAULT NULL COMMENT 'advisor_id or faculty',
-  `old_student_code` varchar(20) DEFAULT NULL,
-  `old_full_name` varchar(100) DEFAULT NULL,
-  `old_class_group` varchar(50) DEFAULT NULL,
-  `new_student_code` varchar(20) DEFAULT NULL,
-  `new_full_name` varchar(100) DEFAULT NULL,
-  `new_class_group` varchar(50) DEFAULT NULL,
-  `status` enum('pending','approved','rejected') DEFAULT 'pending',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `reviewed_at` datetime DEFAULT NULL,
-  `reviewed_by` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `advisor_students`
 --
 
@@ -53,13 +31,6 @@ CREATE TABLE `advisor_students` (
   `advisor_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `advisor_students`
---
-
-INSERT INTO `advisor_students` (`advisor_id`, `student_id`) VALUES
-(1, 7);
 
 -- --------------------------------------------------------
 
@@ -72,23 +43,14 @@ CREATE TABLE `attendance_logs` (
   `session_id` int(11) DEFAULT NULL,
   `student_id` int(11) DEFAULT NULL,
   `checkin_time` datetime DEFAULT NULL,
+  `checkout_time` datetime DEFAULT NULL,
+  `checkin_status` enum('on-time','late') DEFAULT 'on-time',
+  `checkout_status` enum('checked-out','not-checked-out') DEFAULT NULL,
   `latitude` double DEFAULT NULL,
   `longitude` double DEFAULT NULL,
   `status` enum('present','denied') DEFAULT 'present',
   `reason` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `attendance_logs`
---
-
-INSERT INTO `attendance_logs` (`id`, `session_id`, `student_id`, `checkin_time`, `latitude`, `longitude`, `status`, `reason`) VALUES
-(10, 32, 5, NULL, NULL, NULL, 'denied', ''),
-(11, 34, 6, '2026-01-13 11:53:44', 13.9173745, 99.8425957, 'present', NULL),
-(12, 32, 6, NULL, NULL, NULL, 'denied', ''),
-(13, 35, 5, '2026-01-15 11:13:42', 13.9056523, 100.5294726, 'present', NULL),
-(14, 38, 5, '2026-01-21 12:15:03', 13.9048029, 100.5293283, 'present', NULL),
-(15, 39, 7, '2026-02-04 19:42:31', 13.904296744787, 100.52786544794, 'present', NULL);
 
 -- --------------------------------------------------------
 
@@ -103,6 +65,10 @@ CREATE TABLE `attendance_sessions` (
   `room_name` varchar(50) DEFAULT NULL,
   `start_time` datetime DEFAULT NULL,
   `end_time` datetime DEFAULT NULL,
+  `checkin_start` datetime DEFAULT NULL COMMENT 'When check-in window opens (defaults to 15 min before start_time)',
+  `checkin_deadline` datetime DEFAULT NULL COMMENT 'After this time = late (defaults to start_time)',
+  `checkout_start` datetime DEFAULT NULL COMMENT 'When check-out window opens (defaults to end_time)',
+  `checkout_deadline` datetime DEFAULT NULL COMMENT 'After this time = not checked-out (defaults to end_time + 30 min)',
   `latitude` double DEFAULT NULL,
   `longitude` double DEFAULT NULL,
   `radius_meter` int(11) DEFAULT NULL,
@@ -111,11 +77,6 @@ CREATE TABLE `attendance_sessions` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `attendance_sessions`
---
-
 
 -- --------------------------------------------------------
 
@@ -150,11 +111,27 @@ CREATE TABLE `students` (
   `advisor_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
 --
--- Dumping data for table `students`
+-- Table structure for table `student_edit_requests`
 --
 
-
+CREATE TABLE `student_edit_requests` (
+  `request_id` varchar(20) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `requested_by` varchar(50) DEFAULT NULL COMMENT 'advisor_id or faculty',
+  `old_student_code` varchar(20) DEFAULT NULL,
+  `old_full_name` varchar(100) DEFAULT NULL,
+  `old_class_group` varchar(50) DEFAULT NULL,
+  `new_student_code` varchar(20) DEFAULT NULL,
+  `new_full_name` varchar(100) DEFAULT NULL,
+  `new_class_group` varchar(50) DEFAULT NULL,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `reviewed_at` datetime DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -168,15 +145,6 @@ CREATE TABLE `subjects` (
   `subject_name` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `subjects`
---
-
-INSERT INTO `subjects` (`subject_id`, `teacher_id`, `subject_name`) VALUES
-(4, 1, 'การตลาด'),
-(5, 1, 'Cyber'),
-(6, 1, 'Digital projects');
-
 -- --------------------------------------------------------
 
 --
@@ -187,16 +155,6 @@ CREATE TABLE `subject_students` (
   `subject_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `subject_students`
---
-
-INSERT INTO `subject_students` (`subject_id`, `student_id`) VALUES
-(0, 5),
-(4, 6),
-(5, 5),
-(5, 6);
 
 -- --------------------------------------------------------
 
@@ -215,15 +173,6 @@ CREATE TABLE `teachers` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `teachers`
---
-
-INSERT INTO `teachers` (`id`, `title`, `full_name`, `department`, `email`, `password_hash`, `status`, `created_at`) VALUES
-(1, 'อาจารย์', 'จารุวัฒน์ พึ่งไทย', 'ธุรกิจ', 'armrockdc@gmail.com', '$2y$10$FqSBWdAgba31SQ1HCLZEce4MaiLnEQdzIkOVy.eC/9KRG.iK4yDbq', 'approved', '2026-01-07 12:52:22'),
-(2, 'อาจารย์', 'JARUWAT PEUNGTHAI', 'ออกแบบอนิเมชั่น', 'armeye76@gmail.com', '$2y$10$libc97osYsdIvwz.L3ZTVug3iJefP67UH7xUVOGLUPtjVLI8qm61C', 'approved', '2026-01-25 09:50:26'),
-(3, 'ผศ.ดร.', 'อาจารย์ ทดสอบ', 'ธุรกิจ', 'testtest@gmail.com', '$2y$10$MGNBCgFUnPPWprLzN.gVm.vdCPl2vgX6owS4PoqGD1pw1vp8O5Ude', 'approved', '2026-02-03 10:18:14');
-
 -- --------------------------------------------------------
 
 --
@@ -238,32 +187,25 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `users`
---
-
---
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `student_edit_requests`
---
-ALTER TABLE `student_edit_requests`
-  ADD PRIMARY KEY (`request_id`);
 
 --
 -- Indexes for table `attendance_logs`
 --
 ALTER TABLE `attendance_logs`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `session_id` (`session_id`,`student_id`);
+  ADD UNIQUE KEY `session_id` (`session_id`,`student_id`),
+  ADD KEY `idx_checkout_time` (`checkout_time`);
 
 --
 -- Indexes for table `attendance_sessions`
 --
 ALTER TABLE `attendance_sessions`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_session_deleted` (`deleted_at`);
+  ADD KEY `idx_session_deleted` (`deleted_at`),
+  ADD KEY `idx_checkin_times` (`checkin_start`,`checkin_deadline`),
+  ADD KEY `idx_checkout_times` (`checkout_start`,`checkout_deadline`);
 
 --
 -- Indexes for table `faculty_admin`
@@ -276,6 +218,12 @@ ALTER TABLE `faculty_admin`
 --
 ALTER TABLE `students`
   ADD PRIMARY KEY (`user_id`);
+
+--
+-- Indexes for table `student_edit_requests`
+--
+ALTER TABLE `student_edit_requests`
+  ADD PRIMARY KEY (`request_id`);
 
 --
 -- Indexes for table `subjects`
@@ -311,31 +259,31 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `attendance_logs`
 --
 ALTER TABLE `attendance_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `attendance_sessions`
 --
 ALTER TABLE `attendance_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `subject_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `subject_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `teachers`
 --
 ALTER TABLE `teachers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables

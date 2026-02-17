@@ -17,9 +17,7 @@
 
 <style>
 .sidebar-header h2 { font-size: 14px; }
-table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-th { background-color: #f2f2f2; }
+
 .profile-section { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
 .profile-row { margin: 10px 0; }
 .profile-row label { font-weight: bold; display: inline-block; min-width: 150px; }
@@ -33,6 +31,63 @@ input, select { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border
 .pending { background-color: #fff3cd; color: #856404; }
 .approved { background-color: #d4edda; color: #155724; }
 .rejected { background-color: #f8d7da; color: #721c24; }
+
+/* Table styles from session_attendance.css */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.attendance-table th {
+  background: #f2f2f2;
+  border: 1px solid #e6eef6;
+  padding: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.attendance-table td {
+  border: 1px solid #e6eef6;
+  padding: 10px;
+  vertical-align: middle;
+}
+
+.attendance-table .table-row:hover {
+  background: #f9fbfd;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.badge-late {
+  background-color: #ffcdd2;
+  color: #c62828;
+}
+
+.badge-on-time {
+  background-color: #c8e6c9;
+  color: #2e7d32;
+}
+
+.badge-checked-out {
+  background-color: #bbdefb;
+  color: #1565c0;
+}
+
+.badge-not-checked-out {
+  background-color: #ffccbc;
+  color: #d84315;
+}
 </style>
 </head>
 <body>
@@ -108,18 +163,21 @@ input, select { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border
       <div id="attendanceContent" class="card" style="display: none;">
         <h3 class="section-header">📋 ประวัติการเข้าเรียน</h3>
         
-        <div style="overflow-x: auto;">
-          <table>
+        <div class="table-wrapper">
+          <table class="attendance-table">
             <thead>
-              <tr>
+              <tr class="table-header">
                 <th>วิชา</th>
                 <th>รายละเอียด session</th>
-                <th>เวลา</th>
-                <th>สถานะ</th>
+                <th>วันที่ session</th>
+                <th>เวลาเช็คชื่อเข้า</th>
+                <th>สถานะเข้า</th>
+                <th>เวลาเช็คชื่อออก</th>
+                <th>สถานะออก</th>
               </tr>
             </thead>
             <tbody id="logs">
-              <tr><td colspan="4">กำลังโหลด...</td></tr>
+              <tr><td colspan="7">กำลังโหลด...</td></tr>
             </tbody>
           </table>
         </div>
@@ -299,14 +357,14 @@ async function loadHistory() {
 
     if (!res.ok) {
       console.error("HTTP error:", res.status);
-      document.getElementById("logs").innerHTML = "<tr><td colspan='4'>เกิดข้อผิดพลาด</td></tr>";
+      document.getElementById("logs").innerHTML = "<tr><td colspan='7'>เกิดข้อผิดพลาด</td></tr>";
       return;
     }
 
     const text = await res.text();
     if (!text) {
       console.error("Empty response from attendance_history.php");
-      document.getElementById("logs").innerHTML = "<tr><td colspan='4'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+      document.getElementById("logs").innerHTML = "<tr><td colspan='7'>ไม่มีประวัติการเข้าเรียน</td></tr>";
       return;
     }
 
@@ -315,23 +373,70 @@ async function loadHistory() {
     tbody.innerHTML = "";
 
     if (!Array.isArray(rows) || rows.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='4'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='7'>ไม่มีประวัติการเข้าเรียน</td></tr>";
       return;
     }
 
     rows.forEach(r => {
       const tr = document.createElement("tr");
+      tr.className = "table-row";
+      
+      // Helper function to format time (HH:mm only, no date)
+      const formatTime = (datetime) => {
+        if (!datetime) return null;
+        const date = new Date(datetime);
+        return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+      };
+      
+      // Helper function to format session date
+      const formatSessionDate = (datetime) => {
+        if (!datetime) return '';
+        const date = new Date(datetime);
+        const dayInThai = { 'Sun': 'อาทิตย์', 'Mon': 'จันทร์', 'Tue': 'อังคาร', 'Wed': 'พุธ', 'Thu': 'พฤหัสบดี', 'Fri': 'ศุกร์', 'Sat': 'เสาร์' };
+        const options = { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Bangkok' };
+        const parts = date.toLocaleDateString('th-TH', options).split('/');
+        const dayName = new Date(datetime).toLocaleDateString('en-US', { weekday: 'short' });
+        const thaiDay = dayInThai[dayName] || dayName;
+        return `${parts[0]}/${parts[1]}/${parts[2]} (${thaiDay})`;
+      };
+      
+      // Helper function to create status badge HTML for check-in
+      const getCheckinStatusBadge = (checkinTime, checkinStatus) => {
+        if (!checkinStatus) {
+          return '<span class="status-badge badge-not-checked-out">-</span>';
+        }
+        const badgeClass = checkinStatus === 'late' ? 'badge-late' : 'badge-on-time';
+        const statusText = checkinStatus === 'late' ? '⏱️ สาย' : '✅ ตรงเวลา';
+        return `<span class="status-badge ${badgeClass}">${statusText}</span>`;
+      };
+      
+      const getCheckoutStatusBadge = (checkinTime, checkoutStatus) => {
+        if (!checkoutStatus) {
+          return '<span class="status-badge badge-not-checked-out">-</span>';
+        }
+        const badgeClass = checkoutStatus === 'checked-out' ? 'badge-checked-out' : 'badge-not-checked-out';
+        const statusText = checkoutStatus === 'checked-out' ? '✅ เช็คออก' : '❌ ไม่เช็คออก';
+        return `<span class="status-badge ${badgeClass}">${statusText}</span>`;
+      };
+      
+      const checkinTimeFormatted = formatTime(r.checkin_time);
+      const checkoutTimeFormatted = formatTime(r.checkout_time);
+      const sessionDateFormatted = formatSessionDate(r.session_date);
+      
       tr.innerHTML = `
         <td>${r.subject_name}</td>
         <td>${r.room_name}</td>
-        <td>${r.checkin_time}</td>
-        <td>${r.status === "present" ? "✅ เช็คชื่อแล้ว" : "❌ ขาด"}</td>
+        <td>${sessionDateFormatted}</td>
+        <td>${r.checkin_time ? checkinTimeFormatted : (r.checkin_status ? '(เช็ค Manual)' : '-')}</td>
+        <td>${getCheckinStatusBadge(r.checkin_time, r.checkin_status)}</td>
+        <td>${checkoutTimeFormatted ? checkoutTimeFormatted : (r.checkout_status ? '(เช็ค Manual)' : (r.checkin_time ? '<span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>' : '-'))}</td>
+        <td>${getCheckoutStatusBadge(r.checkin_time, r.checkout_status)}</td>
       `;
       tbody.appendChild(tr);
     });
   } catch (error) {
     console.error("loadHistory error:", error);
-    document.getElementById("logs").innerHTML = "<tr><td colspan='4'>เกิดข้อผิดพลาด</td></tr>";
+    document.getElementById("logs").innerHTML = "<tr><td colspan='7'>เกิดข้อผิดพลาด</td></tr>";
   }
 }
 

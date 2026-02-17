@@ -102,8 +102,10 @@ foreach ($students as $code => $info) {
   $userId = $info['user_id'];
   if (empty($userId)) continue;
 
+  // Explicitly set checkin_status and checkout_status to NULL to avoid
+  // applying the column default ('on-time') for absent records.
   $ins = $conn->prepare(
-    "INSERT INTO attendance_logs (session_id, student_id, status) VALUES (?, ?, 'absent')"
+    "INSERT INTO attendance_logs (session_id, student_id, status, checkin_status, checkout_status) VALUES (?, ?, 'absent', NULL, NULL)"
   );
   if ($ins) {
     $ins->bind_param("ii", $sessionId, $userId);

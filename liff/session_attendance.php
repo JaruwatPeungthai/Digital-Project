@@ -64,17 +64,28 @@ $stmt = $conn->prepare("
     JOIN students st 
         ON al.student_id = st.user_id
     WHERE al.session_id = ?
-    ORDER BY st.student_code
+    ORDER BY al.checkin_time DESC, st.student_code
 ");
 $stmt->bind_param("i", $sessionId);
 $stmt->execute();
 $result = $stmt->get_result();
 
 // Get session info for reference
-$sessionStmt = $conn->prepare("SELECT subject_name, start_time, end_time FROM attendance_sessions WHERE id = ?");
+$sessionStmt = $conn->prepare("SELECT subject_name, start_time, end_time, checkin_start FROM attendance_sessions WHERE id = ?");
 $sessionStmt->bind_param("i", $sessionId);
 $sessionStmt->execute();
 $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
+
+// Get session date for grouping (use checkin_start or start_time)
+$sessionDate = $sessionInfo['checkin_start'] ?: $sessionInfo['start_time'];
+$sessionDateFormatted = date('Y-m-d', strtotime($sessionDate));
+
+// Group all data under the same session date
+$groupedByDate = [];
+$groupedByDate[$sessionDateFormatted] = [];
+while ($row = $result->fetch_assoc()) {
+    $groupedByDate[$sessionDateFormatted][] = $row;
+}
 ?>
 
 <!DOCTYPE html>
@@ -86,6 +97,22 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/session_attendance.css">
     <style>
+        .date-section {
+            margin-bottom: 40px;
+        }
+        
+        .date-header {
+            background: #667eea;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -163,6 +190,13 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
             font-size: 11px;
             font-weight: bold;
         }
+
+        /* Wider name column */
+        .attendance-table .col-name { width: 40%; }
+        /* Expand page container for wider table on this view */
+        .container { max-width: 1200px; }
+        /* Allow table cells to size naturally when wider space available */
+        .attendance-table { table-layout: auto; }
         
         .badge-late {
             background-color: #ffcdd2;
@@ -202,103 +236,126 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
 
     <div class="content-area">
         <div class="container">
+            <div class="footer-section" style="margin-bottom: 20px;">
+                <a href="sessions_by_subject.php?subject_name=<?= urlencode($sessionInfo['subject_name']) ?>" class="btn btn-cancel">⬅ กลับ</a>
+            </div>
             <div class="card">
+                <?php if (!empty($groupedByDate) && count($groupedByDate) > 0): ?>
+                    <?php foreach ($groupedByDate as $date => $rows): 
+                        // Format date for display
+                        if ($date === 'ไม่มีวันที่') {
+                            $formattedDate = 'ไม่มีวันที่';
+                        } else {
+                            $dateObj = new DateTime($date, new DateTimeZone('Asia/Bangkok'));
+                            $dayInThai = ['Sun' => 'อาทิตย์', 'Mon' => 'จันทร์', 'Tue' => 'อังคาร', 'Wed' => 'พุธ', 'Thu' => 'พฤหัสบดี', 'Fri' => 'ศุกร์', 'Sat' => 'เสาร์'];
+                            $dayName = $dayInThai[$dateObj->format('D')] ?? $dateObj->format('D');
+                            $formattedDate = $dateObj->format('d/m/Y') . ' (' . $dayName . ')';
+                        }
+                    ?>
+                    <div class="date-section">
+                        <div class="date-header">
+                            <span>📅 <?= $formattedDate ?></span>
+                            <span style="font-size: 14px; font-weight: normal;">นักศึกษา <?= count($rows) ?> คน</span>
+                        </div>
 
-                <div class="table-wrapper">
-                    <table class="table attendance-table">
-                        <thead>
-                            <tr class="table-header">
-                                <th>รหัสนักศึกษา</th>
-                                <th>ชื่อ - นามสกุล</th>
-                                <th>สาขา</th>
-                                <th>เวลาเช็คชื่อเข้า</th>
-                                <th>สถานะเข้า</th>
-                                <th>เวลาเช็คชื่อออก</th>
-                                <th>สถานะออก</th>
-                                <th>จัดการแบบ Manual</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            $hasData = false;
-                            while ($row = $result->fetch_assoc()): 
-                                $hasData = true;
-                            ?>
-                            <tr class="table-row">
-                                <td><?= htmlspecialchars($row['student_code']) ?></td>
-                                <td><?= htmlspecialchars($row['full_name']) ?></td>
-                                <td><?= htmlspecialchars($row['class_group']) ?></td>
-                                
-                                <!-- Check-in Time -->
-                                <td>
-                                    <?= $row['checkin_time'] ? htmlspecialchars($row['checkin_time']) : '❌ ไม่ได้เช็คชื่อ' ?>
-                                </td>
-                                
-                                <!-- Check-in Status -->
-                                <td>
-                                    <?php if ($row['checkin_time']): ?>
-                                        <span class="status-badge <?= $row['checkin_status'] === 'late' ? 'badge-late' : 'badge-on-time' ?>">
-                                            <?= $row['checkin_status'] === 'late' ? '⏱️ สาย' : '✅ ตรงเวลา' ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="status-badge badge-not-checked-out">ไม่มีข้อมูล</span>
-                                    <?php endif; ?>
-                                </td>
-                                
-                                <!-- Check-out Time -->
-                                <td>
-                                    <?php if ($row['checkout_time']): ?>
-                                        <?= htmlspecialchars($row['checkout_time']) ?>
-                                    <?php elseif ($row['checkin_time']): ?>
-                                        <span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>
-                                    <?php else: ?>
-                                        -
-                                    <?php endif; ?>
-                                </td>
-                                
-                                <!-- Check-out Status -->
-                                <td>
-                                    <?php if ($row['checkin_time']): ?>
-                                        <span class="status-badge <?= $row['checkout_status'] === 'checked-out' ? 'badge-checked-out' : 'badge-not-checked-out' ?>">
-                                            <?= $row['checkout_status'] === 'checked-out' ? '✅ เช็คออก' : '❌ ไม่เช็คออก' ?>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="status-badge badge-not-checked-out">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                
-                                <!-- Manual Actions -->
-                                <td style="text-align:center;">
-                                    <div style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
-                                        <?php if ($row['checkin_time']): ?>
-                                            <button class="btn btn-small" onclick="openCheckinModal(<?= $row['log_id'] ?>, '<?= $row['checkin_status'] ?>')">
-                                                ✏️ เข้า
-                                            </button>
-                                            <button class="btn btn-small" onclick="openCheckoutModal(<?= $row['log_id'] ?>, '<?= $row['checkout_status'] ?>')">
-                                                ✏️ ออก
-                                            </button>
-                                        <?php else: ?>
-                                            <span style="color: #999; font-size: 12px;">-</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                            
-                            <?php if (!$hasData): ?>
-                            <tr>
-                                <td colspan="8" class="empty-message">
-                                    ไม่มีข้อมูลการเช็คชื่อ
-                                </td>
-                            </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
+                        <div class="table-wrapper">
+                            <table class="table attendance-table">
+                                <thead>
+                                    <tr class="table-header">
+                                        <th>รหัสนักศึกษา</th>
+                                        <th class="col-name">ชื่อ - นามสกุล</th>
+                                        <th>สาขา</th>
+                                        <th>เวลาเช็คชื่อเข้า</th>
+                                        <th>สถานะเข้า</th>
+                                        <th>เวลาเช็คชื่อออก</th>
+                                        <th>สถานะออก</th>
+                                        <th>จัดการแบบ Manual</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($rows as $row): ?>
+                                    <tr class="table-row">
+                                        <td><?= htmlspecialchars($row['student_code']) ?></td>
+                                        <td class="col-name"><?= htmlspecialchars($row['full_name']) ?></td>
+                                        <td><?= htmlspecialchars($row['class_group']) ?></td>
 
-                <div class="footer-section">
-                    <a href="sessions_by_subject.php?subject_name=<?= urlencode($sessionInfo['subject_name']) ?>" class="btn btn-cancel">⬅ กลับ</a>
-                </div>
+                                        <!-- Check-in Time (HH:mm only) -->
+                                        <td>
+                                            <?php
+                                            if (!empty($row['checkin_time'])) {
+                                                echo htmlspecialchars(date('H:i', strtotime($row['checkin_time'])));
+                                            } elseif (!empty($row['checkin_status'])) {
+                                                echo '(เช็ค Manual)';
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </td>
+
+                                        <!-- Check-in Status -->
+                                        <td>
+                                            <?php
+                                            if (!empty($row['checkin_time']) || !empty($row['checkin_status'])) {
+                                                if ($row['checkin_status'] === 'late') {
+                                                    echo '<span class="status-badge badge-late">⏱️ สาย</span>';
+                                                } else {
+                                                    echo '<span class="status-badge badge-on-time">✅ ตรงเวลา</span>';
+                                                }
+                                            } else {
+                                                echo '<span class="status-badge badge-not-checked-out">-</span>';
+                                            }
+                                            ?>
+                                        </td>
+
+                                        <!-- Check-out Time (HH:mm only) -->
+                                        <td>
+                                            <?php
+                                            if (!empty($row['checkout_time'])) {
+                                                echo htmlspecialchars(date('H:i', strtotime($row['checkout_time'])));
+                                            } elseif (!empty($row['checkout_status'])) {
+                                                echo '(เช็ค Manual)';
+                                            } elseif (!empty($row['checkin_time'])) {
+                                                echo '<span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>';
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </td>
+
+                                        <!-- Check-out Status -->
+                                        <td>
+                                            <?php
+                                            if (!empty($row['checkout_time']) || !empty($row['checkout_status'])) {
+                                                if ($row['checkout_status'] === 'checked-out') {
+                                                    echo '<span class="status-badge badge-checked-out">✅ เช็คออก</span>';
+                                                } else {
+                                                    echo '<span class="status-badge badge-not-checked-out">❌ ไม่เช็คออก</span>';
+                                                }
+                                            } else {
+                                                echo '<span class="status-badge badge-not-checked-out">-</span>';
+                                            }
+                                            ?>
+                                        </td>
+
+                                        <!-- Manual Actions -->
+                                        <td style="text-align:center;">
+                                            <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
+                                                <button class="btn btn-small" onclick="openCheckinModal(<?= $row['log_id'] ?>, '<?= $row['checkin_status'] ?>')">✏️ เข้า</button>
+                                                <button class="btn btn-small" onclick="openCheckoutModal(<?= $row['log_id'] ?>, '<?= $row['checkout_status'] ?>')">✏️ ออก</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div style="text-align: center; color: #666; padding: 20px;" class="empty-message">
+                        ไม่มีข้อมูลการเช็คชื่อ
+                    </div>
+                <?php endif; ?>
 
             </div>
         </div>
@@ -322,6 +379,11 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
                     ⏱️ สาย
                 </button>
             </div>
+            <div style="margin-top: 10px;">
+                <button type="button" class="btn-option" style="background-color: #f44336; width: 100%;" onclick="clearCheckinRecord()">
+                    ❌ ขาด (ลบข้อมูล)
+                </button>
+            </div>
             <button type="button" class="btn-cancel" onclick="closeCheckinModal()">ยกเลิก</button>
         </form>
     </div>
@@ -342,6 +404,11 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
                 </button>
                 <button type="button" class="btn-option not-checked-out" onclick="submitCheckoutForm('not-checked-out')">
                     ❌ ไม่เช็คออก
+                </button>
+            </div>
+            <div style="margin-top: 10px;">
+                <button type="button" class="btn-option" style="background-color: #f44336; width: 100%;" onclick="clearCheckoutRecord()">
+                    ❌ ขาด (ลบข้อมูล)
                 </button>
             </div>
             <button type="button" class="btn-cancel" onclick="closeCheckoutModal()">ยกเลิก</button>
@@ -370,6 +437,18 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
         document.body.appendChild(form);
         form.submit();
     }
+
+    function clearCheckinRecord() {
+        const logId = document.getElementById("checkinLogId").value;
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.innerHTML = `
+            <input type="hidden" name="log_id" value="${logId}">
+            <input type="hidden" name="clear_checkin" value="1">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
     
     function openCheckoutModal(logId, currentStatus) {
         document.getElementById("checkoutLogId").value = logId;
@@ -387,6 +466,18 @@ $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
         form.innerHTML = `
             <input type="hidden" name="log_id" value="${logId}">
             <input type="hidden" name="new_checkout_status" value="${status}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function clearCheckoutRecord() {
+        const logId = document.getElementById("checkoutLogId").value;
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.innerHTML = `
+            <input type="hidden" name="log_id" value="${logId}">
+            <input type="hidden" name="clear_checkout" value="1">
         `;
         document.body.appendChild(form);
         form.submit();

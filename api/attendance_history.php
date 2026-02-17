@@ -23,7 +23,11 @@ if (empty($lineId)) {
 
 $stmt = $conn->prepare("
   SELECT 
+    a.id,
     a.checkin_time,
+    a.checkin_status,
+    a.checkout_time,
+    a.checkout_status,
     a.status,
     a.reason,
     s.subject_name,

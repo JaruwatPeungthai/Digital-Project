@@ -2,12 +2,23 @@
 session_start();
 include("../config.php");
 
+header("Content-Type: application/json; charset=utf-8");
+
 if (!isset($_SESSION['teacher_id'])) {
-  exit("no permission");
+  echo json_encode(["status" => "error", "error" => "no permission"]);
+  exit;
 }
 
 $teacherId = $_SESSION['teacher_id'];
-$sessionId = intval($_POST['session_id']);
+
+// Get session_id from JSON or POST
+$data = json_decode(file_get_contents("php://input"), true);
+$sessionId = $data['session_id'] ?? intval($_POST['session_id'] ?? 0);
+
+if (!$sessionId) {
+  echo json_encode(["status" => "error", "error" => "ไม่พบ session_id"]);
+  exit;
+}
 
 /* ตรวจสิทธิ์ว่า session นี้เป็นของอาจารย์ที่ login */
 $chk = $conn->prepare("
@@ -19,7 +30,8 @@ $chk->bind_param("ii", $sessionId, $teacherId);
 $chk->execute();
 
 if ($chk->get_result()->num_rows === 0) {
-  exit("ไม่พบ session");
+  echo json_encode(["status" => "error", "error" => "ไม่พบ session"]);
+  exit;
 }
 
 /* ลบ attendance_logs ที่อิงกับ session นี้ก่อน */
@@ -28,7 +40,10 @@ $delLogs = $conn->prepare("
   WHERE session_id = ?
 ");
 $delLogs->bind_param("i", $sessionId);
-$delLogs->execute();
+if (!$delLogs->execute()) {
+  echo json_encode(["status" => "error", "error" => "ไม่สามารถลบข้อมูลการเช็คชื่อ"]);
+  exit;
+}
 
 /* ลบ session */
 $delSession = $conn->prepare("
@@ -36,8 +51,11 @@ $delSession = $conn->prepare("
   WHERE id = ?
 ");
 $delSession->bind_param("i", $sessionId);
-$delSession->execute();
+if (!$delSession->execute()) {
+  echo json_encode(["status" => "error", "error" => "ไม่สามารถลบ session"]);
+  exit;
+}
 
-/* กลับไปหน้ารายการ session */
-header("Location: ../liff/sessions.php");
+echo json_encode(["status" => "success", "message" => "ลบ session สำเร็จ"]);
 exit;
+?>

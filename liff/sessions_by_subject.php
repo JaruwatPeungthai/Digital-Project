@@ -153,6 +153,7 @@ tr:hover {
 
 .btn-delete:hover {
   background: #d32f2f;
+  cursor: pointer;
 }
 
 .qr-img {
@@ -292,7 +293,8 @@ tr:hover {
                 </td>
                 <td style="white-space: nowrap;">
                   <a href="session_attendance.php?id=<?= $session['id'] ?>" class="btn-small btn-attendance">👥 รายชื่อ</a><br><br>
-                  <a href="attendance_summary.php?session=<?= $session['id'] ?>" class="btn-small btn-summary">📊 สรุป</a>
+                  <a href="attendance_summary.php?session=<?= $session['id'] ?>" class="btn-small btn-summary">📊 สรุป</a><br><br>
+                  <button class="btn-small btn-delete" onclick="openDeleteModal(<?= $session['id'] ?>, '<?= htmlspecialchars($session['room_name']) ?>')">🗑️ ลบ</button>
                 </td>
               </tr>
               <?php endforeach; ?>
@@ -312,6 +314,27 @@ tr:hover {
 
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" onclick="closeDeleteModal()" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+  <div class="modal-box" onclick="event.stopPropagation()" style="background: white; width: 400px; padding: 30px; text-align: center; border-radius: 8px; box-shadow: 0 2px 20px rgba(0,0,0,0.2);">
+    <h3 style="color: #f44336; margin-bottom: 20px;">⚠️ ยืนยันการลบ Session</h3>
+    
+    <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px; text-align: left;">
+      <p style="margin: 0; color: #856404; font-weight: 600;">คำเตือน:</p>
+      <p style="margin: 5px 0 0 0; color: #856404;">หากลบออก ข้อมูลทุกอย่างในคาบเรียนนี้จะถูกลบ รวมถึงข้อมูลการเช็คชื่อของนักศึกษาด้วย</p>
+    </div>
+
+    <p id="deleteSessionInfo" style="margin: 20px 0; color: #666; font-weight: 600;"></p>
+
+    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+      <button id="deleteConfirmBtn" class="btn-small btn-delete" onclick="confirmDelete()" disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 20px; font-weight: 600;">
+        ลบ (<span id="countdownText">3</span>วิ)
+      </button>
+      <button class="btn-small" onclick="closeDeleteModal()" style="background: #999; color: white; padding: 10px 20px; font-weight: 600;">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
 <!-- QR Modal -->
 <div id="qrModal" onclick="closeQR()">
   <div class="modal-box" onclick="event.stopPropagation()">
@@ -322,6 +345,9 @@ tr:hover {
 </div>
 
 <script>
+let deleteSessionId = null;
+let countdownInterval = null;
+
 function showQR(url) {
   document.getElementById("qrBig").src =
     "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" +
@@ -332,6 +358,84 @@ function showQR(url) {
 function closeQR() {
   document.getElementById("qrModal").style.display = "none";
 }
+
+function openDeleteModal(sessionId, sessionName) {
+  deleteSessionId = sessionId;
+  document.getElementById("deleteSessionInfo").innerText = "Session: " + sessionName;
+  document.getElementById("deleteModal").style.display = "flex";
+  
+  // Start countdown at 3 seconds
+  let timeLeft = 3;
+  document.getElementById("deleteConfirmBtn").disabled = true;
+  document.getElementById("deleteConfirmBtn").style.opacity = "0.5";
+  document.getElementById("deleteConfirmBtn").style.cursor = "not-allowed";
+  
+  // Clear any existing countdown
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  
+  // Start new countdown
+  countdownInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById("countdownText").innerText = timeLeft;
+    
+    if (timeLeft <= 0) {
+      clearInterval(countdownInterval);
+      document.getElementById("deleteConfirmBtn").disabled = false;
+      document.getElementById("deleteConfirmBtn").style.opacity = "1";
+      document.getElementById("deleteConfirmBtn").style.cursor = "pointer";
+      document.getElementById("countdownText").innerText = "0";
+    }
+  }, 1000);
+}
+
+function closeDeleteModal() {
+  document.getElementById("deleteModal").style.display = "none";
+  deleteSessionId = null;
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+  }
+  document.getElementById("deleteConfirmBtn").disabled = true;
+  document.getElementById("deleteConfirmBtn").style.opacity = "0.5";
+  document.getElementById("deleteConfirmBtn").style.cursor = "not-allowed";
+  document.getElementById("countdownText").innerText = "3";
+}
+
+function confirmDelete() {
+  if (!deleteSessionId) return;
+  
+  // Send delete request to API
+  fetch("../api/delete_session.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ session_id: deleteSessionId })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === "success") {
+      alert("ลบ session สำเร็จ");
+      location.reload();
+    } else {
+      alert("เกิดข้อผิดพลาด: " + (data.error || "ไม่ทราบสาเหตุ"));
+    }
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    alert("เกิดข้อผิดพลาด: " + error.message);
+  });
+}
+
+// Close modal when clicking outside
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("deleteModal").addEventListener("click", function(e) {
+    if (e.target === this) {
+      closeDeleteModal();
+    }
+  });
+});
 </script>
 
 </body>
