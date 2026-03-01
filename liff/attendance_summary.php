@@ -1,8 +1,12 @@
 <?php
+// summary removed
 session_start();
 include("../config.php");
 
 if (!isset($_SESSION['teacher_id'])) exit;
+
+header('Location: sessions.php');
+exit;
 
 $sessionId = intval($_GET['session']);
 
@@ -37,6 +41,8 @@ $subjects = $subjects->get_result();
     <title>เลือกวิชาสรุปผล</title>
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/attendance_summary.css">
+    <link rel="stylesheet" href="css/back-button.css">
+    <link rel="stylesheet" href="css/modal-popup.css">
     <style>
       .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
       .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
@@ -81,7 +87,7 @@ $subjects = $subjects->get_result();
                     >✅ สรุปผล</button>
                 </form>
                 <div style="margin-top:18px;text-align:center;">
-                    <a href="sessions.php" class="btn" style="background:#888;">⬅ กลับ</a>
+                  <a href="sessions.php" class="button-65">⬅ กลับ</a>
                 </div>
             </div>
         </div>
@@ -146,7 +152,7 @@ function closeImportModal() {
 
 async function confirmImport() {
   if (!importData || !importData.matched.length) {
-    alert('ไม่มีนักศึกษาที่จะนำเข้า');
+    showModal('ไม่มีนักศูณ์ที่จะนำเข้า', 'warning', 'คำเตือน');
     return;
   }
 
@@ -192,6 +198,7 @@ window.onclick = function(event) {
   }
 }
 </script>
+<script src="js/modal-popup.js"></script>
 
 </body>
 </html>

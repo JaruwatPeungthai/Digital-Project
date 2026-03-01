@@ -3,6 +3,7 @@
 <head>
 <!-- Front-end: edit styles in liff/css/student_register.css -->
 <link rel="stylesheet" href="css/student_register.css">
+<link rel="stylesheet" href="css/modal-popup.css">
 <meta charset="UTF-8">
 <title>สมัครนักศึกษา</title>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -52,13 +53,18 @@ async function register() {
   });
 
   const result = await res.json();
-  alert(result.message);
+  const messageType = result.success ? 'success' : 'error';
+  const messageTitle = result.success ? 'สำเร็จ' : 'ข้อผิดพลาด';
+  showModal(result.message, messageType, messageTitle);
 
   if (result.success) {
-    location.href = "student_dashboard.html";
+    setTimeout(() => {
+      location.href = "student_dashboard.html";
+    }, 1500);
   }
 }
 </script>
+<script src="js/modal-popup.js"></script>
 
 </body>
 </html>

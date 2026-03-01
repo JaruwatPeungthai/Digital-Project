@@ -243,6 +243,115 @@
     border-radius: 8px;
     display: none;
   }
+
+  /* Modal Popup Styles */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal-popup {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    padding: 30px 20px;
+    text-align: center;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-popup.success {
+    border-left: 5px solid #4caf50;
+  }
+
+  .modal-popup.error {
+    border-left: 5px solid #d32f2f;
+  }
+
+  .modal-popup.warning {
+    border-left: 5px solid #ff9800;
+  }
+
+  .modal-popup.info {
+    border-left: 5px solid #2196f3;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+  }
+
+  .modal-message {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+  }
+
+  .modal-btn-ok {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    color: white;
+  }
+
+  .modal-btn-ok:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+  }
+
+  .modal-btn-cancel {
+    background: #f0f0f0;
+    color: #333;
+  }
+
+  .modal-btn-cancel:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+  }
 </style>
 </head>
 <body>
@@ -265,20 +374,20 @@
       <!-- Student & Session Info -->
       <div class="info-section">
         <div class="info-row">
-          <span class="info-label">รหัสนักศึกษา</span>
-          <span class="info-value" id="studentCode">-</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">ชื่อ - นามสกุล</span>
-          <span class="info-value" id="fullName">-</span>
-        </div>
-        <div class="info-row">
           <span class="info-label">รายวิชา</span>
           <span class="info-value" id="subjectName">-</span>
         </div>
         <div class="info-row">
           <span class="info-label">รายละเอียด Session</span>
           <span class="info-value" id="roomName">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">รหัสนักศึกษา</span>
+          <span class="info-value" id="studentCode">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ชื่อ - นามสกุล</span>
+          <span class="info-value" id="fullName">-</span>
         </div>
       </div>
 
@@ -307,7 +416,25 @@
             📤 เช็คชื่อออก
           </button>
         </div>
+
+        <div class="button-group">
+          <a href="student_dashboard.html" style="flex: 1; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 15px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 15px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 20px rgba(102, 126, 234, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            👨‍🎓 Dashboard
+          </a>
+        </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Popup -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal-popup" id="modalPopup">
+    <div class="modal-title" id="modalTitle">แจ้งเตือน</div>
+    <div class="modal-message" id="modalMessage"></div>
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-ok" id="modalOkBtn" onclick="closeModal()">ตกลง</button>
+      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" onclick="closeModal()" style="display: none;">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -317,6 +444,32 @@
   let liffProfile = null;
   let sessionDetails = {};
   let currentStatus = {};
+
+  // Modal Popup Functions
+  function showModal(message, type = 'info', title = 'แจ้งเตือน', hasCancel = false) {
+    const overlay = document.getElementById('modalOverlay');
+    const popup = document.getElementById('modalPopup');
+    const titleEl = document.getElementById('modalTitle');
+    const messageEl = document.getElementById('modalMessage');
+    const okBtn = document.getElementById('modalOkBtn');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    // Set popup style based on type
+    popup.className = `modal-popup ${type}`;
+    
+    // Show/hide cancel button
+    cancelBtn.style.display = hasCancel ? 'block' : 'none';
+    
+    overlay.classList.add('active');
+  }
+
+  function closeModal() {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.remove('active');
+  }
 
   async function initLiff() {
     try {
@@ -472,7 +625,7 @@
 
     try {
       if (!navigator.geolocation) {
-        alert("อุปกรณ์นี้ไม่รองรับ GPS");
+        showModal("อุปกรณ์นี้ไม่รองรับ GPS", "error", "ข้อผิดพลาด");
         btn.disabled = false;
         btn.textContent = "📌 เช็คชื่อเข้า";
         return;
@@ -498,30 +651,30 @@
             try {
               data = JSON.parse(text);
             } catch {
-              alert("Response ไม่ใช่ JSON:\n" + text);
+              showModal("Response ไม่ใช่ JSON:\n" + text, "error", "ข้อผิดพลาด");
               btn.disabled = false;
               btn.textContent = "📌 เช็คชื่อเข้า";
               return;
             }
 
-            alert(data.message);
+            showModal(data.message, "success", "สำเร็จ");
             await checkStatus();
             btn.textContent = "📌 เช็คชื่อเข้า";
           } catch (err) {
-            alert("เกิดข้อผิดพลาด: " + err.message);
+            showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
             btn.disabled = false;
             btn.textContent = "📌 เช็คชื่อเข้า";
           }
         },
         () => {
-          alert("กรุณาอนุญาตแชร์ตำแหน่ง");
+          showModal("กรุณาอนุญาตแชร์ตำแหน่ง", "warning", "คำเตือน");
           btn.disabled = false;
           btn.textContent = "📌 เช็คชื่อเข้า";
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } catch (err) {
-      alert("เกิดข้อผิดพลาด: " + err.message);
+      showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
       btn.disabled = false;
       btn.textContent = "📌 เช็คชื่อเข้า";
     }
@@ -534,7 +687,7 @@
 
     try {
       if (!navigator.geolocation) {
-        alert("อุปกรณ์นี้ไม่รองรับ GPS");
+        showModal("อุปกรณ์นี้ไม่รองรับ GPS", "error", "ข้อผิดพลาด");
         btn.disabled = false;
         btn.textContent = "📤 เช็คชื่อออก";
         return;
@@ -560,30 +713,30 @@
             try {
               data = JSON.parse(text);
             } catch {
-              alert("Response ไม่ใช่ JSON:\n" + text);
+              showModal("Response ไม่ใช่ JSON:\n" + text, "error", "ข้อผิดพลาด");
               btn.disabled = false;
               btn.textContent = "📤 เช็คชื่อออก";
               return;
             }
 
-            alert(data.message);
+            showModal(data.message, "success", "สำเร็จ");
             await checkStatus();
             btn.textContent = "📤 เช็คชื่อออก";
           } catch (err) {
-            alert("เกิดข้อผิดพลาด: " + err.message);
+            showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
             btn.disabled = false;
             btn.textContent = "📤 เช็คชื่อออก";
           }
         },
         () => {
-          alert("กรุณาอนุญาตแชร์ตำแหน่ง");
+          showModal("กรุณาอนุญาตแชร์ตำแหน่ง", "warning", "คำเตือน");
           btn.disabled = false;
           btn.textContent = "📤 เช็คชื่อออก";
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } catch (err) {
-      alert("เกิดข้อผิดพลาด: " + err.message);
+      showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
       btn.disabled = false;
       btn.textContent = "📤 เช็คชื่อออก";
     }

@@ -2,6 +2,11 @@
 session_start();
 include("../config.php");
 
+// Prevent caching - ensure fresh data from database
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 if (!isset($_SESSION['teacher_id'])) {
     header("Location: login.php");
     exit;
@@ -40,6 +45,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ");
         $u->bind_param("sii", $newCheckoutStatus, $logId, $sessionId);
         $u->execute();
+
+        header("Location: session_attendance.php?id=".$sessionId);
+        exit;
+    }
+
+    // Clear check-in record (set status and time to NULL)
+    if (isset($_POST['log_id'], $_POST['clear_checkin'])) {
+        $logId = intval($_POST['log_id']);
+
+        $d = $conn->prepare("
+            UPDATE attendance_logs 
+            SET checkin_status = NULL, checkin_time = NULL
+            WHERE id = ? AND session_id = ?
+        ");
+        $d->bind_param("ii", $logId, $sessionId);
+        $d->execute();
+
+        header("Location: session_attendance.php?id=".$sessionId);
+        exit;
+    }
+
+    // Clear check-out record (set status and time to NULL)
+    if (isset($_POST['log_id'], $_POST['clear_checkout'])) {
+        $logId = intval($_POST['log_id']);
+
+        $d = $conn->prepare("
+            UPDATE attendance_logs 
+            SET checkout_status = NULL, checkout_time = NULL
+            WHERE id = ? AND session_id = ?
+        ");
+        $d->bind_param("ii", $logId, $sessionId);
+        $d->execute();
 
         header("Location: session_attendance.php?id=".$sessionId);
         exit;
@@ -96,6 +133,8 @@ while ($row = $result->fetch_assoc()) {
     <!-- Front-end: edit styles in liff/css/session_attendance.css -->
     <link rel="stylesheet" href="css/sidebar.css">
     <link rel="stylesheet" href="css/session_attendance.css">
+    <link rel="stylesheet" href="css/back-button.css">
+    <link rel="stylesheet" href="css/modal-popup.css">
     <style>
         .date-section {
             margin-bottom: 40px;
@@ -231,13 +270,13 @@ while ($row = $result->fetch_assoc()) {
 
 <div class="main-wrapper">
     <div class="header">
-        <h2 id="page-title">👥 รายชื่อผู้เข้าเรียน</h2>
+        <h2 id="page-title">👥 รายชื่อผู้เข้าเรียน : <?= htmlspecialchars($sessionInfo['subject_name'] ?? '') ?></h2>
     </div>
 
     <div class="content-area">
         <div class="container">
             <div class="footer-section" style="margin-bottom: 20px;">
-                <a href="sessions_by_subject.php?subject_name=<?= urlencode($sessionInfo['subject_name']) ?>" class="btn btn-cancel">⬅ กลับ</a>
+                <a href="sessions_by_subject.php?subject_name=<?= urlencode($sessionInfo['subject_name']) ?>" class="button-65">⬅ กลับ</a>
             </div>
             <div class="card">
                 <?php if (!empty($groupedByDate) && count($groupedByDate) > 0): ?>
@@ -285,7 +324,7 @@ while ($row = $result->fetch_assoc()) {
                                             if (!empty($row['checkin_time'])) {
                                                 echo htmlspecialchars(date('H:i', strtotime($row['checkin_time'])));
                                             } elseif (!empty($row['checkin_status'])) {
-                                                echo '(เช็ค Manual)';
+                                                echo '<span style="color: #ff9800; font-size: 12px;">(เช็คแบบ manual)</span>';
                                             } else {
                                                 echo '-';
                                             }
@@ -295,13 +334,18 @@ while ($row = $result->fetch_assoc()) {
                                         <!-- Check-in Status -->
                                         <td>
                                             <?php
-                                            if (!empty($row['checkin_time']) || !empty($row['checkin_status'])) {
+                                            if (!empty($row['checkin_status'])) {
+                                                // Show status if it exists, regardless of checkin_time
                                                 if ($row['checkin_status'] === 'late') {
                                                     echo '<span class="status-badge badge-late">⏱️ สาย</span>';
                                                 } else {
                                                     echo '<span class="status-badge badge-on-time">✅ ตรงเวลา</span>';
                                                 }
+                                            } elseif (!empty($row['checkin_time'])) {
+                                                // Fallback if status not set but time exists
+                                                echo '<span class="status-badge badge-on-time">✅ ตรงเวลา</span>';
                                             } else {
+                                                // No status and no time
                                                 echo '<span class="status-badge badge-not-checked-out">-</span>';
                                             }
                                             ?>
@@ -313,7 +357,7 @@ while ($row = $result->fetch_assoc()) {
                                             if (!empty($row['checkout_time'])) {
                                                 echo htmlspecialchars(date('H:i', strtotime($row['checkout_time'])));
                                             } elseif (!empty($row['checkout_status'])) {
-                                                echo '(เช็ค Manual)';
+                                                echo '<span style="color: #ff9800; font-size: 12px;">(เช็คแบบ manual)</span>';
                                             } elseif (!empty($row['checkin_time'])) {
                                                 echo '<span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>';
                                             } else {
@@ -340,8 +384,8 @@ while ($row = $result->fetch_assoc()) {
                                         <!-- Manual Actions -->
                                         <td style="text-align:center;">
                                             <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
-                                                <button class="btn btn-small" onclick="openCheckinModal(<?= $row['log_id'] ?>, '<?= $row['checkin_status'] ?>')">✏️ เข้า</button>
-                                                <button class="btn btn-small" onclick="openCheckoutModal(<?= $row['log_id'] ?>, '<?= $row['checkout_status'] ?>')">✏️ ออก</button>
+                                                <button class="btn btn-small" onclick="openCheckinModal(<?= $row['log_id'] ?>, '<?= htmlspecialchars($row['checkin_status'] ?? '', ENT_QUOTES) ?>')">✏️ เข้า</button>
+                                                <button class="btn btn-small" onclick="openCheckoutModal(<?= $row['log_id'] ?>, '<?= htmlspecialchars($row['checkout_status'] ?? '', ENT_QUOTES) ?>')">✏️ ออก</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -495,3 +539,7 @@ while ($row = $result->fetch_assoc()) {
         }
     }
 </script>
+<script src="js/modal-popup.js"></script>
+
+</body>
+</html>

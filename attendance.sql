@@ -44,7 +44,7 @@ CREATE TABLE `attendance_logs` (
   `student_id` int(11) DEFAULT NULL,
   `checkin_time` datetime DEFAULT NULL,
   `checkout_time` datetime DEFAULT NULL,
-  `checkin_status` enum('on-time','late') DEFAULT 'on-time',
+  `checkin_status` enum('on-time','late') DEFAULT NULL,
   `checkout_status` enum('checked-out','not-checked-out') DEFAULT NULL,
   `latitude` double DEFAULT NULL,
   `longitude` double DEFAULT NULL,
@@ -142,7 +142,9 @@ CREATE TABLE `student_edit_requests` (
 CREATE TABLE `subjects` (
   `subject_id` int(11) NOT NULL,
   `teacher_id` int(11) DEFAULT NULL,
-  `subject_name` varchar(100) DEFAULT NULL
+  `subject_name` varchar(100) DEFAULT NULL,
+  `subject_code` varchar(20) DEFAULT NULL,
+  `section` varchar(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------

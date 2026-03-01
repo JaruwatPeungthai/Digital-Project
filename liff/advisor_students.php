@@ -77,6 +77,7 @@ unset($_SESSION['error']);
 <!-- Front-end: edit styles in liff/css/advisor_students.css -->
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/advisor_students.css">
+<link rel="stylesheet" href="css/modal-popup.css">
 <style>
   table { border-collapse: collapse; width:100%; margin-top: 15px; }
   th, td { border:1px solid #ccc; padding:8px; text-align:center; }
@@ -261,10 +262,6 @@ unset($_SESSION['error']);
     </table>
   </div>
 
-  <!-- Back link -->
-  <div class="footer-section">
-    <p><a href="teacher_dashboard.php" class="back-link">⬅ กลับหน้า Dashboard</a></p>
-  </div>
 
 </div>
 
@@ -292,7 +289,7 @@ let importData = null;
 async function importExcel() {
   const fileInput = document.getElementById('excelFile');
   if (!fileInput.files.length) {
-    alert('กรุณาเลือกไฟล์');
+    showModal('กรุณาเลือกไฟล์', 'warning', 'คำเตือน');
     return;
   }
 
@@ -434,7 +431,7 @@ function closeImportModal() {
 
 async function confirmImport() {
   if (!importData || !importData.matched.length) {
-    alert('ไม่มีนักศึกษาที่จะนำเข้า');
+    showModal('ไม่มีนักศูณ์ที่จะนำเข้า', 'warning', 'คำเตือน');
     return;
   }
 
@@ -497,6 +494,7 @@ function filterStudents() {
   });
 }
 </script>
+<script src="js/modal-popup.js"></script>
 
     </div>
   </div>

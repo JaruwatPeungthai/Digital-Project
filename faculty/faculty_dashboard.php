@@ -91,9 +91,42 @@ $pending_requests = $conn->query("SELECT * FROM student_edit_requests WHERE stat
 <meta charset="UTF-8">
 <title>คณะ | ยืนยันอาจารย์</title>
 <style>
+/* Basic table layout */
 table { border-collapse: collapse; width: 100%; }
-td, th { border: 1px solid #ccc; padding: 6px; }
+td, th { border: 1px solid #ccc; padding: 6px; vertical-align: top; }
 .section-header { margin: 0 0 12px 0; }
+
+/* Styled action buttons */
+.btn-manage {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.btn-approve { background: #4caf50; color:#fff; }
+.btn-approve:hover { background: #45a049; }
+.btn-delete { background: #f44336; color:#fff; }
+.btn-delete:hover { background: #d32f2f; }
+
+/* request info formatting */
+.request-info { line-height: 1.4; text-align: left; width: 240px; }
+.request-info div { margin-bottom: 4px; }
+
+/* date/time columns */
+.col-date { width: 140px; }
+.col-time { width: 80px; }
+
+/* ensure old/new columns wide */
+th:nth-child(4), th:nth-child(5) { width: 320px; }
+/* widen manage column */
+th:nth-child(6) { width: 180px; }
+
+/* style for action cell */
+.btn-manage { margin-right: 6px; }
+.btn-manage:last-child { margin-right: 0; }
 </style>
 </head>
 <body>
@@ -120,9 +153,9 @@ td, th { border: 1px solid #ccc; padding: 6px; }
           <td><?= $t['title']." ".$t['full_name'] ?></td>
           <td><?= $t['department'] ?></td>
           <td><?= $t['email'] ?></td>
-          <td>
-            <a href="?approve=<?= $t['id'] ?>">✅ ยืนยัน</a> |
-            <a href="?delete=<?= $t['id'] ?>" onclick="return confirm('ลบ?')">❌ ลบ</a>
+          <td style="display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+            <a href="?approve=<?= $t['id'] ?>" class="btn-manage btn-approve" style="margin-bottom:10px;" onclick="return confirm('ยืนยันอาจารย์คนนี้?')">✅ ยืนยัน</a>
+            <a href="?delete=<?= $t['id'] ?>" class="btn-manage btn-delete" onclick="return confirm('ลบอาจารย์คนนี้?')">❌ ลบ</a>
           </td>
         </tr>
         <?php endwhile; ?>
@@ -142,8 +175,8 @@ td, th { border: 1px solid #ccc; padding: 6px; }
           <td><?= $t['title']." ".$t['full_name'] ?></td>
           <td><?= $t['department'] ?></td>
           <td><?= $t['email'] ?></td>
-          <td>
-            <a href="?delete=<?= $t['id'] ?>" onclick="return confirm('ลบอาจารย์คนนี้?')">❌ ลบ</a>
+          <td style="display:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <a href="?delete=<?= $t['id'] ?>" class="btn-manage btn-delete" onclick="return confirm('ลบอาจารย์คนนี้?')">❌ ลบ</a>
           </td>
         </tr>
         <?php endwhile; ?>
@@ -157,18 +190,31 @@ td, th { border: 1px solid #ccc; padding: 6px; }
         <div style="overflow-x:auto;">
         <table>
         <tr>
-          <th>Request ID</th><th>วันที่</th><th>ข้อมูลเก่า</th><th>ข้อมูลใหม่</th><th>จัดการ</th>
+          <th>Request ID</th><th class="col-date">วันที่</th><th class="col-time">เวลา</th><th>ข้อมูลเก่า</th><th>ข้อมูลใหม่</th><th>จัดการ</th>
         </tr>
         <?php while ($r = $pending_requests->fetch_assoc()): ?>
+        <?php
+           $dt = new DateTime($r['created_at']);
+           $dateOnly = $dt->format('Y-m-d');
+           $timeOnly = $dt->format('H:i');
+        ?>
         <tr>
-          <td><?= $r['request_id'] ?></td>
-          <td><?= $r['created_at'] ?></td>
-          <td><?= $r['old_student_code'] ?> / <?= $r['old_full_name'] ?> / <?= $r['old_class_group'] ?></td>
-          <td><?= $r['new_student_code'] ?> / <?= $r['new_full_name'] ?> / <?= $r['new_class_group'] ?></td>
-          <td>
-            <a href="?approve_req=<?= $r['request_id'] ?>" onclick="return confirm('อนุมัติคำขอ <?= $r['request_id'] ?>?')">✅ ยืนยัน</a>
-            |
-            <a href="?reject_req=<?= $r['request_id'] ?>" onclick="return confirm('ปฏิเสธคำขอ <?= $r['request_id'] ?>?')">❌ ปฏิเสธ</a>
+          <td><?= htmlspecialchars($r['request_id']) ?></td>
+          <td><?= htmlspecialchars($dateOnly) ?></td>
+          <td><?= htmlspecialchars($timeOnly) ?></td>
+          <td class="request-info">
+            <div>รหัส นศ. : <?= htmlspecialchars($r['old_student_code']) ?></div>
+            <div>ชื่อ : <?= htmlspecialchars($r['old_full_name']) ?></div>
+            <div>สาขา : <?= htmlspecialchars($r['old_class_group']) ?></div>
+          </td>
+          <td class="request-info">
+            <div>รหัส นศ. : <?= htmlspecialchars($r['new_student_code']) ?></div>
+            <div>ชื่อ : <?= htmlspecialchars($r['new_full_name']) ?></div>
+            <div>สาขา : <?= htmlspecialchars($r['new_class_group']) ?></div>
+          </td>
+          <td style="display:flex; flex-direction:column; justify-content:space-between; align-items:center;">
+            <a href="?approve_req=<?= $r['request_id'] ?>" class="btn-manage btn-approve" style="margin-bottom:10px;" onclick="return confirm('อนุมัติคำขอ <?= $r['request_id'] ?>?')">✅ ยืนยัน</a>
+            <a href="?reject_req=<?= $r['request_id'] ?>" class="btn-manage btn-delete" onclick="return confirm('ปฏิเสธคำขอ <?= $r['request_id'] ?>?')">❌ ปฏิเสธ</a>
           </td>
         </tr>
         <?php endwhile; ?>

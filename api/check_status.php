@@ -66,11 +66,12 @@ if (!$attendance) {
 $now = new DateTime('now', new DateTimeZone('Asia/Bangkok'));
 $checkoutStartDt = new DateTime($session['checkout_start'] ?: $session['end_time'], new DateTimeZone('Asia/Bangkok'));
 
+$hasCheckedIn = !is_null($attendance['checkin_time']);
 $canCheckout = ($now >= $checkoutStartDt);
 $hasCheckedOut = !is_null($attendance['checkout_time']);
 
 response([
-  "has_checked_in" => true,
+  "has_checked_in" => $hasCheckedIn,
   "checkin_time" => $attendance['checkin_time'],
   "checkin_status" => $attendance['checkin_status'],
   "has_checked_out" => $hasCheckedOut,

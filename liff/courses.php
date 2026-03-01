@@ -53,10 +53,20 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
       <div class="card">
         <h3 class="section-header">สร้างรายวิชาใหม่</h3>
         <form method="post" action="../api/subject_create.php" class="form-section">
-          <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
-            <label class="form-label" style="margin-right: 8px;">ชื่อรายวิชา:</label>
-            <input name="subject_name" class="form-input" required style="flex:1; min-width:180px;">
-            <button type="submit" class="btn btn-primary form-input" style="margin-left: 10px; white-space:nowrap;" >➕ สร้างรายวิชา</button>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+              <label class="form-label" style="margin-right: 8px; min-width: 120px;">ชื่อรายวิชา:</label>
+              <input name="subject_name" class="form-input" required style="flex:1; min-width:180px;">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+              <label class="form-label" style="margin-right: 8px; min-width: 120px;">รหัสวิชา:</label>
+              <input name="subject_code" class="form-input"  required style="flex:1; min-width:180px;">
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 12px;">
+              <label class="form-label" style="margin-right: 8px; min-width: 120px;">เซค(กลุ่มเรียน):</label>
+              <input name="section" class="form-input" required style="flex:1; min-width:180px;">
+              <button type="submit" class="btn btn-primary form-input" style="margin-left: 10px; white-space:nowrap;" >➕ สร้างรายวิชา</button>
+            </div>
           </div>
         </form>
       </div>
@@ -68,6 +78,8 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
           <table>
             <tr>
               <th>ชื่อวิชา</th>
+              <th>รหัสวิชา</th>
+              <th>เซค</th>
               <th>ดูรายชื่อนักศึกษา</th>
               <th>ดูเซสชัน QR</th>
               <th>จัดการ</th>
@@ -76,6 +88,8 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
             <?php while ($row = $subjects->fetch_assoc()): ?>
             <tr>
               <td><?= htmlspecialchars($row['subject_name']) ?></td>
+              <td><?= htmlspecialchars($row['subject_code']) ?></td>
+              <td><?= htmlspecialchars($row['section']) ?></td>
               <td>
                 <a href="subject_students.php?id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px;">
                   👥 นักศึกษา
@@ -89,14 +103,15 @@ th, td { border:1px solid #ccc; padding:8px; text-align:center; }
               <td>
               <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px;" onclick="confirmDelete(
                 <?= $row['subject_id'] ?>,
-                '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>'
+                '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>',
+                '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>'
               )">❌ ลบ</button>
             </td>
             </tr>
             <?php endwhile; ?>
 
             <?php if ($subjects->num_rows === 0): ?>
-            <tr><td colspan="3">ยังไม่มีรายวิชา</td></tr>
+            <tr><td colspan="6">ยังไม่มีรายวิชา</td></tr>
             <?php endif; ?>
           </table>
         </div>
@@ -126,10 +141,13 @@ z-index:1000;
     <h3>⚠️ ยืนยันการลบรายวิชา</h3>
     <p id="modalText"></p>
 
-    <p style="color:red">
-      รายชื่อนักศึกษาที่เพิ่มไว้<br>
-      จะถูกลบออกทั้งหมด
-    </p>
+    <div style="color:red; background:#ffe6e6; padding:12px; border-radius: 6px; margin-bottom:15px; font-size:13px; line-height:1.6;">
+      <strong>⚠️ คำเตือน:</strong><br>
+      • รายชื่อนักศึกษาที่เพิ่มไว้<br>
+      &nbsp;&nbsp;จะถูกลบออกทั้งหมด<br>
+      • <strong>เซสชัน (Session) ทั้งหมด</strong><br>
+      &nbsp;&nbsp;ของวิชานี้จะถูกลบกำจัดด้วย
+    </div>
 
     <form method="post" action="../api/subject_delete.php" style="margin-top: 20px;">
       <input type="hidden" name="subject_id" id="deleteSubjectId">
@@ -147,11 +165,11 @@ z-index:1000;
 let timer;
 let count = 3;
 
-function confirmDelete(id, name) {
+function confirmDelete(id, name, code) {
   document.getElementById("deleteModal").style.display = "block";
   document.getElementById("deleteSubjectId").value = id;
   document.getElementById("modalText").innerText =
-    `คุณต้องการลบรายวิชา "${name}" ใช่หรือไม่?`;
+    `คุณต้องการลบรายวิชา "${name}" (${code}) ใช่หรือไม่?`;
 
   const btn = document.getElementById("confirmBtn");
   btn.disabled = true;

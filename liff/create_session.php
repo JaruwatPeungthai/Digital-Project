@@ -15,6 +15,7 @@ $subjectStmt = $conn->prepare("SELECT subject_id, subject_name FROM subjects WHE
 $subjectStmt->bind_param("i", $teacher_id);
 $subjectStmt->execute();
 $subjectResult = $subjectStmt->get_result();
+$hasSubjects = ($subjectResult->num_rows > 0);
 
 $error_msg = null;
 
@@ -70,6 +71,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = "เกิดข้อผิดพลาด: " . $stmt->error;
     } else {
       $qr_url = "https://liff.line.me/2008718294-WzVz06TP?token=$token";
+
+      // *** new behavior: import all students from the selected subject into
+      // the newly created session so that their attendance rows exist and
+      // show "-" until they check in/out.  This replaces the old summary
+      // workflow where the teacher would later import/finalize absent
+      // students.
+      $newSessionId = $conn->insert_id;
+      $subjectName = $_POST['subject'];
+
+      // import student list into attendance_logs and count how many were added
+      $importCount = 0;
+      $importStmt = $conn->prepare(
+        "SELECT ss.student_id
+         FROM subject_students ss
+         JOIN subjects s ON ss.subject_id = s.subject_id
+         WHERE s.subject_name = ? AND s.teacher_id = ?"
+      );
+      if ($importStmt) {
+        $importStmt->bind_param("si", $subjectName, $teacher_id);
+        $importStmt->execute();
+        $res = $importStmt->get_result();
+        $ins = $conn->prepare(
+          "INSERT IGNORE INTO attendance_logs (session_id, student_id) VALUES (?,?)"
+        );
+        while ($row = $res->fetch_assoc()) {
+          if ($ins) {
+            $ins->bind_param("ii", $newSessionId, $row['student_id']);
+            $ins->execute();
+            if ($ins->affected_rows > 0) {
+              $importCount++;
+            }
+          }
+        }
+      }
+      // expose count to template for feedback
+      if (!isset($imported_students)) {
+        $imported_students = $importCount;
+      }
     }
   }
 }
@@ -82,6 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Front-end: edit styles in liff/css/create_session.css -->
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/create_session.css">
+<link rel="stylesheet" href="css/modal-popup.css">
 
 <link rel="stylesheet"
  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -118,17 +158,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="card">
         <h3 class="section-header">สร้าง QR Code ใหม่</h3>
+        <?php if (! $hasSubjects): ?>
+          <div style="background:#fff3e0; border-left:4px solid #ff9800; color:#e65100; padding:12px; border-radius:4px; margin:15px 0;">
+            ⚠️ ยังไม่มีรายวิชาที่สร้างไว้
+            <a href="courses.php" class="btn" style="margin-left:10px; white-space:nowrap;">➕ สร้างรายวิชา</a>
+          </div>
+        <?php endif; ?>
         
         <form method="post" class="form-section">
+        <?php if (! $hasSubjects) echo '<fieldset disabled>'; ?>
           <div class="form-group">
             <label class="form-label">วิชา:</label>
             <select name="subject" class="form-input" required>
-              <option value="">-- เลือกรายวิชา --</option>
-              <?php while ($subject = $subjectResult->fetch_assoc()): ?>
-                <option value="<?= htmlspecialchars($subject['subject_name']) ?>">
-                  <?= htmlspecialchars($subject['subject_name']) ?>
-                </option>
-              <?php endwhile; ?>
+              <?php if (! $hasSubjects): ?>
+                <option value="">ยังไม่มีรายวิชา</option>
+              <?php else: ?>
+                <option value="">-- เลือกรายวิชา --</option>
+                <?php while ($subject = $subjectResult->fetch_assoc()): ?>
+                  <option value="<?= htmlspecialchars($subject['subject_name']) ?>">
+                    <?= htmlspecialchars($subject['subject_name']) ?>
+                  </option>
+                <?php endwhile; ?>
+              <?php endif; ?>
             </select>
           </div>
 
@@ -192,13 +243,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           
           <!-- ข้อความเตือน -->
           <div id="submitWarning" style="display:none; background:#fff3e0; border-left:4px solid #ff9800; color:#e65100; padding:12px 15px; border-radius:4px; margin-top:15px; font-size:14px;"></div>
+        <?php if (! $hasSubjects) echo '</fieldset>'; ?>
         </form>
       </div>
 
       <?php if ($qr_url): ?>
       <div class="card">
-        <h3 class="section-header">✅ QR Code สำเร็จ</h3>
-        <div style="text-align: center; padding: 20px;">
+        <h3 class="section-header">✅ QR Code สำเร็จ</h3>        <?php if (isset($imported_students)): ?>
+          <p style="color:#155724; padding:10px; background:#d4edda; border-radius:4px;">
+            นำเข้านักศึกษา <?= (int)$imported_students ?> คนจากรายวิชานี้เรียบร้อยแล้ว
+          </p>
+        <?php endif; ?>        <div style="text-align: center; padding: 20px;">
           <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= urlencode($qr_url) ?>" style="border: 2px solid #1976d2; border-radius: 8px;">
           <p style="margin-top: 16px; font-size: 12px; color: #666; word-break: break-all;"><?= htmlspecialchars($qr_url) ?></p>
         </div>
@@ -317,12 +372,13 @@ document.querySelector('form').addEventListener('submit', function(e) {
   
   // ตรวจสอบว่ามีการเลือดตำแหน่งแล้ว
   if (!document.getElementById('lat').value || !document.getElementById('lng').value) {
-    alert('กรุณาเลือกตำแหน่งห้องเรียนบนแผนที่');
+    showModal('กรุณาเลือกตำแหน่งห้องเรียนบนแผนที่', 'warning', 'คำเตือน');
     e.preventDefault();
     return false;
   }
 });
 </script>
+<script src="js/modal-popup.js"></script>
 
 </body>
 </html>

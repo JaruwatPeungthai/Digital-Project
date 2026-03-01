@@ -66,6 +66,8 @@ unset($_SESSION['error']);
 <!-- Front-end: edit styles in liff/css/subject_students.css -->
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/subject_students.css">
+<link rel="stylesheet" href="css/back-button.css">
+<link rel="stylesheet" href="css/modal-popup.css">
 <meta charset="UTF-8">
 <title><?= htmlspecialchars($subject['subject_name']) ?></title>
 <style>
@@ -145,7 +147,7 @@ unset($_SESSION['error']);
               </div>
             </div>
 
-            <a href="courses.php" class="back-link" style="margin-bottom: 15px; display: inline-block;">⬅ กลับหน้ารายวิชา</a>
+            <a href="courses.php" class="button-65" style="margin-bottom: 15px; display: inline-block;">⬅ กลับหน้ารายวิชา</a>
 
             <!-- Enrolled students section -->
             <div class="card advisees-card">
@@ -234,7 +236,7 @@ unset($_SESSION['error']);
 
             <!-- Back link -->
             <div class="footer-section">
-              <p><a href="courses.php" class="back-link">⬅ กลับหน้ารายวิชา</a></p>
+              <p><a href="courses.php" class="button-65">⬅ กลับหน้ารายวิชา</a></p>
             </div>
           </div>
         </div>
@@ -276,7 +278,7 @@ unset($_SESSION['error']);
       async function importExcel(subjectId) {
         const fileInput = document.getElementById('excelFile');
         if (!fileInput.files.length) {
-          alert('กรุณาเลือกไฟล์');
+          showModal('กรุณาเลือกไฟล์', 'warning', 'คำเตือน');
           return;
         }
         const formData = new FormData();
@@ -410,7 +412,7 @@ unset($_SESSION['error']);
 
       async function confirmImport() {
         if (!importData || !importData.matched.length) {
-          alert('ไม่มีนักศึกษาที่จะนำเข้า');
+          showModal('ไม่มีนักศูณ์ที่จะนำเข้า', 'warning', 'คำเตือน');
           return;
         }
         const studentIds = importData.matched.map(s => s.user_id);
@@ -448,6 +450,7 @@ unset($_SESSION['error']);
         }
       }
       </script>
+      <script src="js/modal-popup.js"></script>
 
       </body>
       </html>

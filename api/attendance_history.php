@@ -31,13 +31,18 @@ $stmt = $conn->prepare("
     a.status,
     a.reason,
     s.subject_name,
-    s.room_name
+    s.room_name,
+    COALESCE(s.checkin_start, s.start_time) AS session_date,
+    sub.subject_code,
+    t.full_name AS teacher_name
   FROM users u
   JOIN students st ON u.id = st.user_id
   JOIN attendance_logs a ON a.student_id = st.user_id
   JOIN attendance_sessions s ON a.session_id = s.id
+  LEFT JOIN subjects sub ON sub.teacher_id = s.teacher_id AND sub.subject_name = s.subject_name
+  LEFT JOIN teachers t ON t.id = s.teacher_id
   WHERE u.line_user_id=?
-  ORDER BY a.checkin_time DESC
+  ORDER BY COALESCE(s.checkin_start, s.start_time) DESC
 ");
 
 if (!$stmt) {

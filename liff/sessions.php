@@ -9,13 +9,14 @@ if (!isset($_SESSION['teacher_id'])) {
 
 $teacherId = $_SESSION['teacher_id'];
 
-// ดึงรายวิชาของครูปัจจุบัน
-$stmt = $conn->prepare("
-  SELECT DISTINCT s.subject_name
-  FROM attendance_sessions s
-  WHERE s.teacher_id = ? AND s.deleted_at IS NULL
-  ORDER BY s.subject_name ASC
-");
+// ดึงรายวิชาของครูปัจจุบัน (subject_code มาจากตาราง subjects)
+$stmt = $conn->prepare(
+  "SELECT DISTINCT sub.subject_name, sub.subject_code
+   FROM subjects sub
+   JOIN attendance_sessions s ON s.subject_name = sub.subject_name AND s.teacher_id = sub.teacher_id
+   WHERE sub.teacher_id = ? AND s.deleted_at IS NULL
+   ORDER BY sub.subject_name ASC"
+);
 if (!$stmt) {
   die("Prepare failed: " . $conn->error);
 }
@@ -67,6 +68,16 @@ $result = $stmt->get_result();
   opacity: 0.9;
 }
 
+.subject-code {
+  margin-top: 8px;
+  font-size: 13px;
+  opacity: 0.95;
+  background: rgba(255,255,255,0.12);
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
 .session-count {
   display: inline-block;
   background: rgba(255,255,255,0.3);
@@ -111,6 +122,7 @@ $result = $stmt->get_result();
           ?>
           <a href="sessions_by_subject.php?subject_name=<?= urlencode($row['subject_name']) ?>" class="subject-card">
             <h3>📖 <?= htmlspecialchars($row['subject_name']) ?></h3>
+            <div class="subject-code"><?= htmlspecialchars($row['subject_code'] ?? '') ?></div>
             <div class="session-count">
               <?= $countResult['cnt'] ?> เซสชั่น
             </div>

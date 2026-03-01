@@ -78,7 +78,7 @@ $stmt = $conn->prepare("
 $stmt->bind_param("ii", $session['id'], $student['user_id']);
 $stmt->execute();
 $existing = $stmt->get_result()->fetch_assoc();
-if ($existing) {
+if ($existing && !is_null($existing['checkin_time'])) {
   $existingStatus = strtolower(trim($existing['status'] ?? ''));
   // allow re-checkin when previous record was explicitly denied/rejected
   if ($existingStatus !== 'denied' && $existingStatus !== 'rejected') {

@@ -1,8 +1,14 @@
 <?php
+// finalization no longer used since student list imported on session creation.
+// keep file for compatibility but simply redirect.
 session_start();
 include("../config.php");
 
 if (!isset($_SESSION['teacher_id'])) exit("no permission");
+
+// redirect back to sessions listing
+header('Location: ../liff/sessions_by_subject.php');
+exit;
 
 $teacherId = $_SESSION['teacher_id'];
 $sessionId = intval($_POST['session_id']);

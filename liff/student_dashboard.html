@@ -163,24 +163,20 @@ input, select { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border
       <div id="attendanceContent" class="card" style="display: none;">
         <h3 class="section-header">📋 ประวัติการเข้าเรียน</h3>
         
-        <div class="table-wrapper">
-          <table class="attendance-table">
-            <thead>
-              <tr class="table-header">
-                <th>วิชา</th>
-                <th>รายละเอียด session</th>
-                <th>วันที่ session</th>
-                <th>เวลาเช็คชื่อเข้า</th>
-                <th>สถานะเข้า</th>
-                <th>เวลาเช็คชื่อออก</th>
-                <th>สถานะออก</th>
-              </tr>
-            </thead>
-            <tbody id="logs">
-              <tr><td colspan="7">กำลังโหลด...</td></tr>
-            </tbody>
-          </table>
+        <!-- Combined summary -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; flex-wrap:wrap;">
+          <div style="font-weight:600; color:#333;">สรุปรวมทั้งหมด</div>
+          <div style="background:#fff; border:1px solid #e6eef6; padding:8px 12px; border-radius:6px; font-size:14px;">
+            <strong>เช็คเข้า (รวม):</strong> <span id="totalCheckins">0</span> &nbsp;|&nbsp;
+            <strong>เช็คออก:</strong> <span id="totalCheckouts">0</span> &nbsp;|&nbsp;
+            <strong>ตรงเวลา:</strong> <span id="totalOnTime">0</span> &nbsp;|&nbsp;
+            <strong>สาย:</strong> <span id="totalLate">0</span> &nbsp;|&nbsp;
+            <strong>เช็คเข้าไม่เช็คออก:</strong> <span id="totalNoCheckout">0</span> &nbsp;|&nbsp;
+            <strong>ขาด:</strong> <span id="totalAbsent">0</span>
+          </div>
         </div>
+
+        <div id="attendanceBySubject"></div>
       </div>
 
       <!-- Requests Section -->
@@ -357,87 +353,215 @@ async function loadHistory() {
 
     if (!res.ok) {
       console.error("HTTP error:", res.status);
-      document.getElementById("logs").innerHTML = "<tr><td colspan='7'>เกิดข้อผิดพลาด</td></tr>";
+      document.getElementById("attendanceBySubject").innerHTML = "<p>เกิดข้อผิดพลาด</p>";
       return;
     }
 
     const text = await res.text();
     if (!text) {
       console.error("Empty response from attendance_history.php");
-      document.getElementById("logs").innerHTML = "<tr><td colspan='7'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+      document.getElementById("attendanceBySubject").innerHTML = "<p>ไม่มีประวัติการเข้าเรียน</p>";
       return;
     }
 
     const rows = JSON.parse(text);
-    const tbody = document.getElementById("logs");
-    tbody.innerHTML = "";
-
     if (!Array.isArray(rows) || rows.length === 0) {
-      tbody.innerHTML = "<tr><td colspan='7'>ไม่มีประวัติการเข้าเรียน</td></tr>";
+      document.getElementById("attendanceBySubject").innerHTML = "<p>ไม่มีประวัติการเข้าเรียน</p>";
+      clearSummary();
       return;
     }
 
-    rows.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.className = "table-row";
-      
-      // Helper function to format time (HH:mm only, no date)
-      const formatTime = (datetime) => {
-        if (!datetime) return null;
-        const date = new Date(datetime);
-        return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
-      };
-      
-      // Helper function to format session date
-      const formatSessionDate = (datetime) => {
-        if (!datetime) return '';
-        const date = new Date(datetime);
-        const dayInThai = { 'Sun': 'อาทิตย์', 'Mon': 'จันทร์', 'Tue': 'อังคาร', 'Wed': 'พุธ', 'Thu': 'พฤหัสบดี', 'Fri': 'ศุกร์', 'Sat': 'เสาร์' };
-        const options = { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Bangkok' };
-        const parts = date.toLocaleDateString('th-TH', options).split('/');
-        const dayName = new Date(datetime).toLocaleDateString('en-US', { weekday: 'short' });
-        const thaiDay = dayInThai[dayName] || dayName;
-        return `${parts[0]}/${parts[1]}/${parts[2]} (${thaiDay})`;
-      };
-      
-      // Helper function to create status badge HTML for check-in
-      const getCheckinStatusBadge = (checkinTime, checkinStatus) => {
-        if (!checkinStatus) {
-          return '<span class="status-badge badge-not-checked-out">-</span>';
-        }
-        const badgeClass = checkinStatus === 'late' ? 'badge-late' : 'badge-on-time';
-        const statusText = checkinStatus === 'late' ? '⏱️ สาย' : '✅ ตรงเวลา';
-        return `<span class="status-badge ${badgeClass}">${statusText}</span>`;
-      };
-      
-      const getCheckoutStatusBadge = (checkinTime, checkoutStatus) => {
-        if (!checkoutStatus) {
-          return '<span class="status-badge badge-not-checked-out">-</span>';
-        }
-        const badgeClass = checkoutStatus === 'checked-out' ? 'badge-checked-out' : 'badge-not-checked-out';
-        const statusText = checkoutStatus === 'checked-out' ? '✅ เช็คออก' : '❌ ไม่เช็คออก';
-        return `<span class="status-badge ${badgeClass}">${statusText}</span>`;
-      };
-      
-      const checkinTimeFormatted = formatTime(r.checkin_time);
-      const checkoutTimeFormatted = formatTime(r.checkout_time);
-      const sessionDateFormatted = formatSessionDate(r.session_date);
-      
-      tr.innerHTML = `
-        <td>${r.subject_name}</td>
-        <td>${r.room_name}</td>
-        <td>${sessionDateFormatted}</td>
-        <td>${r.checkin_time ? checkinTimeFormatted : (r.checkin_status ? '(เช็ค Manual)' : '-')}</td>
-        <td>${getCheckinStatusBadge(r.checkin_time, r.checkin_status)}</td>
-        <td>${checkoutTimeFormatted ? checkoutTimeFormatted : (r.checkout_status ? '(เช็ค Manual)' : (r.checkin_time ? '<span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>' : '-'))}</td>
-        <td>${getCheckoutStatusBadge(r.checkin_time, r.checkout_status)}</td>
-      `;
-      tbody.appendChild(tr);
+    // Group by subject
+    const historyBySubject = {};
+    const subjectMetadata = {};
+    rows.forEach(row => {
+      const subj = row.subject_name || 'ไม่ระบุ';
+      if (!historyBySubject[subj]) {
+        historyBySubject[subj] = [];
+        subjectMetadata[subj] = {
+          subject_code: row.subject_code || '',
+          teacher_name: row.teacher_name || 'ไม่ระบุ'
+        };
+      }
+      historyBySubject[subj].push(row);
     });
+
+    // Calculate summaries
+    const summaryBySubject = {};
+    const totalSummary = { present_checkout: 0, on_time: 0, late: 0, present_no_checkout: 0, absent: 0 };
+
+    Object.keys(historyBySubject).forEach(subj => {
+      const summ = { present_checkout: 0, on_time: 0, late: 0, present_no_checkout: 0, absent: 0 };
+      historyBySubject[subj].forEach(sess => {
+        // Check if either checkin_time or checkin_status exists (manual or auto)
+        if (!sess.checkin_time && !sess.checkin_status) {
+          summ.absent++;
+        } else {
+          if (sess.checkout_time || sess.checkout_status) {
+            summ.present_checkout++;
+          } else {
+            summ.present_no_checkout++;
+          }
+          if (sess.checkin_status === 'late') {
+            summ.late++;
+          } else {
+            summ.on_time++;
+          }
+        }
+      });
+      summaryBySubject[subj] = summ;
+      Object.keys(summ).forEach(k => { totalSummary[k] += summ[k]; });
+    });
+
+    // Update total summary display
+    document.getElementById("totalCheckins").innerText = totalSummary.on_time + totalSummary.late;
+    document.getElementById("totalCheckouts").innerText = totalSummary.present_checkout;
+    document.getElementById("totalOnTime").innerText = totalSummary.on_time;
+    document.getElementById("totalLate").innerText = totalSummary.late;
+    document.getElementById("totalNoCheckout").innerText = totalSummary.present_no_checkout;
+    document.getElementById("totalAbsent").innerText = totalSummary.absent;
+
+    // Render grouped sections
+    let html = '';
+    let isFirst = true;
+    Object.keys(historyBySubject).forEach(subj => {
+      const summ = summaryBySubject[subj];
+      const meta = subjectMetadata[subj] || {};
+      const totalCheckins = summ.on_time + summ.late;
+
+      if (!isFirst) {
+        html += '<div style="height: 1px; background: linear-gradient(90deg,#eef6ff,#ffffff); margin:18px 0; border-radius:2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);"></div>';
+      }
+
+      html += '<div style="margin-top:18px; border:1px solid #e6eef6; border-radius:8px; overflow:hidden; background:#fff;">' +
+        '<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background: linear-gradient(90deg,#f7fbff,#f0f8ff);">' +
+        '<div>' +
+        '<div style="font-weight:700; font-size:15px;">' + htmlEscape(meta.subject_code) + ' — ' + htmlEscape(subj) + '</div>' +
+        '<div style="color:#666; font-size:13px; margin-top:4px;">อาจารย์ผู้สอน: ' + htmlEscape(meta.teacher_name) + '</div>' +
+        '</div>' +
+        '<div style="text-align:right; background:#fff; border:1px solid #e6eef6; padding:8px 12px; border-radius:6px; font-size:13px; min-width:220px;">' +
+        '<div style="font-weight:700; margin-bottom:6px;">สรุปรายวิชา</div>' +
+        '<div>เช็คเข้า (รวม): <strong>' + totalCheckins + '</strong></div>' +
+        '<div>เช็คออก: <strong>' + summ.present_checkout + '</strong></div>' +
+        '<div>ตรงเวลา: <strong>' + summ.on_time + '</strong> / สาย: <strong>' + summ.late + '</strong></div>' +
+        '<div>เช็คเข้าแต่ไม่เช็คออก: <strong>' + summ.present_no_checkout + '</strong></div>' +
+        '<div>ขาด: <strong>' + summ.absent + '</strong></div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="table-wrapper" style="padding:12px;">' +
+        '<table class="attendance-table">' +
+        '<thead>' +
+        '<tr class="table-header" style="background: #f2f2f2;">' +
+        '<th style="border: 1px solid #e6eef6;">รายละเอียด session</th>' +
+        '<th style="border: 1px solid #e6eef6;">วันที่ session</th>' +
+        '<th style="border: 1px solid #e6eef6;">เวลาเช็คชื่อเข้า</th>' +
+        '<th style="border: 1px solid #e6eef6;">สถานะเข้า</th>' +
+        '<th style="border: 1px solid #e6eef6;">เวลาเช็คชื่อออก</th>' +
+        '<th style="border: 1px solid #e6eef6;">สถานะออก</th>' +
+        '</tr>' +
+        '</thead>' +
+        '<tbody>';
+
+      if (historyBySubject[subj].length > 0) {
+        historyBySubject[subj].forEach(r => {
+          const sessionDate = formatSessionDate(r.session_date);
+          const checkinTime = formatTime(r.checkin_time);
+          const checkoutTime = formatTime(r.checkout_time);
+          const checkinBadge = getCheckinBadge(r.checkin_time, r.checkin_status);
+          const checkoutBadge = getCheckoutBadge(r.checkin_time, r.checkout_time, r.checkout_status);
+
+          html += '<tr class="table-row" style="border-bottom: 1px solid #e6eef6;">' +
+            '<td style="border: 1px solid #e6eef6; padding: 10px;">' + htmlEscape(r.room_name || '-') + '</td>' +
+            '<td style="border: 1px solid #e6eef6; padding: 10px;">' + sessionDate + '</td>' +
+            '<td style="border: 1px solid #e6eef6; padding: 10px;">' + formatCheckinTimeDisplay(checkinTime, r.checkin_status) + '</td>' +
+            '<td style="border: 1px solid #e6eef6; padding: 10px;">' + checkinBadge + '</td>' +
+            '<td style="border: 1px solid #e6eef6; padding: 10px;">' + formatCheckoutTimeDisplay(checkoutTime, r.checkin_time, r.checkout_status) + '</td>' +
+            '<td style="border: 1px solid #e6eef6; padding: 10px;">' + checkoutBadge + '</td>' +
+            '</tr>';
+        });
+      } else {
+        html += '<tr><td colspan="6" style="text-align:center; color:#666; padding:20px; border: 1px solid #e6eef6;">ยังไม่มี session สำหรับรายวิชานี้</td></tr>';
+      }
+
+      html += '</tbody>' +
+        '</table>' +
+        '</div>' +
+        '</div>';
+      isFirst = false;
+    });
+
+    document.getElementById("attendanceBySubject").innerHTML = html;
   } catch (error) {
     console.error("loadHistory error:", error);
-    document.getElementById("logs").innerHTML = "<tr><td colspan='7'>เกิดข้อผิดพลาด</td></tr>";
+    document.getElementById("attendanceBySubject").innerHTML = "<p>เกิดข้อผิดพลาด: " + error.message + "</p>";
   }
+}
+
+function clearSummary() {
+  document.getElementById("totalCheckins").innerText = '0';
+  document.getElementById("totalCheckouts").innerText = '0';
+  document.getElementById("totalOnTime").innerText = '0';
+  document.getElementById("totalLate").innerText = '0';
+  document.getElementById("totalNoCheckout").innerText = '0';
+  document.getElementById("totalAbsent").innerText = '0';
+}
+
+function htmlEscape(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatTime(datetime) {
+  if (!datetime) return null;
+  const date = new Date(datetime);
+  return date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatSessionDate(datetime) {
+  if (!datetime) return '';
+  const date = new Date(datetime);
+  const dayInThai = { 'Sun': 'อาทิตย์', 'Mon': 'จันทร์', 'Tue': 'อังคาร', 'Wed': 'พุธ', 'Thu': 'พฤหัสบดี', 'Fri': 'ศุกร์', 'Sat': 'เสาร์' };
+  const options = { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Bangkok' };
+  const parts = date.toLocaleDateString('th-TH', options).split('/');
+  const dayName = new Date(datetime).toLocaleDateString('en-US', { weekday: 'short' });
+  const thaiDay = dayInThai[dayName] || dayName;
+  return `${parts[0]}/${parts[1]}/${parts[2]} (${thaiDay})`;
+}
+
+function getCheckinBadge(checkinTime, checkinStatus) {
+  if (!checkinStatus) {
+    return '<span class="status-badge badge-not-checked-out">-</span>';
+  }
+  const badgeClass = checkinStatus === 'late' ? 'badge-late' : 'badge-on-time';
+  const statusText = checkinStatus === 'late' ? '⏱️ สาย' : '✅ ตรงเวลา';
+  return '<span class="status-badge ' + badgeClass + '">' + statusText + '</span>';
+}
+
+function getCheckoutBadge(checkinTime, checkoutTime, checkoutStatus) {
+  if (!checkoutStatus) {
+    return '<span class="status-badge badge-not-checked-out">-</span>';
+  }
+  const badgeClass = checkoutStatus === 'checked-out' ? 'badge-checked-out' : 'badge-not-checked-out';
+  const statusText = checkoutStatus === 'checked-out' ? '✅ เช็คออก' : '❌ ไม่เช็คออก';
+  return '<span class="status-badge ' + badgeClass + '">' + statusText + '</span>';
+}
+
+function formatCheckinTimeDisplay(checkinTime, checkinStatus) {
+  if (checkinTime) return checkinTime;
+  if (checkinStatus) return '<span style="color: #ff9800; font-size: 12px;">(เช็คแบบ manual)</span>';
+  return '-';
+}
+
+function formatCheckoutTimeDisplay(checkoutTime, checkinTime, checkoutStatus) {
+  if (checkoutTime) return checkoutTime;
+  if (checkoutStatus) return '<span style="color: #ff9800; font-size: 12px;">(เช็คแบบ manual)</span>';
+  if (checkinTime) return '<span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>';
+  return '-';
 }
 
 function openEditModal() {

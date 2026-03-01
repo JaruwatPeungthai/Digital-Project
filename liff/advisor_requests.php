@@ -55,6 +55,8 @@ $requests = $stmt->get_result();
 <!-- Front-end: edit styles in liff/css/advisor_requests.css -->
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/advisor_requests.css">
+<link rel="stylesheet" href="css/back-button.css">
+<link rel="stylesheet" href="css/modal-popup.css">
 <style>
   table { border-collapse: collapse; width: 100%; margin-top: 20px; }
   th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
@@ -155,43 +157,46 @@ $requests = $stmt->get_result();
 </tbody>
 </table>
 
-<p><a href="teacher_dashboard.php">⬅ กลับหน้า Dashboard</a></p>
-
 <script>
 async function approveRequest(requestId) {
-  if (!confirm('ยืนยันการแก้ไขข้อมูลนักศึกษาหรือไม่?')) return;
+  showConfirmModal('ยืนยันการแก้ไขข้อมูลนักศูณ์หรือไม่?', async function() {
+    const res = await fetch("../api/approve_student_request.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        request_id: requestId,
+        action: "approve"
+      })
+    });
 
-  const res = await fetch("../api/approve_student_request.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      request_id: requestId,
-      action: "approve"
-    })
-  });
-
-  const data = await res.json();
-  alert(data.message);
-  location.reload();
+    const data = await res.json();
+    showModal(data.message, 'success', 'สำเร็จ');
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  }, 'ยืนยัน');
 }
 
 async function rejectRequest(requestId) {
-  if (!confirm('ปฏิเสธการแก้ไขข้อมูลนักศึกษาหรือไม่?')) return;
+  showConfirmModal('ปฏิเสธการแก้ไขข้อมูลนักศูณ์หรือไม่?', async function() {
+    const res = await fetch("../api/approve_student_request.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        request_id: requestId,
+        action: "reject"
+      })
+    });
 
-  const res = await fetch("../api/approve_student_request.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      request_id: requestId,
-      action: "reject"
-    })
-  });
-
-  const data = await res.json();
-  alert(data.message);
-  location.reload();
+    const data = await res.json();
+    showModal(data.message, 'success', 'สำเร็จ');
+    setTimeout(() => {
+      location.reload();
+    }, 1500);
+  }, 'ปฏิเสธ');
 }
 </script>
+<script src="js/modal-popup.js"></script>
 
         </tbody>
         </table>

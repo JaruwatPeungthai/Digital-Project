@@ -67,14 +67,14 @@ $student = $stmt->get_result()->fetch_assoc();
 if (!$student) response(["message"=>"ยังไม่ได้ลงทะเบียน"]);
 
 $stmt = $conn->prepare("
-  SELECT id, checkout_time FROM attendance_logs
+  SELECT id, checkin_time, checkout_time FROM attendance_logs
   WHERE session_id=? AND student_id=?
 ");
 $stmt->bind_param("ii", $session['id'], $student['user_id']);
 $stmt->execute();
 $existing = $stmt->get_result()->fetch_assoc();
 
-if (!$existing) {
+if (!$existing || is_null($existing['checkin_time'])) {
   response(["message"=>"ไม่พบบันทึกเช็คชื่อเข้า"]);
 }
 

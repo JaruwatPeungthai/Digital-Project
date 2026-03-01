@@ -60,6 +60,7 @@ krsort($groupedByDate);
 <title><?= htmlspecialchars($subjectName) ?></title>
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/sessions.css">
+<link rel="stylesheet" href="css/back-button.css">
 
 <style>
 .back-link {
@@ -206,6 +207,98 @@ tr:hover {
   padding: 40px;
   color: #999;
 }
+
+/* Modal Popup Styles */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-popup {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px;
+  width: 90%;
+  padding: 30px 20px;
+  text-align: center;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-popup.success {
+  border-left: 5px solid #4caf50;
+}
+
+.modal-popup.error {
+  border-left: 5px solid #d32f2f;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.modal-message {
+  font-size: 15px;
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.modal-btn-ok {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  color: white;
+}
+
+.modal-btn-ok:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+}
+
 </style>
 </head>
 
@@ -226,7 +319,7 @@ tr:hover {
     <!-- Container for main content -->
     <div class="container">
 
-      <a href="sessions.php" class="back-link">← กลับ</a>
+      <a href="sessions.php" class="button-65">← กลับ</a>
 
       <div class="card">
         <?php if (count($groupedByDate) > 0): ?>
@@ -293,7 +386,6 @@ tr:hover {
                 </td>
                 <td style="white-space: nowrap;">
                   <a href="session_attendance.php?id=<?= $session['id'] ?>" class="btn-small btn-attendance">👥 รายชื่อ</a><br><br>
-                  <a href="attendance_summary.php?session=<?= $session['id'] ?>" class="btn-small btn-summary">📊 สรุป</a><br><br>
                   <button class="btn-small btn-delete" onclick="openDeleteModal(<?= $session['id'] ?>, '<?= htmlspecialchars($session['room_name']) ?>')">🗑️ ลบ</button>
                 </td>
               </tr>
@@ -344,7 +436,39 @@ tr:hover {
   </div>
 </div>
 
+<!-- Modal Popup -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal-popup" id="modalPopup">
+    <div class="modal-title" id="modalTitle">แจ้งเตือน</div>
+    <div class="modal-message" id="modalMessage"></div>
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-ok" onclick="closeModal()">ตกลง</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// Modal Popup Functions
+function showModal(message, type = 'info', title = 'แจ้งเตือน') {
+  const overlay = document.getElementById('modalOverlay');
+  const popup = document.getElementById('modalPopup');
+  const titleEl = document.getElementById('modalTitle');
+  const messageEl = document.getElementById('modalMessage');
+
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+  
+  // Set popup style based on type
+  popup.className = `modal-popup ${type}`;
+  
+  overlay.classList.add('active');
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.remove('active');
+}
+
 let deleteSessionId = null;
 let countdownInterval = null;
 
@@ -416,15 +540,17 @@ function confirmDelete() {
   .then(response => response.json())
   .then(data => {
     if (data.status === "success") {
-      alert("ลบ session สำเร็จ");
-      location.reload();
+      showModal("ลบ session สำเร็จ", "success", "สำเร็จ");
+      setTimeout(() => {
+        location.reload();
+      }, 1500);
     } else {
-      alert("เกิดข้อผิดพลาด: " + (data.error || "ไม่ทราบสาเหตุ"));
+      showModal("เกิดข้อผิดพลาด: " + (data.error || "ไม่ทราบสาเหตุ"), "error", "ข้อผิดพลาด");
     }
   })
   .catch(error => {
     console.error("Error:", error);
-    alert("เกิดข้อผิดพลาด: " + error.message);
+    showModal("เกิดข้อผิดพลาด: " + error.message, "error", "ข้อผิดพลาด");
   });
 }
 
