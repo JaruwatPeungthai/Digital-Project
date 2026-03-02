@@ -89,7 +89,7 @@ $pending_requests = $conn->query("SELECT * FROM student_edit_requests WHERE stat
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/faculty_dashboard.css">
 <meta charset="UTF-8">
-<title>คณะ | ยืนยันอาจารย์</title>
+<title>ระบบ Admin หลัก</title>
 <style>
 /* Basic table layout */
 table { border-collapse: collapse; width: 100%; }
@@ -135,7 +135,7 @@ th:nth-child(6) { width: 180px; }
 
 <div class="main-wrapper">
   <div class="header">
-    <h2 id="page-title">🏛️ จัดการคณะ</h2>
+    <h2 id="page-title">🏛️ ระบบ Admin หลัก</h2>
   </div>
 
   <div class="content-area">

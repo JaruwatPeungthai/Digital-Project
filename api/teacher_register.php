@@ -18,4 +18,4 @@ $stmt->bind_param(
 );
 
 $stmt->execute();
-echo "สมัครเรียบร้อย รอคณะยืนยัน";
+header("Location: ../liff/index.html");

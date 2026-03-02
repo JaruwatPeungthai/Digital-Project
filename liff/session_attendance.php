@@ -141,7 +141,7 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .date-header {
-            background: #667eea;
+            background: #007469;
             color: white;
             padding: 15px 20px;
             border-radius: 8px 8px 0 0;
@@ -203,7 +203,7 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .btn-option.checked-out {
-            background-color: #2196f3;
+            background-color: #007469;
             color: white;
         }
         
@@ -248,8 +248,8 @@ while ($row = $result->fetch_assoc()) {
         }
         
         .badge-checked-out {
-            background-color: #bbdefb;
-            color: #1565c0;
+            background-color: #c8e6c9;
+            color: #007469;
         }
         
         .badge-not-checked-out {

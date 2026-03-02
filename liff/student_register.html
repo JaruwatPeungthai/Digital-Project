@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<h2>สมัครนักศึกษา</h2>
+<!-- <h2>สมัครนักศึกษา</h2>
 
 <input id="code" placeholder="รหัสนักศึกษา"><br><br>
 <input id="name" placeholder="ชื่อ-นามสกุล"><br><br>
@@ -24,11 +24,40 @@
   <option value="นิเทศ">นิเทศ</option>
 </select><br><br>
 
-<button onclick="register()">สมัคร</button>
+<button onclick="register()">สมัคร</button> -->
+
+<div class="form-container">
+
+    <img src="pic/logo.jpg" class="logo">
+
+    <h2>ลงทะเบียนนักศึกษา</h2>
+
+    <input id="code" placeholder="รหัสนักศึกษา">
+    <input id="first_name" placeholder="ชื่อ" style="margin-bottom:8px;">
+    <input id="last_name" placeholder="นามสกุล">
+    <input type="hidden" id="full_name" name="full_name">
+
+    <div class="select-wrapper">
+      <select id="major">
+        <option value="">-- เลือกสาขา --</option>
+        <option value="ธุรกิจ">ธุรกิจ</option>
+        <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+        <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+        <option value="ออกแบบเกม">ออกแบบเกม</option>
+        <option value="นิเทศ">นิเทศ</option>
+      </select>
+      <i class="bi bi-caret-down-fill"></i>
+    </div>
+
+    <button onclick="register()">สมัคร</button>
+    <a href="index.html">← กลับหน้าแรก</a>
+  </div>
+</body>
 
 <script>
 const LIFF_ID = "2008718294-WzVz06TP";
 
+// Show confirmation modal before sending registration
 async function register() {
   await liff.init({ liffId: LIFF_ID });
 
@@ -39,31 +68,104 @@ async function register() {
 
   const profile = await liff.getProfile();
 
-  const data = {
-    line_user_id: profile.userId,
-    code: document.getElementById("code").value,
-    name: document.getElementById("name").value,
-    major: document.getElementById("major").value
+  const first = document.getElementById("first_name").value.trim();
+  const last = document.getElementById("last_name").value.trim();
+  const full = first + (last ? (' ' + last) : '');
+  const code = document.getElementById("code").value.trim();
+  const major = document.getElementById("major").value;
+
+  // populate modal
+  document.getElementById('confirmCode').innerText = code || '-';
+  document.getElementById('confirmName').innerText = full || '-';
+  document.getElementById('confirmMajor').innerText = major || '-';
+  document.getElementById('confirmWarning').innerText = 'กรุณาเช็คข้อมูลของตัวเองให้ถูกต้อง เพื่อผลประโยชน์ของตัวนักศึกษาเอง';
+
+  const modal = document.getElementById('confirmModal');
+  modal.style.display = 'block';
+
+  // disable confirm for 3 seconds with countdown
+  const confirmBtn = document.getElementById('confirmBtn');
+  confirmBtn.disabled = true;
+  let wait = 3;
+  confirmBtn.innerText = `ตกลง (${wait})`;
+  const countdown = setInterval(() => {
+    wait--;
+    if (wait <= 0) {
+      clearInterval(countdown);
+      confirmBtn.disabled = false;
+      confirmBtn.innerText = 'ตกลง';
+    } else {
+      confirmBtn.innerText = `ตกลง (${wait})`;
+    }
+  }, 1000);
+
+  // attach handler (one-time)
+  const onConfirm = async () => {
+    // send registration
+    const data = {
+      line_user_id: profile.userId,
+      code: code,
+      full_name: full,
+      major: major
+    };
+
+    // close modal while sending
+    modal.style.display = 'none';
+
+    await sendRegistration(data);
+
+    // cleanup
+    confirmBtn.removeEventListener('click', onConfirm);
+    document.getElementById('cancelBtn').removeEventListener('click', onCancel);
   };
 
-  const res = await fetch("../api/register_student.php", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
+  const onCancel = () => {
+    modal.style.display = 'none';
+    confirmBtn.removeEventListener('click', onConfirm);
+    document.getElementById('cancelBtn').removeEventListener('click', onCancel);
+  };
 
-  const result = await res.json();
-  const messageType = result.success ? 'success' : 'error';
-  const messageTitle = result.success ? 'สำเร็จ' : 'ข้อผิดพลาด';
-  showModal(result.message, messageType, messageTitle);
+  confirmBtn.addEventListener('click', onConfirm);
+  document.getElementById('cancelBtn').addEventListener('click', onCancel);
+}
 
-  if (result.success) {
-    setTimeout(() => {
-      location.href = "student_dashboard.html";
-    }, 1500);
+async function sendRegistration(data) {
+  try {
+    const res = await fetch("../api/register_student.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    const messageType = result.success ? 'success' : 'error';
+    const messageTitle = result.success ? 'สำเร็จ' : 'ข้อผิดพลาด';
+    showModal(result.message, messageType, messageTitle);
+
+    if (result.success) {
+      setTimeout(() => { location.href = "student_dashboard.html"; }, 1500);
+    }
+  } catch (err) {
+    showModal('เกิดข้อผิดพลาด: ' + err.message, 'error', 'ข้อผิดพลาด');
   }
 }
 </script>
+
+<!-- Confirmation modal -->
+<div id="confirmModal" style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:10000;">
+  <div style="position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; width:92%; max-width:520px; padding:18px; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.2); z-index:10001; max-height:90vh; overflow:auto;">
+    <h3 style="margin-top:0; color:#007469;">ยืนยันข้อมูลก่อนสมัคร</h3>
+    <div style="margin:8px 0; font-size:14px;"><strong>รหัสนักศึกษา:</strong> <span id="confirmCode">-</span></div>
+    <div style="margin:8px 0; font-size:14px;"><strong>ชื่อ-นามสกุล:</strong> <span id="confirmName">-</span></div>
+    <div style="margin:8px 0 14px 0; font-size:14px;"><strong>สาขา:</strong> <span id="confirmMajor">-</span></div>
+    <div id="confirmWarning" style="color:#b00020; background:#fff5f5; padding:10px; border-radius:6px; margin-bottom:12px;">กรุณาเช็คข้อมูลของตัวเองให้ถูกต้อง เพื่อผลประโยชน์ของตัวนักศึกษาเอง</div>
+
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button id="cancelBtn" type="button" style="padding:8px 14px; background:#efefef; border:none; border-radius:6px; cursor:pointer;">ยกเลิก</button>
+      <button id="confirmBtn" type="button" style="padding:8px 14px; background:#007469; color:#fff; border:none; border-radius:6px; cursor:pointer;">ตกลง</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/modal-popup.js"></script>
 
 </body>

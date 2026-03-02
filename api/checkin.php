@@ -50,12 +50,12 @@ try {
   $checkoutDeadlineDt = new DateTime($session['checkout_deadline'] ?: $session['end_time'], new DateTimeZone('Asia/Bangkok'));
   
   if ($nowDt < $checkinStartDt || $nowDt > $checkoutDeadlineDt) {
-    response(["message"=>"ไม่อยู่ในช่วงเวลาเช็คชื่อ"]);
+    response(["message"=>"ไม่ได้อยู่ในช่วงเวลาเช็คชื่อ"]);
   }
 } catch (Exception $e) {
   // If parsing fails, fall back to start_time and end_time
   if ($now < $session['start_time'] || $now > $session['end_time']) {
-    response(["message"=>"ไม่อยู่ในช่วงเวลาเช็คชื่อ"]);
+    response(["message"=>"ไม่ได้อยู่ในช่วงเวลาเช็คชื่อ"]);
   }
 }
 
@@ -82,7 +82,7 @@ if ($existing && !is_null($existing['checkin_time'])) {
   $existingStatus = strtolower(trim($existing['status'] ?? ''));
   // allow re-checkin when previous record was explicitly denied/rejected
   if ($existingStatus !== 'denied' && $existingStatus !== 'rejected') {
-    response(["message"=>"คุณเช็คชื่อเข้าแล้ว"]);
+    response(["message"=>"คุณเช็คชื่อเข้าไปแล้ว"]);
   }
   // otherwise (denied/rejected) allow insertion of a new check-in record
 }

@@ -1,2 +1,123 @@
-/* Styles for student_register.html */
-@import url('default_page.css');
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Layout กลางจอ */
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f6f9;
+}
+
+/* กล่องฟอร์ม */
+.form-container {
+  width: 400px;
+  background: white;
+  padding: 45px 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* โลโก้ */
+.logo {
+  display: block;
+  margin: 0 auto 20px auto;
+  width: 120px;
+}
+
+/* หัวข้อ */
+h2 {
+  margin-bottom: 30px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #4c3126;
+}
+
+/* input ทั่วไป */
+input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+/* wrapper สำหรับ select */
+.select-wrapper {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+/* ซ่อนลูกศร default */
+.select-wrapper select {
+  width: 100%;
+  padding: 14px 45px 14px 14px; /* เว้นที่ให้ไอคอน */
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: white;
+  transition: 0.2s;
+}
+
+/* ไอคอน caret */
+.select-wrapper i {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: #4c3126;
+  font-size: 16px;
+}
+
+/* Focus effect */
+input:focus,
+.select-wrapper select:focus {
+  outline: none;
+  border-color: #007469;
+  box-shadow: 0 0 0 3px rgba(0,116,105,0.15);
+}
+
+/* ปุ่ม */
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  background-color: #007469;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background-color: #005f56;
+}
+
+/* ลิงก์กลับหน้าแรก */
+a {
+  display: block;
+  margin-top: 25px;
+  color: #007469;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+a:hover {
+  text-decoration: underline;
+}

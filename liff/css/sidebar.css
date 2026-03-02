@@ -12,7 +12,7 @@ body {
 /* Sidebar styles */
 .sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  background: linear-gradient(135deg, #007469 0%, #005f56 100%);
   color: #fff;
   padding: 0;
   margin: 0;
@@ -68,7 +68,7 @@ body {
 .sidebar-menu .menu-item.active a {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
-  border-left-color: #ffeb3b;
+  border-left-color: #007469;
   font-weight: 600;
 }
 

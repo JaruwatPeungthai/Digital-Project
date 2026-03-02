@@ -27,7 +27,8 @@ $stmt->bind_param(
   "isss",
   $user_id,
   $data['code'],
-  $data['name'],
+  // use full_name collected from separate first/last fields
+  $data['full_name'],
   $data['major']
 );
 $stmt->execute();

@@ -5,7 +5,7 @@ body { display: flex; flex-direction: row; margin: 0; height: 100vh; overflow: h
 
 .sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+  background: linear-gradient(135deg, #007469 0%, #005f56 100%);
   color: #fff;
   padding: 0;
   box-shadow: 2px 0 8px rgba(0,0,0,0.1);
@@ -38,4 +38,4 @@ body { display: flex; flex-direction: row; margin: 0; height: 100vh; overflow: h
 
 /* utility */
 .card { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-.btn { display:inline-block; padding:8px 12px; background:#1976d2; color:#fff; border-radius:6px; text-decoration:none; }
+.btn { display:inline-block; padding:8px 12px; background:#007469; color:#fff; border-radius:6px; text-decoration:none; }

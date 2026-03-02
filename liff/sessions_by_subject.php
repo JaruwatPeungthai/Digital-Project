@@ -66,7 +66,7 @@ krsort($groupedByDate);
 .back-link {
   display: inline-block;
   margin-bottom: 20px;
-  color: #667eea;
+  color: #007469;
   text-decoration: none;
   font-weight: 600;
 }
@@ -80,8 +80,7 @@ krsort($groupedByDate);
 }
 
 .date-header {
-  background: #667eea;
-  color: white;
+  background: #007469;
   padding: 15px 20px;
   border-radius: 8px 8px 0 0;
   font-weight: bold;
@@ -139,12 +138,12 @@ tr:hover {
 }
 
 .btn-summary {
-  background: #2196f3;
+  background: #007469;
   color: white;
 }
 
 .btn-summary:hover {
-  background: #1976d2;
+  background: #005f56;
 }
 
 .btn-delete {
@@ -190,7 +189,7 @@ tr:hover {
 
 .modal-box button {
   padding: 8px 16px;
-  background: #667eea;
+  background: #007469;
   color: white;
   border: none;
   border-radius: 4px;
@@ -199,7 +198,7 @@ tr:hover {
 }
 
 .modal-box button:hover {
-  background: #764ba2;
+  background: #007469;
 }
 
 .empty-state {
@@ -290,13 +289,13 @@ tr:hover {
 }
 
 .modal-btn-ok {
-  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  background: linear-gradient(135deg, #007469 0%, #005f56 100%);
   color: white;
 }
 
 .modal-btn-ok:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 10px 20px rgba(0,116,105,0.3);
 }
 
 </style>
@@ -332,7 +331,7 @@ tr:hover {
             $formattedDate = $dateObj->format('d/m/Y') . ' (' . $dayName . ')';
           ?>
           <div class="date-section">
-            <div class="date-header">
+            <div class="date-header" style="color: white;">
               <span>📅 <?= $formattedDate ?></span>
               <span style="font-size: 14px; font-weight: normal;"><?= count($sessions) ?> เซสชั่น</span>
             </div>

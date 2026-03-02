@@ -15,33 +15,22 @@ body {
   background-color: #f4f6f9;
 }
 
-/* กล่อง */
+/* กล่องฟอร์ม */
 .form-container {
-  width: 400px;                     /* เท่าหน้า register */
+  width: 400px;
   background: white;
-  padding: 45px 40px;               /* เท่ากัน */
-  border-radius: 20px;              /* เท่ากัน */
+  padding: 45px 40px;
+  border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
   text-align: center;
-  position: relative;   /* สำคัญมาก */
 }
 
 /* โลโก้ */
 .logo {
   display: block;
   margin: 0 auto 20px auto;
-  width: 120px;  /* เท่าหน้า register */
+  width: 120px;
 }
-
-
-.uni-logo {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 80px;   /* ปรับขนาดได้ */
-  height: auto;
-}
-
 
 /* หัวข้อ */
 h2 {
@@ -51,16 +40,34 @@ h2 {
   color: #4c3126;
 }
 
+/* input */
+input {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+/* focus effect */
+input:focus {
+  outline: none;
+  border-color: #007469;
+  box-shadow: 0 0 0 3px rgba(0,116,105,0.15);
+}
+
 /* ปุ่ม */
 button {
   width: 100%;
   padding: 14px;
-  margin-bottom: 18px;
-  border: none;
-  border-radius: 10px;
+  margin-top: 10px;
   background-color: #007469;
   color: white;
-  font-size: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;

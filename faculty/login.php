@@ -25,14 +25,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <title>Login คณะ</title>
   <!-- Front-end: edit styles in faculty/css/login.css -->
   <link rel="stylesheet" href="css/login.css">
+  <link rel="stylesheet" href="css/faculty_login.css">
 </head>
 <body>
 
 <!-- Page container -->
-<div class="login-container">
+<div class="from-container">
   
+
+<img src="../liff/pic/logo.jpg" class="logo">
+
+<img src="../liff/pic/Silpakorn_logo.png" class="logo">
+    
   <!-- Page title -->
-  <h1 id="page-title" class="page-title">Login คณะ</h1>
+  <h2>Login Admin</h2>
 
   <!-- Error alert message -->
   <?php if (!empty($error)): ?>

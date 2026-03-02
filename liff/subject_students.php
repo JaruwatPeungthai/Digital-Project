@@ -118,6 +118,9 @@ unset($_SESSION['error']);
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close:hover { color: black; }
         .import-status { padding: 10px; border-radius: 4px; margin: 10px 0; }
+        /* Hover effect utilities for buttons on this page */
+        .hover-effect { cursor: pointer; transition: background-color .35s; }
+        .hover-effect:focus { outline: none; }
       </style>
       </head>
       <body>
@@ -449,6 +452,48 @@ unset($_SESSION['error']);
           closeImportModal();
         }
       }
+      </script>
+      <script>
+      // Apply hover behavior to buttons on this page
+      document.addEventListener('DOMContentLoaded', function() {
+        const selectors = ['.btn', 'a.btn', '.btn-confirm', '.btn-cancel', '.btn-import', '.btn-remove-item', '.btn-success', '.btn-danger', '.btn-delete', '.btn-small'];
+        const elems = Array.from(document.querySelectorAll(selectors.join(',')));
+        const hoverColor = 'rgb(0, 95, 86)'; // #005f56
+        const defaultReplacement = '#007469';
+
+        elems.forEach(el => {
+          // add utility class
+          el.classList.add('hover-effect');
+
+          // preserve computed background
+          const cs = getComputedStyle(el);
+          let origBg = cs.backgroundColor || '';
+          const norm = (s) => (s || '').replace(/\s+/g, '').toLowerCase();
+
+          // If the computed background is the hover color, change the default to #007469
+          if (norm(origBg) === norm(hoverColor)) {
+            el.style.backgroundColor = defaultReplacement;
+            origBg = defaultReplacement;
+          }
+
+          // save original in dataset for revert
+          el.dataset._origBg = origBg;
+
+          // ensure pointer & transition
+          el.style.cursor = 'pointer';
+          el.style.transition = 'background-color .35s';
+
+          el.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#005f56';
+            this.style.color = '#ffffff';
+          });
+
+          el.addEventListener('mouseleave', function() {
+            const ob = this.dataset._origBg || '';
+            this.style.backgroundColor = ob || '';
+          });
+        });
+      });
       </script>
       <script src="js/modal-popup.js"></script>
 

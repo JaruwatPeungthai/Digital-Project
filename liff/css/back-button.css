@@ -3,7 +3,7 @@
 .button-65 {
   appearance: none;
   backface-visibility: hidden;
-  background-color: #2f80ed;
+  background-color: #007469;
   border-radius: 10px;
   border-style: none;
   box-shadow: none;
@@ -33,7 +33,7 @@
 }
 
 .button-65:hover {
-  background-color: #1366d6;
+  background-color: #005f56;
   box-shadow: rgba(0, 0, 0, .05) 0 5px 30px, rgba(0, 0, 0, .05) 0 1px 4px;
   opacity: 1;
   transform: translateY(0);

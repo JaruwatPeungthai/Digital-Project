@@ -42,7 +42,7 @@ $result = $stmt->get_result();
 }
 
 .subject-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #007469;
   color: white;
   padding: 30px;
   border-radius: 10px;

@@ -63,7 +63,7 @@ $requests = $stmt->get_result();
   th { background-color: #f2f2f2; }
   .search-section { margin-bottom: 20px; }
   .search-section input { padding: 8px; width: 300px; }
-  .search-section button { padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  .search-section button { padding: 8px 15px; background-color: #007469; color: white; border: none; border-radius: 4px; cursor: pointer; }
   .pending { background-color: #fff3cd; }
   .approved { background-color: #d4edda; }
   .rejected { background-color: #f8d7da; }
@@ -72,7 +72,7 @@ $requests = $stmt->get_result();
   .reject-btn { background-color: #dc3545; color: white; padding: 6px 10px; border: none; border-radius: 3px; cursor: pointer; margin-left: 5px; }
   .approve-btn:hover { background-color: #218838; }
   .reject-btn:hover { background-color: #c82333; }
-  .change-highlight { font-weight: bold; color: #007bff; }
+  .change-highlight { font-weight: bold; color: #007469; }
 </style>
 </head>
 <body>

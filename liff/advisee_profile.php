@@ -172,7 +172,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
 <style>
   /* Card / layout */
   .card { background: #fff; border: 1px solid #e9f4ff; border-radius: 10px; padding: 14px; box-shadow: 0 6px 18px rgba(30,60,120,0.04); margin-bottom: 18px; }
-  .profile-info { background-color: #fbfeff; padding: 16px; border-radius: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+  .profile-info { background-color: #fff; padding: 16px; border-radius: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
   .back-link { margin-top: 20px; display:inline-block; }
   .header h2 { color: #173e7a; font-size: 20px; margin: 0 0 6px 0; }
 
@@ -181,20 +181,20 @@ foreach ($historyBySubject as $subjectName => $sessions) {
   
   .badge-late { background: linear-gradient(90deg,#fff1f0,#ffd7d2); color:#b71c1c; }
   .badge-on-time { background: linear-gradient(90deg,#f0fff4,#d9f7dd); color:#1b5e20; }
-  .badge-checked-out { background: linear-gradient(90deg,#eef7ff,#d8ecff); color:#0d47a1; }
+  .badge-checked-out { background: linear-gradient(90deg,#e3f2e1,#c8e6c9); color:#007469; }
   .badge-not-checked-out { background: linear-gradient(90deg,#fff7f0,#ffe8d8); color:#bf360c; }
   
   .table-wrapper { overflow-x:auto; }
   .attendance-table { width:100%; border-collapse:collapse; text-align:center; font-size:14px; }
-  .attendance-table th { background: linear-gradient(180deg,#f8fbff,#eef6ff); border:1px solid #e6eef6; padding:12px; font-weight:700; color:#153459; }
+  .attendance-table th { background: #f2f2f2; border:1px solid #e6eef6; padding:12px; font-weight:700; color:#153459; }
   .attendance-table td { border:1px solid #e9f2ff; padding:12px; vertical-align:middle; color:#2b3b4a; }
   .attendance-table .table-row:hover { background: #fbfdff; }
 
   /* Summary / subject card */
   .summary-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; flex-wrap:wrap; }
-  .summary-box { background: linear-gradient(90deg,#ffffff,#f4fbff); border:1px solid #e6eef6; padding:10px 14px; border-radius:8px; font-size:14px; color:#163152; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+  .summary-box { background: linear-gradient(90deg,#ffffff,#e8f5e9); border:1px solid #e6eef6; padding:10px 14px; border-radius:8px; font-size:14px; color:#163152; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
   .subject-card { margin-top:18px; border:1px solid #e6eef6; border-radius:8px; overflow:hidden; background:#fff; }
-  .subject-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background: linear-gradient(90deg,#f7fbff,#f0f8ff); }
+  .subject-header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background: #fff; }
   .subject-header .title { font-weight:700; font-size:15px; color:#102c54; }
   .subject-header .teacher { color:#566674; font-size:13px; margin-top:4px; }
   .subject-summary { text-align:right; background:#fff; border:1px solid #e6eef6; padding:10px 12px; border-radius:8px; font-size:13px; min-width:220px; box-shadow:0 4px 12px rgba(20,40,80,0.02); color:#173a66; }
@@ -202,12 +202,12 @@ foreach ($historyBySubject as $subjectName => $sessions) {
   .subject-table { padding:12px; }
 
   /* Section divider between combined summary and subjects and between subjects */
-  .section-divider { height: 1px; background: linear-gradient(90deg,#eef6ff,#ffffff); margin:18px 0; border-radius:2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
+  .section-divider { height: 1px; background: #eee; margin:18px 0; border-radius:2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
 
   /* Footer button */
   /* Reusable button */
-  .btn { display:inline-block; background:#4058d6; color:#fff; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:700; }
-  .btn:hover { background:#2f46b3; }
+  .btn { display:inline-block; background:#007469; color:#fff; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:700; }
+  .btn:hover { background:#005f56; }
   .btn-secondary { background:#f3f6fb; color:#173a66; border:1px solid #e6eef6; }
   .btn-secondary:hover { background:#e9f2ff; }
   .footer-section .btn { /* keep compatibility */ }
@@ -263,7 +263,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
             <div class="section-divider" aria-hidden="true"></div>
           <?php endif; ?>
           <div class="subject-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#f7fbff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff;">
               <div>
                 <div style="font-weight:700; font-size:15px;"><?= htmlspecialchars($subjectCode) ?> — <?= htmlspecialchars($subjectName) ?></div>
                 <div style="color:#666; font-size:13px; margin-top:4px;">อาจารย์ผู้สอน: <?= htmlspecialchars($teacherName) ?></div>

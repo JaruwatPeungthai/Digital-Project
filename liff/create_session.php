@@ -131,6 +131,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <style>
 #map { height: 400px; }
 </style>
+<style>
+  /* small utility for hover effects used on buttons */
+  .hover-effect { cursor: pointer; transition: background-color .35s; }
+  .hover-effect:focus { outline: none; }
+</style>
 </head>
 
 <body>
@@ -189,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
 
           <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 15px; margin-bottom: 15px;">
-            <h4 style="color: #1976d2; margin-bottom: 15px;">⏰ กำหนดเวลาเช็คเข้า/ออก</h4>
+            <h4 style="color: #007469; margin-bottom: 15px;">⏰ กำหนดเวลาเช็คเข้า/ออก</h4>
             
             <div class="form-group">
               <label class="form-label">เวลาเปิดช่องเช็คชื่อเข้า:</label>
@@ -233,7 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           <div class="form-group">
             <label class="form-label">รัศมี (เมตร):</label>
-            <input id="radius" name="radius" class="form-input" value="50">
+            <input id="radius" name="radius" class="form-input" value="50" type="number" min="0" step="1" inputmode="numeric" pattern="\d*" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
           </div>
 
           <div class="form-actions">
@@ -254,7 +259,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             นำเข้านักศึกษา <?= (int)$imported_students ?> คนจากรายวิชานี้เรียบร้อยแล้ว
           </p>
         <?php endif; ?>        <div style="text-align: center; padding: 20px;">
-          <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= urlencode($qr_url) ?>" style="border: 2px solid #1976d2; border-radius: 8px;">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=<?= urlencode($qr_url) ?>" style="border: 2px solid #007469; border-radius: 8px;">
           <p style="margin-top: 16px; font-size: 12px; color: #666; word-break: break-all;"><?= htmlspecialchars($qr_url) ?></p>
         </div>
       </div>
@@ -379,6 +384,39 @@ document.querySelector('form').addEventListener('submit', function(e) {
 });
 </script>
 <script src="js/modal-popup.js"></script>
+
+<script>
+// Attach hover behavior to the "ใช้ตำแหน่งปัจจุบัน" button
+document.addEventListener('DOMContentLoaded', function() {
+  const btn = document.querySelector('button[onclick="useMyLocation()"]');
+  if (!btn) return;
+
+  const cs = getComputedStyle(btn);
+  let origBg = cs.backgroundColor || '';
+  const hoverColor = 'rgb(0, 95, 86)'; // #005f56
+  const defaultReplacement = '#007469';
+  const norm = s => (s || '').replace(/\s+/g, '').toLowerCase();
+
+  // If the current computed background equals the hover color, set a safer default
+  if (norm(origBg) === norm(hoverColor)) {
+    btn.style.backgroundColor = defaultReplacement;
+    origBg = defaultReplacement;
+  }
+
+  btn.dataset._origBg = origBg;
+  btn.classList.add('hover-effect');
+  btn.style.cursor = 'pointer';
+  btn.style.transition = 'background-color .35s';
+
+  btn.addEventListener('mouseenter', function() {
+    this.style.backgroundColor = '#005f56';
+    this.style.color = '#ffffff';
+  });
+  btn.addEventListener('mouseleave', function() {
+    this.style.backgroundColor = this.dataset._origBg || '';
+  });
+});
+</script>
 
 </body>
 </html>

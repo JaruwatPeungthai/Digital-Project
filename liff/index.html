@@ -23,24 +23,29 @@ button {
 
 <body>
 
-<h1>📍 Q locate</h1>
-
 <!-- ===== หน้า Home ===== -->
-<div id="home" style="display:none">
-  <h3>เมนูหลัก</h3>
 
-  <button onclick="location.href='teacher_register.html'">
-    สมัครอาจารย์
-  </button><br>
+<div class="form-container">
 
-  <button onclick="location.href='teacher_login.php'">
-    Login อาจารย์
-  </button><br>
+    <img src="pic/logo.jpg" class="logo">
 
-  <button onclick="studentLogin()">
-    Login นักศึกษา (LINE)
-  </button>
-</div>
+    <img src="pic/Silpakorn_logo.png" class="uni-logo" alt="Silpakorn University Logo">
+
+    <h2>เมนูหลัก</h2>
+
+    <button onclick="location.href='teacher_register.html'">
+      ลงทะเบียนอาจารย์
+    </button>
+
+    <button onclick="location.href='teacher_login.php'">
+      Login อาจารย์
+    </button>
+
+    <button onclick="studentLogin()">
+      Login นักศึกษา (LINE)
+    </button>
+
+  </div>
 
 <!-- คอมเม้นตรงนี้(script)ไว้ตอนเอาไปทำ ui จะได้ไม่มี error -->
 

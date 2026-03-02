@@ -98,6 +98,9 @@ unset($_SESSION['error']);
   .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
   .close:hover { color: black; }
   .import-status { padding: 10px; border-radius: 4px; margin: 10px 0; }
+  /* Hover effect utilities for buttons on this page */
+  .hover-effect { cursor: pointer; transition: background-color .35s; }
+  .hover-effect:focus { outline: none; }
 </style>
 </head>
 <body>
@@ -493,6 +496,48 @@ function filterStudents() {
     row.style.display = (matchDept && matchSearch) ? '' : 'none';
   });
 }
+</script>
+// Add hover handlers to buttons so hover background becomes #005f56
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const TARGET_SELECTORS = ['.btn', '.btn-confirm', '.btn-cancel', '.btn-import', '.btn-remove-item', 'a.btn'];
+  const elems = Array.from(document.querySelectorAll(TARGET_SELECTORS.join(',')));
+  const hoverColor = 'rgb(0, 95, 86)'; // #005f56
+  const defaultReplacement = '#007469';
+
+  elems.forEach(el => {
+    // add utility class
+    el.classList.add('hover-effect');
+
+    // store computed background
+    const cs = getComputedStyle(el);
+    let origBg = cs.backgroundColor || '';
+    const norm = (s) => (s || '').replace(/\s+/g, '').toLowerCase();
+
+    // If the computed background is the hover color, change the default to #007469
+    if (norm(origBg) === norm(hoverColor)) {
+      el.style.backgroundColor = defaultReplacement;
+      origBg = defaultReplacement;
+    }
+
+    // save original in dataset for revert
+    el.dataset._origBg = origBg;
+
+    // apply pointer & transition styles (in case external CSS missing)
+    el.style.cursor = 'pointer';
+    el.style.transition = 'background-color .35s';
+
+    el.addEventListener('mouseenter', function() {
+      this.style.backgroundColor = '#005f56';
+      this.style.color = '#ffffff';
+    });
+
+    el.addEventListener('mouseleave', function() {
+      const ob = this.dataset._origBg || '';
+      this.style.backgroundColor = ob || '';
+    });
+  });
+});
 </script>
 <script src="js/modal-popup.js"></script>
 

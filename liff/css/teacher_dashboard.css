@@ -3,11 +3,11 @@
 
 /* Dashboard specific styling */
 .greeting-section {
-  background: #f0f8ff;
+  background: #fff;
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 16px;
-  border-left: 4px solid #1976d2;
+  border-left: 4px solid #007469;
 }
 
 .greeting-section p {

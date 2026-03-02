@@ -42,19 +42,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<div class="header"><h2>Login อาจารย์</h2></div>
-
-<form method="post">
-  Email:<br>
-  <input name="email" type="email" required><br><br>
-
-  Password:<br>
-  <input name="password" type="password" required><br><br>
-
-  <button>Login</button>
 </form>
+ <div class="form-container">
 
-<p style="color:red"><?= $error ?? '' ?></p>
+    <img src="pic/logo.jpg" class="logo">
+
+    <h2>Login Admin</h2>
+
+    <form method="post">
+
+      <input name="email" type="email" placeholder="Email" required>
+
+      <input name="password" type="password" placeholder="Password" required>
+
+      <button type="submit">Login</button>
+
+    </form>
+
+    <p style="color:red"><?= $error ?? '' ?></p>
+    <a href="index.html" class="back-link">← กลับหน้าแรก</a>
+  </div>
+
+
 
 </body>
 </html>
