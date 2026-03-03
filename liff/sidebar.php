@@ -15,16 +15,6 @@ $menuItems = [
     'icon' => 'dashboard'
   ],
   [
-    'url' => 'create_session.php',
-    'title' => '✏️ สร้าง QR เช็คชื่อ',
-    'icon' => 'create'
-  ],
-  [
-    'url' => 'sessions.php',
-    'title' => '📋 รายการ QR ที่เคยสร้าง',
-    'icon' => 'sessions'
-  ],
-  [
     'url' => 'courses.php',
     'title' => '📚 รายวิชา',
     'icon' => 'courses'

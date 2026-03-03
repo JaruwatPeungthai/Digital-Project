@@ -68,7 +68,7 @@ body {
 .sidebar-menu .menu-item.active a {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
-  border-left-color: #007469;
+  border-left-color: #ffeb3b;
   font-weight: 600;
 }
 

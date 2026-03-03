@@ -10,97 +10,142 @@ if (!isset($_SESSION['teacher_id'])) {
 $qr_url = null;
 $teacher_id = $_SESSION['teacher_id'];
 
-// Fetch subjects for this teacher
-$subjectStmt = $conn->prepare("SELECT subject_id, subject_name FROM subjects WHERE teacher_id = ? ORDER BY subject_name ASC");
-$subjectStmt->bind_param("i", $teacher_id);
-$subjectStmt->execute();
-$subjectResult = $subjectStmt->get_result();
-$hasSubjects = ($subjectResult->num_rows > 0);
-
+// Check if coming from a specific subject
+$subject_id_param = $_GET['subject_id'] ?? null;
 $error_msg = null;
+$selected_subject = '';
+$subject_details = null;
+
+// If subject_id parameter is provided, fetch the subject details
+if ($subject_id_param) {
+  $subjectStmt = $conn->prepare("
+    SELECT subject_id, subject_name, subject_code, section, years, semester 
+    FROM subjects 
+    WHERE teacher_id = ? AND subject_id = ?
+  ");
+  $subjectStmt->bind_param("ii", $teacher_id, $subject_id_param);
+  $subjectStmt->execute();
+  $subjectResult = $subjectStmt->get_result();
+  
+  if ($subjectResult->num_rows > 0) {
+    $subject_details = $subjectResult->fetch_assoc();
+    $selected_subject = $subject_details['subject_id'];
+  } else {
+    // Subject not found or doesn't belong to this teacher
+    $error_msg = "ไม่พบรายวิชาที่ระบุ";
+  }
+}
+
+// Only fetch all subjects if not coming from a specific subject
+$hasSubjects = false;
+if (!$subject_details) {
+  $subjectStmt = $conn->prepare("SELECT subject_id, subject_name FROM subjects WHERE teacher_id = ? ORDER BY subject_name ASC");
+  $subjectStmt->bind_param("i", $teacher_id);
+  $subjectStmt->execute();
+  $subjectResult = $subjectStmt->get_result();
+  $hasSubjects = ($subjectResult->num_rows > 0);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $token = bin2hex(random_bytes(16));
   
-  // Convert datetime-local format (YYYY-MM-DDTHH:MM) to MySQL format (YYYY-MM-DD HH:MM:SS)
-  $checkin_start = str_replace('T', ' ', $_POST['checkin_start']) . ':00';
-  $checkin_deadline = str_replace('T', ' ', $_POST['checkin_deadline']) . ':00';
-  $checkout_start = str_replace('T', ' ', $_POST['checkout_start']) . ':00';
-  $checkout_deadline = str_replace('T', ' ', $_POST['checkout_deadline']) . ':00';
-
-  // ตรวจสอบเงื่อนไขเวลา: checkin_start < checkin_deadline < checkout_start < checkout_deadline
-  $startTime = strtotime($checkin_start);
-  $deadlineTime = strtotime($checkin_deadline);
-  $checkoutStartTime = strtotime($checkout_start);
-  $checkoutDeadlineTime = strtotime($checkout_deadline);
-
-  if ($startTime >= $deadlineTime) {
-    $error_msg = "เวลาหมดเขตเช็คเข้าต้องมาหลังเวลาเริ่มเช็คเข้า";
-  } elseif ($deadlineTime >= $checkoutStartTime) {
-    $error_msg = "เวลาเริ่มเช็คออกต้องมาหลังเวลาหมดเขตเช็คเข้า";
-  } elseif ($checkoutStartTime >= $checkoutDeadlineTime) {
-    $error_msg = "เวลาหมดเขตเช็คออกต้องมาหลังเวลาเริ่มเช็คออก";
+  // If coming from a subject, use that; otherwise use POST value
+  $subject_id_to_save = $subject_details ? $subject_details['subject_id'] : $_POST['subject'];
+  $subject_name_to_save = $subject_details ? $subject_details['subject_name'] : '';
+  
+  // If not coming from a subject, fetch the subject name from the selected subject_id
+  if (!$subject_details && $subject_id_to_save) {
+    $tempStmt = $conn->prepare("SELECT subject_name FROM subjects WHERE subject_id = ? AND teacher_id = ?");
+    $tempStmt->bind_param("ii", $subject_id_to_save, $teacher_id);
+    $tempStmt->execute();
+    $tempResult = $tempStmt->get_result()->fetch_assoc();
+    if ($tempResult) {
+      $subject_name_to_save = $tempResult['subject_name'];
+    }
+  }
+  
+  if (!$subject_id_to_save) {
+    $error_msg = "กรุณาเลือกรายวิชา";
   } else {
-    $stmt = $conn->prepare("
-      INSERT INTO attendance_sessions
-      (teacher_id, subject_name, room_name, start_time, end_time,
-       latitude, longitude, radius_meter, qr_token,
-       checkin_start, checkin_deadline, checkout_start, checkout_deadline)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-    ");
+    // Convert datetime-local format (YYYY-MM-DDTHH:MM) to MySQL format (YYYY-MM-DD HH:MM:SS)
+    $checkin_start = str_replace('T', ' ', $_POST['checkin_start']) . ':00';
+    $checkin_deadline = str_replace('T', ' ', $_POST['checkin_deadline']) . ':00';
+    $checkout_start = str_replace('T', ' ', $_POST['checkout_start']) . ':00';
+    $checkout_deadline = str_replace('T', ' ', $_POST['checkout_deadline']) . ':00';
 
-    $stmt->bind_param(
-      "issssddisssss",
-      $teacher_id,
-      $_POST['subject'],
-      $_POST['room'],
-      $checkin_start,
-      $checkout_deadline,
-      $_POST['lat'],
-      $_POST['lng'],
-      $_POST['radius'],
-      $token,
-      $checkin_start,
-      $checkin_deadline,
-      $checkout_start,
-      $checkout_deadline
-    );
+    // ตรวจสอบเงื่อนไขเวลา: checkin_start < checkin_deadline < checkout_start < checkout_deadline
+    $startTime = strtotime($checkin_start);
+    $deadlineTime = strtotime($checkin_deadline);
+    $checkoutStartTime = strtotime($checkout_start);
+    $checkoutDeadlineTime = strtotime($checkout_deadline);
 
-    if (!$stmt->execute()) {
-      $error_msg = "เกิดข้อผิดพลาด: " . $stmt->error;
+    if ($startTime >= $deadlineTime) {
+      $error_msg = "เวลาหมดเขตเช็คเข้าต้องมาหลังเวลาเริ่มเช็คเข้า";
+    } elseif ($deadlineTime >= $checkoutStartTime) {
+      $error_msg = "เวลาเริ่มเช็คออกต้องมาหลังเวลาหมดเขตเช็คเข้า";
+    } elseif ($checkoutStartTime >= $checkoutDeadlineTime) {
+      $error_msg = "เวลาหมดเขตเช็คออกต้องมาหลังเวลาเริ่มเช็คออก";
     } else {
-      $qr_url = "https://liff.line.me/2008718294-WzVz06TP?token=$token";
+      $stmt = $conn->prepare("
+        INSERT INTO attendance_sessions
+        (teacher_id, subject_id, subject_name, room_name, start_time, end_time,
+         latitude, longitude, radius_meter, qr_token,
+         checkin_start, checkin_deadline, checkout_start, checkout_deadline)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      ");
 
-      // *** new behavior: import all students from the selected subject into
-      // the newly created session so that their attendance rows exist and
-      // show "-" until they check in/out.  This replaces the old summary
-      // workflow where the teacher would later import/finalize absent
-      // students.
-      $newSessionId = $conn->insert_id;
-      $subjectName = $_POST['subject'];
-
-      // import student list into attendance_logs and count how many were added
-      $importCount = 0;
-      $importStmt = $conn->prepare(
-        "SELECT ss.student_id
-         FROM subject_students ss
-         JOIN subjects s ON ss.subject_id = s.subject_id
-         WHERE s.subject_name = ? AND s.teacher_id = ?"
+      $stmt->bind_param(
+        "iissssddisssss",
+        $teacher_id,
+        $subject_id_to_save,
+        $subject_name_to_save,
+        $_POST['room'],
+        $checkin_start,
+        $checkout_deadline,
+        $_POST['lat'],
+        $_POST['lng'],
+        $_POST['radius'],
+        $token,
+        $checkin_start,
+        $checkin_deadline,
+        $checkout_start,
+        $checkout_deadline
       );
-      if ($importStmt) {
-        $importStmt->bind_param("si", $subjectName, $teacher_id);
-        $importStmt->execute();
-        $res = $importStmt->get_result();
-        $ins = $conn->prepare(
-          "INSERT IGNORE INTO attendance_logs (session_id, student_id) VALUES (?,?)"
+
+      if (!$stmt->execute()) {
+        $error_msg = "เกิดข้อผิดพลาด: " . $stmt->error;
+      } else {
+        $qr_url = "https://liff.line.me/2008718294-WzVz06TP?token=$token";
+
+        // *** new behavior: import all students from the selected subject into
+        // the newly created session so that their attendance rows exist and
+        // show "-" until they check in/out.  This replaces the old summary
+        // workflow where the teacher would later import/finalize absent
+        // students.
+        $newSessionId = $conn->insert_id;
+
+        // import student list into attendance_logs and count how many were added
+        $importCount = 0;
+        $importStmt = $conn->prepare(
+          "SELECT ss.student_id
+           FROM subject_students ss
+           WHERE ss.subject_id = ?"
         );
-        while ($row = $res->fetch_assoc()) {
-          if ($ins) {
-            $ins->bind_param("ii", $newSessionId, $row['student_id']);
-            $ins->execute();
-            if ($ins->affected_rows > 0) {
-              $importCount++;
+        if ($importStmt) {
+          $importStmt->bind_param("i", $subject_id_to_save);
+          $importStmt->execute();
+          $res = $importStmt->get_result();
+          $ins = $conn->prepare(
+            "INSERT IGNORE INTO attendance_logs (session_id, student_id) VALUES (?,?)"
+          );
+          while ($row = $res->fetch_assoc()) {
+            if ($ins) {
+              $ins->bind_param("ii", $newSessionId, $row['student_id']);
+              $ins->execute();
+              if ($ins->affected_rows > 0) {
+                $importCount++;
+              }
             }
           }
         }
@@ -141,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <!-- Include sidebar navigation -->
-<?php include('sidebar.php'); ?>
+<?php $currentPage = 'courses.php'; include('sidebar.php'); ?>
 
 <!-- Main content wrapper -->
 <div class="main-wrapper">
@@ -161,9 +206,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
       <?php endif; ?>
 
+      <?php if ($subject_details): ?>
+      <!-- Subject Info Card (when coming from a specific subject) -->
+      <div class="card" style="background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; margin-bottom: 20px; padding: 20px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 18px;">📌 ข้อมูลรายวิชา</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; line-height: 1.8;">
+          <div>
+            <p style="margin: 4px 0;"><strong>ชื่อวิชา:</strong> <?= htmlspecialchars($subject_details['subject_name']) ?></p>
+            <p style="margin: 4px 0;"><strong>รหัสวิชา:</strong> <?= htmlspecialchars($subject_details['subject_code']) ?></p>
+            <p style="margin: 4px 0;"><strong>เซค:</strong> <?= htmlspecialchars($subject_details['section']) ?></p>
+          </div>
+          <div>
+            <p style="margin: 4px 0;"><strong>ปีการศึกษา:</strong> <?= htmlspecialchars($subject_details['years']) ?></p>
+            <p style="margin: 4px 0;"><strong>เทอม:</strong> <?= htmlspecialchars($subject_details['semester']) ?></p>
+            <p style="margin: 4px 0;"><a href="sessions_by_subject.php?subject_id=<?= $subject_details['subject_id'] ?>" style="color: white; text-decoration: underline; font-weight: 600;">← กลับไปยังรายวิชา</a></p>
+          </div>
+        </div>
+      </div>
+      <?php endif; ?>
+
       <div class="card">
         <h3 class="section-header">สร้าง QR Code ใหม่</h3>
-        <?php if (! $hasSubjects): ?>
+        <?php if (!$subject_details && !$hasSubjects): ?>
           <div style="background:#fff3e0; border-left:4px solid #ff9800; color:#e65100; padding:12px; border-radius:4px; margin:15px 0;">
             ⚠️ ยังไม่มีรายวิชาที่สร้างไว้
             <a href="courses.php" class="btn" style="margin-left:10px; white-space:nowrap;">➕ สร้างรายวิชา</a>
@@ -171,11 +235,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
         
         <form method="post" class="form-section">
-        <?php if (! $hasSubjects) echo '<fieldset disabled>'; ?>
+        <?php if (!$subject_details && !$hasSubjects) echo '<fieldset disabled>'; ?>
+          
+          <?php if (!$subject_details): ?>
+          <!-- Subject dropdown (only shown if not coming from a specific subject) -->
           <div class="form-group">
             <label class="form-label">วิชา:</label>
             <select name="subject" class="form-input" required>
-              <?php if (! $hasSubjects): ?>
+              <?php if (!$hasSubjects): ?>
                 <option value="">ยังไม่มีรายวิชา</option>
               <?php else: ?>
                 <option value="">-- เลือกรายวิชา --</option>
@@ -187,6 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <?php endif; ?>
             </select>
           </div>
+          <?php endif; ?>
 
           <div class="form-group">
             <label class="form-label">รายละเอียด session:</label>
@@ -199,7 +267,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
               <label class="form-label">เวลาเปิดช่องเช็คชื่อเข้า:</label>
               <input type="datetime-local" name="checkin_start" class="form-input" required>
-              <small style="color: #999;">เมื่อไหร่ให้นักศึกษาสามารถเช็คชื่อเข้นได้</small>
+              <small style="color: #999;">เวลาที่นักศึกษาสามารถเช็คชื่อเข้าได้</small>
             </div>
 
             <div class="form-group">
@@ -211,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
               <label class="form-label">เวลาเปิดช่องเช็คชื่อออก:</label>
               <input type="datetime-local" name="checkout_start" class="form-input" required>
-              <small style="color: #999;">เมื่อไหร่ให้นักศึกษาสามารถเช็คชื่อออกได้</small>
+              <small style="color: #999;">เวลาที่นักศึกษาสามารถเช็คชื่อออกได้</small>
             </div>
 
             <div class="form-group">
@@ -248,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           
           <!-- ข้อความเตือน -->
           <div id="submitWarning" style="display:none; background:#fff3e0; border-left:4px solid #ff9800; color:#e65100; padding:12px 15px; border-radius:4px; margin-top:15px; font-size:14px;"></div>
-        <?php if (! $hasSubjects) echo '</fieldset>'; ?>
+        <?php if (!$subject_details && !$hasSubjects) echo '</fieldset>'; ?>
         </form>
       </div>
 

@@ -108,7 +108,7 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 // Get session info for reference
-$sessionStmt = $conn->prepare("SELECT subject_name, start_time, end_time, checkin_start FROM attendance_sessions WHERE id = ?");
+$sessionStmt = $conn->prepare("SELECT subject_name, subject_id, start_time, end_time, checkin_start FROM attendance_sessions WHERE id = ?");
 $sessionStmt->bind_param("i", $sessionId);
 $sessionStmt->execute();
 $sessionInfo = $sessionStmt->get_result()->fetch_assoc();
@@ -266,7 +266,7 @@ while ($row = $result->fetch_assoc()) {
 </head>
 <body>
 
-<?php $currentPage = 'sessions.php'; include('sidebar.php'); ?>
+<?php $currentPage = 'courses.php'; include('sidebar.php'); ?>
 
 <div class="main-wrapper">
     <div class="header">
@@ -276,7 +276,7 @@ while ($row = $result->fetch_assoc()) {
     <div class="content-area">
         <div class="container">
             <div class="footer-section" style="margin-bottom: 20px;">
-                <a href="sessions_by_subject.php?subject_name=<?= urlencode($sessionInfo['subject_name']) ?>" class="button-65">⬅ กลับ</a>
+                <a href="sessions_by_subject.php?subject_id=<?= $sessionInfo['subject_id'] ?>" class="button-65">⬅ กลับ</a>
             </div>
             <div class="card">
                 <?php if (!empty($groupedByDate) && count($groupedByDate) > 0): ?>

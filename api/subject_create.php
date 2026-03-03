@@ -10,13 +10,18 @@ if (!isset($_SESSION['teacher_id'])) {
 $name = trim($_POST['subject_name']);
 $code = trim($_POST['subject_code']);
 $section = trim($_POST['section']);
+$years = trim($_POST['years']);
+$semester = trim($_POST['semester']);
 $teacherId = $_SESSION['teacher_id'];
 
+// Generate hash for the subject data
+$hash = generateSubjectHash($name, $code, $section, $years, $semester);
+
 $stmt = $conn->prepare("
-  INSERT INTO subjects (teacher_id, subject_name, subject_code, section)
-  VALUES (?,?,?,?)
+  INSERT INTO subjects (teacher_id, subject_name, subject_code, section, years, semester, hash)
+  VALUES (?,?,?,?,?,?,?)
 ");
-$stmt->bind_param("isss", $teacherId, $name, $code, $section);
+$stmt->bind_param("issssss", $teacherId, $name, $code, $section, $years, $semester, $hash);
 
 // execute and redirect
 if (!$stmt->execute()) {

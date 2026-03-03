@@ -8,13 +8,24 @@ if (!isset($_SESSION['teacher_id'])) {
 }
 
 $teacherId = $_SESSION['teacher_id'];
-$subjectName = $_GET['subject_name'] ?? '';
-$currentPage = 'sessions.php'; // Active highlight สำหรับ sidebar
+$subjectId = $_GET['subject_id'] ?? '';
+$currentPage = 'courses.php'; // Active highlight สำหรับ sidebar
 
-if (!$subjectName) {
+if (!$subjectId) {
   header("Location: sessions.php");
   exit;
 }
+
+// ดึงข้อมูลวิชา
+$subjectStmt = $conn->prepare("
+  SELECT subject_id, subject_name, subject_code, section, years, semester
+  FROM subjects
+  WHERE subject_id = ? AND teacher_id = ?
+");
+$subjectStmt->bind_param("ii", $subjectId, $teacherId);
+$subjectStmt->execute();
+$subjectData = $subjectStmt->get_result()->fetch_assoc();
+$subjectName = $subjectData['subject_name'] ?? '';
 
 // ดึง session ทั้งหมดของวิชานี้ที่ยังไม่ถูกลบ
 $stmt = $conn->prepare("
@@ -26,7 +37,7 @@ $stmt = $conn->prepare("
        AND l.status = 'present') AS present_count
   FROM attendance_sessions s
   WHERE s.teacher_id = ? 
-    AND s.subject_name = ? 
+    AND s.subject_id = ? 
     AND s.deleted_at IS NULL
   ORDER BY COALESCE(s.checkin_start, s.start_time) DESC, s.id DESC
 ");
@@ -35,7 +46,7 @@ if (!$stmt) {
   die("Prepare failed: " . $conn->error);
 }
 
-$stmt->bind_param("is", $teacherId, $subjectName);
+$stmt->bind_param("ii", $teacherId, $subjectId);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -318,7 +329,27 @@ tr:hover {
     <!-- Container for main content -->
     <div class="container">
 
-      <a href="sessions.php" class="button-65">← กลับ</a>
+      <!-- Subject Info Card -->
+      <div class="card" style="background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; margin-bottom: 20px; padding: 20px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 18px;">📌 ข้อมูลรายวิชา</h3>
+        <div style="display: flex; justify-content: space-between; gap: 20px;">
+          <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
+            <p style="margin: 4px 0;"><strong>ชื่อวิชา:</strong> <?= htmlspecialchars($subjectName) ?></p>
+            <p style="margin: 4px 0;"><strong>ปีการศึกษา:</strong> <?= htmlspecialchars($subjectData['years'] ?? '-') ?></p>
+            
+            <p style="margin: 4px 0;"><strong>รหัสวิชา:</strong> <?= htmlspecialchars($subjectData['subject_code'] ?? '-') ?></p>
+            <p style="margin: 4px 0;"><strong>เทอม:</strong> <?= htmlspecialchars($subjectData['semester'] ?? '-') ?></p>
+            
+            <p style="margin: 4px 0;"><strong>เซค:</strong> <?= htmlspecialchars($subjectData['section'] ?? '-') ?></p>
+            <p style="margin: 4px 0;"><a href="courses.php" style="color: white; text-decoration: underline; font-weight: 600;">← กลับไปยังรายวิชา</a></p>
+          </div>
+          <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
+            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn btn-primary" style="padding: 12px 24px; background: white; color: #007469; font-weight: 600; text-decoration: none; border-radius: 6px; cursor: pointer; transition: background-color 0.35s ease; white-space: nowrap;">
+               สร้าง QR เช็คชื่อ
+            </a>
+          </div>
+        </div>
+      </div>
 
       <div class="card">
         <?php if (count($groupedByDate) > 0): ?>
@@ -395,7 +426,7 @@ tr:hover {
         <?php else: ?>
           <div class="empty-state">
             <p>ยังไม่มีเซสชั่นสำหรับรายวิชานี้</p>
-            <a href="create_session.php" class="btn" style="margin-top: 20px;">+ สร้าง QR ใหม่</a>
+            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn" style="margin-top: 20px;">+ สร้าง QR ใหม่</a>
           </div>
         <?php endif; ?>
       </div>

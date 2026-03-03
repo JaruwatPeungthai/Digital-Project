@@ -497,7 +497,7 @@ function filterStudents() {
   });
 }
 </script>
-// Add hover handlers to buttons so hover background becomes #005f56
+ <!-- Add hover handlers to buttons so hover background becomes #005f56 -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const TARGET_SELECTORS = ['.btn', '.btn-confirm', '.btn-cancel', '.btn-import', '.btn-remove-item', 'a.btn'];

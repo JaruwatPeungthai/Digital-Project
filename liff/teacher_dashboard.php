@@ -155,7 +155,7 @@ $subjectsResult = $subjectsStmt->get_result();
           </table>
         <?php else: ?>
           <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; color: #999;">
-            ยังไม่มีรายวิชา <a href="courses.php" style="color: #007469; text-decoration: none; font-weight: 600;">สร้างให้เหมือนกัน</a>
+            ยังไม่มีรายวิชา <a href="courses.php" style="color: #007469; text-decoration: none; font-weight: 600;">สร้างรายวิชา</a>
           </div>
         <?php endif; ?>
       </div>
