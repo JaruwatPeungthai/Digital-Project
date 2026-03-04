@@ -159,23 +159,35 @@ input, select { padding: 8px; margin-right: 10px; border: 1px solid #ddd; border
       </div>
 
       <!-- Attendance History Section -->
-      <div id="attendanceContent" class="card" style="display: none;">
-        <h3 class="section-header">📋 ประวัติการเข้าเรียน</h3>
-        
-        <!-- Combined summary -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:12px; flex-wrap:wrap;">
-          <div style="font-weight:600; color:#333;">สรุปรวมทั้งหมด</div>
-          <div style="background:#fff; border:1px solid #e6eef6; padding:8px 12px; border-radius:6px; font-size:14px;">
-            <strong>เช็คเข้า (รวม):</strong> <span id="totalCheckins">0</span> &nbsp;|&nbsp;
-            <strong>เช็คออก:</strong> <span id="totalCheckouts">0</span> &nbsp;|&nbsp;
-            <strong>ตรงเวลา:</strong> <span id="totalOnTime">0</span> &nbsp;|&nbsp;
-            <strong>สาย:</strong> <span id="totalLate">0</span> &nbsp;|&nbsp;
-            <strong>เช็คเข้าไม่เช็คออก:</strong> <span id="totalNoCheckout">0</span> &nbsp;|&nbsp;
-            <strong>ขาด:</strong> <span id="totalAbsent">0</span>
+      <div id="attendanceContent" style="display: none;">
+        <!-- Summary by subject cards -->
+        <div id="filterControls" style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-weight:700; color:#173e7a;">ปีการศึกษา:</label>
+            <select id="filterYear" style="padding:6px 8px; border:1px solid #ddd; border-radius:6px;"></select>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <label style="font-weight:700; color:#173e7a;">เทอม:</label>
+            <div id="filterSemester" style="display:flex; gap:6px;">
+              <button type="button" class="semester-btn active" data-sem="all" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">ทั้งหมด</button>
+              <button type="button" class="semester-btn" data-sem="1" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">1</button>
+              <button type="button" class="semester-btn" data-sem="2" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">2</button>
+              <button type="button" class="semester-btn" data-sem="3" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">3</button>
+            </div>
           </div>
         </div>
 
-        <div id="attendanceBySubject"></div>
+        <div class="card" style="margin-top:12px;">
+          <h3 style="color:#173e7a; font-size:18px; margin:0 0 16px 0;">📊 สรุปผลการเข้าเรียนรายวิชา</h3>
+          <div id="summaryBySubjectCards" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px;">
+          </div>
+        </div>
+
+        <!-- Detailed history section -->
+        <div class="card" style="margin-top:24px;">
+          <h3 style="margin:0;">📋 ประวัติการเข้าเรียน</h3>
+          <div id="attendanceBySubject"></div>
+        </div>
       </div>
 
       <!-- Requests Section -->
@@ -315,7 +327,14 @@ async function loadProfile() {
       return;
     }
 
-    const data = JSON.parse(text);
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Failed to parse JSON from student_subjects_history.php:', e, 'response:', text);
+      document.getElementById("attendanceBySubject").innerHTML = "<p>เกิดข้อผิดพลาด: ไม่สามารถอ่านข้อมูลจากเซิร์ฟเวอร์</p>";
+      return;
+    }
     
     if (data.error) {
       console.error("API error:", data.error);
@@ -345,7 +364,7 @@ async function loadProfile() {
 
 async function loadHistory() {
   try {
-    const res = await fetch("../api/attendance_history.php", {
+    const res = await fetch("../api/student_subjects_history.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ line_user_id: lineUserId })
@@ -364,16 +383,67 @@ async function loadHistory() {
       return;
     }
 
-    const rows = JSON.parse(text);
+    const data = JSON.parse(text);
+    const rows = data.sessions || [];
+    const allSubjects = data.subjects || {};
+    
     if (!Array.isArray(rows) || rows.length === 0) {
-      document.getElementById("attendanceBySubject").innerHTML = "<p>ไม่มีประวัติการเข้าเรียน</p>";
-      clearSummary();
+      // Still show empty subjects from allSubjects
+      if (Object.keys(allSubjects).length > 0) {
+        // Create summary cards for all subjects (even without history)
+        let summaryHtml = '';
+        Object.keys(allSubjects).forEach(subj => {
+          const meta = allSubjects[subj];
+          summaryHtml += '<div class="summary-card" data-years="' + htmlEscape(meta.years || '') + '" data-semester="' + htmlEscape(meta.semester || '') + '" style="border:1px solid #e6eef6; border-radius:8px; padding:14px; background:#fff; box-shadow:0 2px 8px rgba(30,60,120,0.08);">' +
+            '<div style="font-weight:700; font-size:14px; margin-bottom:12px; color:#173e7a; word-break:break-word;">' +
+            htmlEscape(meta.subject_code) + '<br>' +
+            '<span style="font-size:13px; color:#555; font-weight:500;">' + htmlEscape(subj) + '</span>' +
+            '<div style="font-size:12px; color:#777; margin-top:4px;">เซค ' + htmlEscape(meta.section || '-') + ' / ปี ' + htmlEscape(meta.years || '-') + ' / เทอม ' + htmlEscape(meta.semester || '-') + '</div>' +
+            '</div>' +
+            '<div style="font-size:13px; line-height:1.8; color:#333;">' +
+            '<div style="display:flex; align-items:center; margin-bottom:6px;"><span style="flex:1;">เช็คเข้าและเช็คออก:</span><span style="background:linear-gradient(90deg,#e8f5e9,#c8e6c9); color:#1b5e20; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">0</span></div>' +
+            '<div style="display:flex; align-items:center; margin-bottom:6px;"><span style="flex:1;">เช็คออก:</span><span style="background:linear-gradient(90deg,#e1f5fe,#b3e5fc); color:#01579b; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">0</span></div>' +
+            '<div style="display:flex; align-items:center; margin-bottom:6px;"><span style="flex:1;">ตรงเวลา:</span><span style="background:linear-gradient(90deg,#f0fff4,#d9f7dd); color:#1b5e20; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">0</span></div>' +
+            '<div style="display:flex; align-items:center; margin-bottom:6px;"><span style="flex:1;">สาย:</span><span style="background:linear-gradient(90deg,#fff3e0,#ffe0b2); color:#e65100; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">0</span></div>' +
+            '<div style="display:flex; align-items:center; margin-bottom:6px;"><span style="flex:1;">เช็คเข้า ไม่เช็คออก:</span><span style="background:linear-gradient(90deg,#fff7f0,#ffe8d8); color:#bf360c; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">0</span></div>' +
+            '<div style="display:flex; align-items:center;"><span style="flex:1;">ขาด:</span><span style="background:linear-gradient(90deg,#fff1f0,#ffd7d2); color:#b71c1c; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">0</span></div>' +
+            '</div></div>';
+        });
+        document.getElementById("summaryBySubjectCards").innerHTML = summaryHtml;
+        
+        // Show empty state for history
+        let historyHtml = '';
+        Object.keys(allSubjects).forEach((subj, index) => {
+          const meta = allSubjects[subj];
+          if (index > 0) historyHtml += '<div style="height: 1px; background: #eee; margin:18px 0; border-radius:2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);"></div>';
+          historyHtml += '<div class="subject-section" data-years="' + htmlEscape(meta.years || '') + '" data-semester="' + htmlEscape(meta.semester || '') + '" style="margin-top:18px; border:1px solid #e6eef6; border-radius:8px; overflow:hidden; background:#fff;">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background: #fff;">' +
+            '<div><div style="font-weight:700; font-size:15px;">' + htmlEscape(meta.subject_code) + ' — ' + htmlEscape(subj) + '</div>' +
+            '<div style="color:#666; font-size:13px; margin-top:4px;">อาจารย์ผู้สอน: ' + htmlEscape(meta.teacher_name) + '</div></div>' +
+            '<div style="text-align:right; background:#fff; border:1px solid #e6eef6; padding:8px 12px; border-radius:6px; font-size:13px; min-width:220px;">' +
+            '<div style="font-weight:700; margin-bottom:6px;">สรุปรายวิชา</div><div>เช็คเข้าและเช็คออก: <strong>0</strong></div><div>เช็คออก: <strong>0</strong></div><div>ตรงเวลา: <strong>0</strong> / สาย: <strong>0</strong></div><div>เช็คเข้าแต่ไม่เช็คออก: <strong>0</strong></div><div>ขาด: <strong>0</strong></div></div></div>' +
+            '<div class="table-wrapper" style="padding:12px;"><table class="attendance-table"><thead><tr class="table-header" style="background: #f2f2f2;"><th style="border: 1px solid #e6eef6;">รายละเอียด session</th><th style="border: 1px solid #e6eef6;">วันที่ session</th><th style="border: 1px solid #e6eef6;">เวลาเช็คชื่อเข้า</th><th style="border: 1px solid #e6eef6;">สถานะเข้า</th><th style="border: 1px solid #e6eef6;">เวลาเช็คชื่อออก</th><th style="border: 1px solid #e6eef6;">สถานะออก</th></tr></thead><tbody><tr><td colspan="6" style="text-align:center; color:#666; padding:20px; border: 1px solid #e6eef6;">ยังไม่มี session สำหรับรายวิชานี้</td></tr></tbody></table></div></div>';
+        });
+        document.getElementById("attendanceBySubject").innerHTML = historyHtml;
+        setupFilterControls();
+      } else {
+        document.getElementById("summaryBySubjectCards").innerHTML = "<p>ไม่มีประวัติการเข้าเรียน</p>";
+        document.getElementById("attendanceBySubject").innerHTML = "<p>ไม่มีประวัติการเข้าเรียน</p>";
+      }
       return;
     }
 
-    // Group by subject
+    // Group by subject - include ALL subjects
     const historyBySubject = {};
     const subjectMetadata = {};
+    
+    // Initialize all subjects first
+    Object.keys(allSubjects).forEach(subj => {
+      historyBySubject[subj] = [];
+      subjectMetadata[subj] = allSubjects[subj];
+    });
+    
+    // Add session data
     rows.forEach(row => {
       const subj = row.subject_name || 'ไม่ระบุ';
       if (!historyBySubject[subj]) {
@@ -414,14 +484,52 @@ async function loadHistory() {
     });
 
     // Update total summary display
-    document.getElementById("totalCheckins").innerText = totalSummary.on_time + totalSummary.late;
-    document.getElementById("totalCheckouts").innerText = totalSummary.present_checkout;
-    document.getElementById("totalOnTime").innerText = totalSummary.on_time;
-    document.getElementById("totalLate").innerText = totalSummary.late;
-    document.getElementById("totalNoCheckout").innerText = totalSummary.present_no_checkout;
-    document.getElementById("totalAbsent").innerText = totalSummary.absent;
+    // (Removed - no longer needed in new UI structure)
 
-    // Render grouped sections
+    // Render summary cards (📊 สรุปผลการเข้าเรียนรายวิชา)
+    let summaryHtml = '';
+    Object.keys(summaryBySubject).forEach(subj => {
+      const summ = summaryBySubject[subj];
+      const meta = subjectMetadata[subj] || {};
+      const totalCheckins = summ.on_time + summ.late;
+
+      summaryHtml += '<div class="summary-card" data-years="' + htmlEscape(meta.years || '') + '" data-semester="' + htmlEscape(meta.semester || '') + '" style="border:1px solid #e6eef6; border-radius:8px; padding:14px; background:#fff; box-shadow:0 2px 8px rgba(30,60,120,0.08);">' +
+        '<div style="font-weight:700; font-size:14px; margin-bottom:12px; color:#173e7a; word-break:break-word;">' +
+        htmlEscape(meta.subject_code) + '<br>' +
+        '<span style="font-size:13px; color:#555; font-weight:500;">' + htmlEscape(subj) + '</span>' +
+        '<div style="font-size:12px; color:#777; margin-top:4px;">เซค ' + htmlEscape(meta.section || '-') + ' / ปี ' + htmlEscape(meta.years || '-') + ' / เทอม ' + htmlEscape(meta.semester || '-') + '</div>' +
+        '</div>' +
+        '<div style="font-size:13px; line-height:1.8; color:#333;">' +
+        '<div style="display:flex; align-items:center; margin-bottom:6px;">' +
+        '<span style="flex:1;">เช็คเข้าและเช็คออก:</span>' +
+        '<span style="background:linear-gradient(90deg,#e8f5e9,#c8e6c9); color:#1b5e20; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">' + totalCheckins + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; margin-bottom:6px;">' +
+        '<span style="flex:1;">เช็คออก:</span>' +
+        '<span style="background:linear-gradient(90deg,#e1f5fe,#b3e5fc); color:#01579b; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">' + summ.present_checkout + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; margin-bottom:6px;">' +
+        '<span style="flex:1;">ตรงเวลา:</span>' +
+        '<span style="background:linear-gradient(90deg,#f0fff4,#d9f7dd); color:#1b5e20; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">' + summ.on_time + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; margin-bottom:6px;">' +
+        '<span style="flex:1;">สาย:</span>' +
+        '<span style="background:linear-gradient(90deg,#fff3e0,#ffe0b2); color:#e65100; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">' + summ.late + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center; margin-bottom:6px;">' +
+        '<span style="flex:1;">เช็คเข้า ไม่เช็คออก:</span>' +
+        '<span style="background:linear-gradient(90deg,#fff7f0,#ffe8d8); color:#bf360c; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">' + summ.present_no_checkout + '</span>' +
+        '</div>' +
+        '<div style="display:flex; align-items:center;">' +
+        '<span style="flex:1;">ขาด:</span>' +
+        '<span style="background:linear-gradient(90deg,#fff1f0,#ffd7d2); color:#b71c1c; padding:2px 8px; border-radius:4px; font-weight:700; min-width:40px; text-align:center;">' + summ.absent + '</span>' +
+        '</div>' +
+        '</div>' +
+        '</div>';
+    });
+    document.getElementById("summaryBySubjectCards").innerHTML = summaryHtml;
+
+    // Render grouped sections (📋 ประวัติการเข้าเรียน)
     let html = '';
     let isFirst = true;
     Object.keys(historyBySubject).forEach(subj => {
@@ -433,15 +541,16 @@ async function loadHistory() {
         html += '<div style="height: 1px; background: #eee; margin:18px 0; border-radius:2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);"></div>'; 
       }
 
-      html += '<div style="margin-top:18px; border:1px solid #e6eef6; border-radius:8px; overflow:hidden; background:#fff;">' +
+      html += '<div class="subject-section" data-years="' + htmlEscape(meta.years || '') + '" data-semester="' + htmlEscape(meta.semester || '') + '" style="margin-top:18px; border:1px solid #e6eef6; border-radius:8px; overflow:hidden; background:#fff;">' +
         '<div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background: #fff;">' +
         '<div>' +
         '<div style="font-weight:700; font-size:15px;">' + htmlEscape(meta.subject_code) + ' — ' + htmlEscape(subj) + '</div>' +
+        '<div style="font-size:12px; color:#555; margin-top:3px;">เซค ' + htmlEscape(meta.section || '-') + ' / ปี ' + htmlEscape(meta.years || '-') + ' / เทอม ' + htmlEscape(meta.semester || '-') + '</div>' +
         '<div style="color:#666; font-size:13px; margin-top:4px;">อาจารย์ผู้สอน: ' + htmlEscape(meta.teacher_name) + '</div>' +
         '</div>' +
         '<div style="text-align:right; background:#fff; border:1px solid #e6eef6; padding:8px 12px; border-radius:6px; font-size:13px; min-width:220px;">' +
         '<div style="font-weight:700; margin-bottom:6px;">สรุปรายวิชา</div>' +
-        '<div>เช็คเข้า (รวม): <strong>' + totalCheckins + '</strong></div>' +
+        '<div>เช็คเข้าและเช็คออก: <strong>' + totalCheckins + '</strong></div>' +
         '<div>เช็คออก: <strong>' + summ.present_checkout + '</strong></div>' +
         '<div>ตรงเวลา: <strong>' + summ.on_time + '</strong> / สาย: <strong>' + summ.late + '</strong></div>' +
         '<div>เช็คเข้าแต่ไม่เช็คออก: <strong>' + summ.present_no_checkout + '</strong></div>' +
@@ -490,20 +599,89 @@ async function loadHistory() {
       isFirst = false;
     });
 
+    if (html === '') {
+      html = '<div style="padding:20px; text-align:center; color:#666;">ไม่มีประวัติการเข้าเรียน</div>';
+    }
+
     document.getElementById("attendanceBySubject").innerHTML = html;
+    setupFilterControls();
   } catch (error) {
     console.error("loadHistory error:", error);
     document.getElementById("attendanceBySubject").innerHTML = "<p>เกิดข้อผิดพลาด: " + error.message + "</p>";
   }
 }
 
-function clearSummary() {
-  document.getElementById("totalCheckins").innerText = '0';
-  document.getElementById("totalCheckouts").innerText = '0';
-  document.getElementById("totalOnTime").innerText = '0';
-  document.getElementById("totalLate").innerText = '0';
-  document.getElementById("totalNoCheckout").innerText = '0';
-  document.getElementById("totalAbsent").innerText = '0';
+// Filter helpers: populate year select, bind semester buttons, and apply filters
+function populateYearSelects(selectId, startThaiYear = 2565) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '';
+  const currentThai = new Date().getFullYear() + 543;
+  for (let y = startThaiYear; y <= currentThai; y++) {
+    const opt = document.createElement('option');
+    opt.value = String(y);
+    opt.text = String(y);
+    if (y === currentThai) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function applyFilters() {
+  const year = (document.getElementById('filterYear') || {}).value || '';
+  const semBtn = document.querySelector('#filterSemester .semester-btn.active');
+  const sem = semBtn ? semBtn.getAttribute('data-sem') : 'all';
+
+  // summary cards
+  document.querySelectorAll('.summary-card').forEach(el => {
+    const y = el.getAttribute('data-years') || '';
+    const s = el.getAttribute('data-semester') || '';
+    const matchYear = !year || year === '' || y === '' || y === year;
+    const matchSem = (sem === 'all') || s === '' || s === sem;
+    el.style.display = (matchYear && matchSem) ? '' : 'none';
+  });
+
+  // subject sections in history
+  const subjectSections = document.querySelectorAll('.subject-section');
+  subjectSections.forEach(el => {
+    const y = el.getAttribute('data-years') || '';
+    const s = el.getAttribute('data-semester') || '';
+    const matchYear = !year || year === '' || y === '' || y === year;
+    const matchSem = (sem === 'all') || s === '' || s === sem;
+    el.style.display = (matchYear && matchSem) ? '' : 'none';
+  });
+
+  // If no visible subject sections, show a top-level message
+  const anyVisible = Array.from(subjectSections).some(el => el.style.display !== 'none');
+  const attendanceContainer = document.getElementById('attendanceBySubject');
+  const summaryContainer = document.getElementById('summaryBySubjectCards');
+  if (!anyVisible) {
+    if (attendanceContainer) attendanceContainer.querySelectorAll('.no-results-message').forEach(n=>n.remove());
+    const msg = document.createElement('div');
+    msg.className = 'no-results-message';
+    msg.style.padding = '16px'; msg.style.color = '#666'; msg.style.textAlign = 'center';
+    msg.innerText = 'ไม่พบรายวิชาในปีการศึกษา/เทอมที่เลือก';
+    if (attendanceContainer && attendanceContainer.parentNode) attendanceContainer.parentNode.insertBefore(msg, attendanceContainer.nextSibling);
+  } else {
+    // remove message if present
+    const existing = document.querySelectorAll('.no-results-message');
+    existing.forEach(n => n.remove());
+  }
+}
+
+function setupFilterControls() {
+  populateYearSelects('filterYear');
+  const semButtons = document.querySelectorAll('.semester-btn');
+  semButtons.forEach(btn => {
+    btn.onclick = () => {
+      semButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    };
+  });
+  const yearSel = document.getElementById('filterYear');
+  if (yearSel) yearSel.onchange = applyFilters;
+  // apply initial filter after short delay to ensure DOM ready
+  setTimeout(applyFilters, 50);
 }
 
 function htmlEscape(str) {

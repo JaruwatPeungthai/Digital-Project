@@ -12,11 +12,24 @@ $teacherId = $_SESSION['teacher_id'];
 $stmt = $conn->prepare("
   SELECT * FROM subjects
   WHERE teacher_id = ?
-  ORDER BY subject_id DESC
+  ORDER BY years DESC, subject_id DESC
 ");
 $stmt->bind_param("i", $teacherId);
 $stmt->execute();
 $subjects = $stmt->get_result();
+
+// Group subjects by year
+$groupedByYear = [];
+while ($row = $subjects->fetch_assoc()) {
+  $year = $row['years'] ?? 'ไม่มีปีการศึกษา';
+  if (!isset($groupedByYear[$year])) {
+    $groupedByYear[$year] = [];
+  }
+  $groupedByYear[$year][] = $row;
+}
+
+// Sort years descending
+krsort($groupedByYear);
 ?>
 
 <!DOCTYPE html>
@@ -28,9 +41,46 @@ $subjects = $stmt->get_result();
 <link rel="stylesheet" href="css/sidebar.css">
 <link rel="stylesheet" href="css/courses.css">
 <style>
-table { border-collapse: collapse; width:100%; }
-th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-th { background: #ccc; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+td, th {
+  border-bottom: 1px solid #eee;
+  padding: 12px;
+  text-align: center;
+}
+
+th {
+  background: #f5f5f5;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+}
+
+tr:hover {
+  background: #f9f9f9;
+}
+
+.year-section {
+  margin-bottom: 30px;
+}
+
+.year-header {
+  background: #007469;
+  padding: 15px 20px;
+  border-radius: 8px 8px 0 0;
+  font-weight: bold;
+  font-size: 16px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 /* button hover styling */
 .btn:hover { background: #005f56 !important; cursor: pointer; color: white; }
@@ -87,7 +137,9 @@ th { background: #ccc; }
               </div>
               <div>
                 <label>ปีการศึกษา:</label>
-                <input name="years" id="edit_years" class="form-input" type="number" required style="width:100%;" placeholder="เช่น 2566">
+                <select name="years" id="edit_years" class="form-input" required style="width:100%;">
+                  <option value="">-- เลือกปีการศึกษา --</option>
+                </select>
               </div>
               <!-- row4 buttons -->
               <div style="grid-column:1/2; text-align:left;">
@@ -133,7 +185,9 @@ th { background: #ccc; }
               </div>
               <div>
                 <label>ปีการศึกษา:</label>
-                <input name="years" id="years" class="form-input" type="number" required style="width:100%;" placeholder="เช่น 2566">
+                <select name="years" id="years" class="form-input" required style="width:100%;">
+                  <option value="">-- เลือกปีการศึกษา --</option>
+                </select>
               </div>
               <!-- row4 buttons -->
               <div style="grid-column:1/2; text-align:left;">
@@ -150,52 +204,79 @@ th { background: #ccc; }
       <div class="card" style="position: relative;">
         <h3 class="section-header" style="display: inline-block;">รายวิชาของฉัน</h3>
         <button id="openAddBtn" class="btn" style="position:absolute; top:12px; right:12px; padding:6px 12px;">➕ สร้างรายวิชา</button>
-        <div style="overflow-x: auto;">
-          <table>
-            <tr>
-              <th>ชื่อวิชา</th>
-              <th>รหัสวิชา</th>
-              <th>เซค</th>
-              <th>ปีการศึกษา</th>
-              <th>เทอม</th>
-              <th>ดูรายชื่อนักศึกษา</th>
-              <th>ดูเซสชัน QR</th>
-              <th>จัดการ</th>
-            </tr>
-
-            <?php while ($row = $subjects->fetch_assoc()): ?>
-            <tr>
-              <td><?= htmlspecialchars($row['subject_name']) ?></td>
-              <td><?= htmlspecialchars($row['subject_code']) ?></td>
-              <td><?= htmlspecialchars($row['section']) ?></td>
-              <td><?= htmlspecialchars($row['years'] ?? '-') ?></td>
-              <td><?= htmlspecialchars($row['semester'] ?? '-') ?></td>
-              <td>
-                  <a href="subject_students.php?id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">
-                  👥 นักศึกษา
-                </a>
-              </td>
-              <td>
-                  <a href="sessions_by_subject.php?subject_id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">
-                  📋 เซสชัน
-                </a>
-              </td>
-              <td>
-                <button class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="openEditModal(<?= $row['subject_id'] ?>, '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['section'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['years'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['semester'], ENT_QUOTES) ?>')" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">✏️ แก้ไข</button>
-                <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="confirmDelete(
-                <?= $row['subject_id'] ?>,
-                '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>',
-                '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>'
-                )" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">❌ ลบ</button>
-            </td>
-            </tr>
-            <?php endwhile; ?>
-
-            <?php if ($subjects->num_rows === 0): ?>
-            <tr><td colspan="8">ยังไม่มีรายวิชา</td></tr>
-            <?php endif; ?>
-          </table>
+        
+        <!-- Filter controls (outside year-sections) -->
+        <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="yearFilter" style="font-weight: 600; color: #333;">ปีการศึกษา:</label>
+            <select id="yearFilter" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;" onchange="filterTable()">
+              <!-- Will be populated by JS -->
+            </select>
+          </div>
+          <div style="display: flex; gap: 0; border-radius: 6px; overflow: hidden; background: #f0f0f0; border: 1px solid #ddd;">
+            <button class="semester-btn" data-semester="1" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s; border-radius: 6px 0 0 6px;">เทอม 1</button>
+            <button class="semester-btn" data-semester="2" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; border-left: 1px solid #ddd; font-weight: 600; color: #333; transition: all 0.3s;">เทอม 2</button>
+            <button class="semester-btn" data-semester="3" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; border-left: 1px solid #ddd; font-weight: 600; color: #333; transition: all 0.3s; border-radius: 0 6px 6px 0;">เทอม 3</button>
+          </div>
         </div>
+        
+        <?php if (count($groupedByYear) > 0): ?>
+          <?php foreach ($groupedByYear as $year => $yearSubjects): ?>
+            <div class="year-section" data-year="<?= htmlspecialchars($year) ?>">
+              <div class="year-header">
+                <span>📚 ปีการศึกษา <?= htmlspecialchars($year) ?></span>
+                <span style="font-size: 14px; font-weight: normal;"><?= count($yearSubjects) ?> รายวิชา</span>
+              </div>
+              <div class="section-content">
+                <div style="overflow-x: auto;">
+                  <table>
+                  <tr>
+                    <th>รหัสวิชา</th>
+                    <th style="text-align: left;">ชื่อวิชา</th>
+                    <th>เซค</th>
+                    <th>ดูรายชื่อนักศึกษา</th>
+                    <th>ดูเซสชัน QR</th>
+                    <th>จัดการ</th>
+                  </tr>
+
+                  <?php foreach ($yearSubjects as $row): ?>
+                  <tr class="subject-row" data-years="<?= htmlspecialchars($row['years']) ?>" data-semester="<?= htmlspecialchars($row['semester']) ?>">
+                    <td><?= htmlspecialchars($row['subject_code']) ?></td>
+                    <td style="text-align: left;"><?= htmlspecialchars($row['subject_name']) ?></td>
+                    <td><?= htmlspecialchars($row['section']) ?></td>
+                    <td>
+                        <a href="subject_students.php?id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">
+                        👥 นักศึกษา
+                      </a>
+                    </td>
+                    <td>
+                        <a href="sessions_by_subject.php?subject_id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">
+                        📋 เซสชัน
+                      </a>
+                    </td>
+                    <td>
+                      <button class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="openEditModal(<?= $row['subject_id'] ?>, '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['section'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['years'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['semester'], ENT_QUOTES) ?>')" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">✏️ แก้ไข</button>
+                      <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="confirmDelete(
+                      <?= $row['subject_id'] ?>,
+                      '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>',
+                      '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>'
+                      )" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">❌ ลบ</button>
+                  </td>
+                  </tr>
+                  <?php endforeach; ?>
+                </table>
+                </div>
+                <div class="empty-state" style="display: none; padding: 30px 20px; text-align: center; color: #999; border-bottom: 1px solid #eee;">
+                  ไม่มีรายวิชาในปีการศึกษานี้ เทอมนี้
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php else: ?>
+          <div style="text-align: center; padding: 40px; color: #999;">
+            <p>ยังไม่มีรายวิชา</p>
+          </div>
+        <?php endif; ?>
       </div>
         
         
@@ -399,7 +480,7 @@ function openEditModal(id, name, code, section, years, semester) {
   document.getElementById('edit_subject_name').value = name;
   document.getElementById('edit_subject_code').value = code;
   document.getElementById('edit_section').value = section;
-  document.getElementById('edit_years').value = years;
+  document.getElementById('edit_years').value = years;  // Set the select value
   document.getElementById('edit_semester').value = semester;
   document.getElementById('editModal').style.display = 'flex';
 }
@@ -576,6 +657,150 @@ function showModal(message, type, title) {
     document.head.appendChild(style);
   }
 }
+
+// === Populate Year Dropdowns in Create/Edit Forms ===
+function populateYearSelects() {
+  const currentYear = new Date().getFullYear() + 543;
+  
+  // Populate both create and edit form year selects
+  const yearSelects = [document.getElementById('years'), document.getElementById('edit_years')];
+  
+  yearSelects.forEach(select => {
+    if (select) {
+      // Clear existing options except the placeholder
+      const options = select.querySelectorAll('option');
+      options.forEach((opt, idx) => {
+        if (idx > 0) opt.remove();
+      });
+      
+      // Add year options from 2565 to current year
+      for (let year = currentYear; year >= 2565; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.text = 'ปี ' + year;
+        select.appendChild(option);
+      }
+    }
+  });
+}
+
+// === Filter Table by Year and Semester ===
+function initializeFilter() {
+  // Get current Thai year
+  const currentYear = new Date().getFullYear() + 543;
+  
+  // Populate year dropdown (2565 to current year)
+  const yearSelect = document.getElementById('yearFilter');
+  if (yearSelect) {
+    for (let year = currentYear; year >= 2565; year--) {
+      const option = document.createElement('option');
+      option.value = year;
+      option.text = 'ปี ' + year;
+      if (year === currentYear) {
+        option.selected = true;
+      }
+      yearSelect.appendChild(option);
+    }
+  }
+  
+  // Set semester 1 as active by default
+  const semesterBtns = document.querySelectorAll('.semester-btn');
+  if (semesterBtns.length > 0) {
+    semesterBtns[0].style.backgroundColor = '#007469';
+    semesterBtns[0].style.color = 'white';
+    semesterBtns[0].dataset.active = 'true';
+  }
+  
+  filterTable();
+}
+
+function filterTable() {
+  const selectedYear = document.getElementById('yearFilter').value;
+  const semesterBtns = document.querySelectorAll('.semester-btn');
+  let selectedSemester = null;
+  
+  semesterBtns.forEach(btn => {
+    if (btn.dataset.active === 'true') {
+      selectedSemester = btn.dataset.semester;
+    }
+  });
+  
+  // Hide/show year sections and rows
+  const yearSections = document.querySelectorAll('.year-section');
+  let anyVisibleSection = false;
+  
+  yearSections.forEach(section => {
+    const sectionYear = section.dataset.year;
+    const rows = section.querySelectorAll('.subject-row');
+    let visibleRowCount = 0;
+    
+    rows.forEach(row => {
+      const rowYear = row.dataset.years;
+      const rowSemester = row.dataset.semester;
+      
+      if (rowYear === selectedYear && rowSemester === selectedSemester) {
+        row.style.display = '';
+        visibleRowCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    
+    // Hide section if no visible rows
+    if (visibleRowCount === 0) {
+      section.style.display = 'none';
+    } else {
+      section.style.display = '';
+      anyVisibleSection = true;
+    }
+  });
+  
+  // Show empty message if no sections visible
+  let emptyMsg = document.getElementById('noSubjectsMessage');
+  if (!anyVisibleSection) {
+    if (!emptyMsg) {
+      emptyMsg = document.createElement('div');
+      emptyMsg.id = 'noSubjectsMessage';
+      emptyMsg.style.cssText = 'text-align: center; padding: 40px; color: #999;';
+      emptyMsg.innerText = 'ไม่มีรายวิชาในปีการศึกษาและเทอมนี้';
+      document.querySelector('.card').appendChild(emptyMsg);
+    }
+    emptyMsg.style.display = 'block';
+  } else if (emptyMsg) {
+    emptyMsg.style.display = 'none';
+  }
+}
+
+// Semester button toggle
+document.addEventListener('DOMContentLoaded', function() {
+  const semesterBtns = document.querySelectorAll('.semester-btn');
+  
+  semesterBtns.forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Remove active state from all buttons
+      semesterBtns.forEach(b => {
+        b.style.backgroundColor = '#f0f0f0';
+        b.style.color = '#333';
+        b.dataset.active = 'false';
+      });
+      
+      // Add active state to clicked button
+      this.style.backgroundColor = '#007469';
+      this.style.color = 'white';
+      this.dataset.active = 'true';
+      
+      filterTable();
+    });
+  });
+  
+  // Initialize filter on page load
+  initializeFilter();
+  
+  // Populate year selects in forms
+  populateYearSelects();
+});
 </script>
 
 </html>

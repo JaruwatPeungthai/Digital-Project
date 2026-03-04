@@ -62,6 +62,9 @@ while ($row = $result->fetch_assoc()) {
 
 // จัดเรียงวันที่จากใหม่ไปเก่า
 krsort($groupedByDate);
+
+// determine if there are any sessions for display logic
+$hasSessions = count($groupedByDate) > 0;
 ?>
 
 <!DOCTYPE html>
@@ -80,6 +83,20 @@ krsort($groupedByDate);
   color: #007469;
   text-decoration: none;
   font-weight: 600;
+}
+
+/* button inside card when sessions exist */
+.card .create-session-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  color: #007469;
+  padding: 12px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .back-link:hover {
@@ -330,7 +347,7 @@ tr:hover {
     <div class="container">
 
       <!-- Subject Info Card -->
-      <div class="card" style="background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; margin-bottom: 20px; padding: 20px;">
+      <div class="card" style="position: relative; background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; margin-bottom: 20px; padding: 20px;">
         <h3 style="margin: 0 0 15px 0; font-size: 18px;">📌 ข้อมูลรายวิชา</h3>
         <div style="display: flex; justify-content: space-between; gap: 20px;">
           <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
@@ -343,16 +360,14 @@ tr:hover {
             <p style="margin: 4px 0;"><strong>เซค:</strong> <?= htmlspecialchars($subjectData['section'] ?? '-') ?></p>
             <p style="margin: 4px 0;"><a href="courses.php" style="color: white; text-decoration: underline; font-weight: 600;">← กลับไปยังรายวิชา</a></p>
           </div>
-          <div style="display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
-            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn btn-primary" style="padding: 12px 24px; background: white; color: #007469; font-weight: 600; text-decoration: none; border-radius: 6px; cursor: pointer; transition: background-color 0.35s ease; white-space: nowrap;">
-               สร้าง QR เช็คชื่อ
-            </a>
-          </div>
         </div>
+        <?php if ($hasSessions): ?>
+          <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="create-session-btn">+ สร้าง QR ใหม่</a>
+        <?php endif; ?>
       </div>
 
       <div class="card">
-        <?php if (count($groupedByDate) > 0): ?>
+        <?php if ($hasSessions): ?>
           <?php foreach ($groupedByDate as $date => $sessions): 
             // แปลงวันที่เป็นรูปแบบที่อ่านได้
             $dateObj = new DateTime($date, new DateTimeZone('Asia/Bangkok'));
@@ -429,6 +444,7 @@ tr:hover {
             <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn" style="margin-top: 20px;">+ สร้าง QR ใหม่</a>
           </div>
         <?php endif; ?>
+
       </div>
 
     </div>

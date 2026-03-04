@@ -75,6 +75,43 @@ unset($_SESSION['error']);
   body { font-family: Arial, sans-serif; margin: 0; }
   /* ...existing code... */
   /* ลบ margin:20px ออกเพื่อให้ layout เหมือนหน้าอื่น */
+
+  /* table theme (matches courses.php) */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  td, th {
+    border-bottom: 1px solid #eee;
+    padding: 12px;
+    text-align: center;
+  }
+  th {
+    background: #f5f5f5;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+  }
+  tr:hover {
+    background: #f9f9f9;
+  }
+
+  /* filter UI inside modal */
+  .filter-section { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+  .filter-group { display: inline-block; margin-right: 20px; }
+  .filter-label { margin-right: 8px; font-weight: 600; }
+  .filter-input, .filter-select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; }
+  .col-select { width: 40px; }
+
+  /* modal visibility and layout (hide until opened) */
+  .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
+  .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
+
+  /* card action container for buttons */
+  .card-actions { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -92,47 +129,8 @@ unset($_SESSION['error']);
       
 
 
-      <!DOCTYPE html>
-      <html>
-      <head>
-      <meta charset="UTF-8">
-      <title>รายชื่อนักศึกษาในวิชา <?= htmlspecialchars($subject['subject_name']) ?></title>
-      <link rel="stylesheet" href="css/sidebar.css">
-      <link rel="stylesheet" href="css/subject_students.css">
-      <style>
-        table { border-collapse: collapse; width:100%; margin-top: 15px; }
-        th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-        th { background-color: #f2f2f2; }
-        .filter-section { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .filter-section label { margin-right: 10px; }
-        .filter-section input, .filter-section select { padding: 5px; margin-right: 10px; }
-        h3 { margin-top: 30px; color: #333; }
-        .enrolled-section { color: green; }
-        .not-enrolled-section { color: #666; }
-        .success { color: green; padding: 10px; background-color: #e8f5e9; border-radius: 4px; margin-bottom: 10px; }
-        .error { color: red; padding: 10px; background-color: #ffebee; border-radius: 4px; margin-bottom: 10px; }
-        .upload-section { background-color: #fffacd; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #daa; }
-        .upload-section input[type="file"], .upload-section button { padding: 8px 12px; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close:hover { color: black; }
-        .import-status { padding: 10px; border-radius: 4px; margin: 10px 0; }
-        /* Hover effect utilities for buttons on this page */
-        .hover-effect { cursor: pointer; transition: background-color .35s; }
-        .hover-effect:focus { outline: none; }
-      </style>
-      </head>
-      <body>
 
-
-      <div class="main-wrapper">
-        <div class="header">
-          <h2 id="page-title">👥 รายชื่อนักศึกษาในวิชา: <?= htmlspecialchars($subject['subject_name']) ?></h2>
-        </div>
-        <div class="content-area">
-          <div class="container page-container">
-            <?php if ($successMsg): ?>
+        <?php if ($successMsg): ?>
             <div class="success" id="success-msg"> <?= htmlspecialchars($successMsg) ?> </div>
             <?php endif; ?>
             <?php if ($errorMsg): ?>
@@ -150,10 +148,12 @@ unset($_SESSION['error']);
               </div>
             </div>
 
-            <a href="courses.php" class="button-65" style="margin-bottom: 15px; display: inline-block;">⬅ กลับหน้ารายวิชา</a>
-
             <!-- Enrolled students section -->
             <div class="card advisees-card">
+              <div class="card-actions">
+                <a href="courses.php" class="button-65">⬅ กลับหน้ารายวิชา</a>
+                <button id="openAvailableBtn" class="btn">เพิ่มรายชื่อนักศึกษา (<?= count($not_enrolled_students) ?>)</button>
+              </div>
               <h3 class="section-header enrolled-section">✅ นักศึกษาในวิชานี้ (<?= count($enrolled_students) ?>)</h3>
               <table class="advisees-table">
                 <thead>
@@ -172,7 +172,7 @@ unset($_SESSION['error']);
                       <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
                       <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
                       <td class="col-actions">
-                        <a href="../api/subject_student_remove.php?subject=<?= $subjectId ?>&student=<?= $st['user_id'] ?>" class="btn btn-danger" onclick="return confirm('ยืนยันลบ?')">❌ ลบ</a>
+                        <button class="btn btn-danger" onclick="handleDeleteStudent(<?= $subjectId ?>, <?= $st['user_id'] ?>); return false;">❌ ลบ</button>
                       </td>
                     </tr>
                     <?php endforeach; ?>
@@ -185,62 +185,67 @@ unset($_SESSION['error']);
               </table>
             </div>
 
-            <!-- Available students to add (card container) -->
-            <div class="card available-card">
-              <h3 class="section-header not-enrolled-section">➕ รายชื่อที่ยังไม่ได้เพิ่ม (<?= count($not_enrolled_students) ?>)</h3>
-              <div class="filters-section">
-                <div class="filter-group">
-                  <label for="departmentFilter" class="filter-label">กรองตามสาขา (Department):</label>
-                  <select id="departmentFilter" class="filter-select" onchange="filterStudents()">
-                    <option value="">-- ทั้งหมด --</option>
-                    <option value="ธุรกิจ">ธุรกิจ</option>
-                    <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
-                    <option value="ออกแบบแอพ">ออกแบบแอพ</option>
-                    <option value="ออกแบบเกม">ออกแบบเกม</option>
-                    <option value="นิเทศ">นิเทศ</option>
-                  </select>
-                </div>
-                <div class="filter-group">
-                  <label for="searchInput" class="filter-label">ค้นหา (ชื่อ/รหัส):</label>
-                  <input type="text" id="searchInput" class="filter-input" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา" onkeyup="filterStudents()">
-                </div>
-              </div>
-              <table id="studentTable" class="students-table">
-                <thead>
-                  <tr class="table-header">
-                    <th class="col-code">รหัสนักศึกษา</th>
-                    <th class="col-name">ชื่อ-นามสกุล</th>
-                    <th class="col-dept">สาขา</th>
-                    <th class="col-actions">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if (count($not_enrolled_students) > 0): ?>
-                    <?php foreach ($not_enrolled_students as $st): ?>
-                    <tr class="student-row" data-code="<?= htmlspecialchars($st['student_code']) ?>" 
-                        data-name="<?= htmlspecialchars($st['full_name']) ?>" 
-                        data-class="<?= htmlspecialchars($st['class_group']) ?>">
-                      <td class="col-code"><?= htmlspecialchars($st['student_code']) ?></td>
-                      <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
-                      <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
-                      <td class="col-actions">
-                        <a href="../api/subject_student_add.php?subject=<?= $subjectId ?>&student=<?= $st['user_id'] ?>" class="btn btn-success">➕ เพิ่ม</a>
-                      </td>
-                    </tr>
-                    <?php endforeach; ?>
-                  <?php else: ?>
-                    <tr class="table-row empty-row">
-                      <td colspan="4" class="empty-cell">ไม่มีนักศึกษาที่ยังไม่อยู่ในรายวิชานี้</td>
-                    </tr>
-                  <?php endif; ?>
-                </tbody>
-              </table>
-            </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- Back link -->
-            <div class="footer-section">
-              <p><a href="courses.php" class="button-65">⬅ กลับหน้ารายวิชา</a></p>
+      <!-- Modal for managing not-enrolled students -->
+      <div id="availableModal" class="modal" role="dialog" aria-modal="true">
+        <div class="modal-content">
+          <div class="modal-header" style="position:relative;">
+            <h2 class="modal-title">รายชื่อนักศึกษาที่ยังไม่ได้เพิ่มในรายวิชานี้</h2>
+            <div class="modal-actions" style="position:absolute; top:10px; right:10px;">
+              <button onclick="confirmAddSelected()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
+              <button onclick="closeAvailableModal()" class="btn btn-cancel">ยกเลิก</button>
             </div>
+            <span class="modal-close" onclick="closeAvailableModal()" role="button" aria-label="Close">&times;</span>
+          </div>
+          <div class="modal-body">
+            <div class="filters-section">
+              <div class="filter-group">
+                <label for="departmentFilter" class="filter-label">กรองตามสาขา (Department):</label>
+                <select id="departmentFilter" class="filter-select" onchange="filterStudents()">
+                  <option value="">-- ทั้งหมด --</option>
+                  <option value="ธุรกิจ">ธุรกิจ</option>
+                  <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+                  <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+                  <option value="ออกแบบเกม">ออกแบบเกม</option>
+                  <option value="นิเทศ">นิเทศ</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="searchInput" class="filter-label">ค้นหา (ชื่อ/รหัส):</label>
+                <input type="text" id="searchInput" class="filter-input" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา" onkeyup="filterStudents()">
+              </div>
+            </div>
+            <table id="availableTable" class="students-table">
+              <thead>
+                <tr class="table-header">
+                  <th class="col-select">เลือก</th>
+                  <th class="col-code">รหัสนักศึกษา</th>
+                  <th class="col-name">ชื่อ-นามสกุล</th>
+                  <th class="col-dept">สาขา</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (count($not_enrolled_students) > 0): ?>
+                  <?php foreach ($not_enrolled_students as $st): ?>
+                  <tr class="student-row" data-code="<?= htmlspecialchars($st['student_code']) ?>" 
+                      data-name="<?= htmlspecialchars($st['full_name']) ?>" 
+                      data-class="<?= htmlspecialchars($st['class_group']) ?>">
+                    <td class="col-select"><input type="checkbox" class="select-student" value="<?= $st['user_id'] ?>"></td>
+                    <td class="col-code"><?= htmlspecialchars($st['student_code']) ?></td>
+                    <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
+                    <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
+                  </tr>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <tr class="table-row empty-row">
+                    <td colspan="4" class="empty-cell">ไม่มีนักศึกษาที่ยังไม่อยู่ในรายวิชานี้</td>
+                  </tr>
+                <?php endif; ?>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -248,15 +253,15 @@ unset($_SESSION['error']);
       <!-- Modal dialog for import preview -->
       <div id="importModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
-          <div class="modal-header">
+          <div class="modal-header" style="position:relative;">
             <h2 id="modal-title" class="modal-title">📋 ตรวจสอบรายชื่อที่จะนำเข้า</h2>
+            <div class="modal-actions" style="position:absolute; top:10px; right:10px;">
+              <button onclick="confirmImport()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
+              <button onclick="closeImportModal()" class="btn btn-cancel">ยกเลิก</button>
+            </div>
             <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close">&times;</span>
           </div>
           <div id="importPreview" class="modal-body preview-section"></div>
-          <div class="modal-footer">
-            <button onclick="confirmImport()" class="btn btn-confirm">✅ ยืนยันการนำเข้า</button>
-            <button onclick="closeImportModal()" class="btn btn-cancel">❌ ยกเลิก</button>
-          </div>
         </div>
       </div>
 
@@ -273,6 +278,29 @@ unset($_SESSION['error']);
           const matchSearch = !searchInput || code.includes(searchInput) || name.includes(searchInput);
           row.style.display = (matchDept && matchSearch) ? '' : 'none';
         });
+      }
+
+      // Modal controls for available students
+      function openAvailableModal() {
+        document.getElementById('availableModal').style.display = 'block';
+      }
+      function closeAvailableModal() {
+        document.getElementById('availableModal').style.display = 'none';
+      }
+      async function confirmAddSelected() {
+        const checks = document.querySelectorAll('#availableModal .select-student:checked');
+        if (checks.length === 0) {
+          showModal('กรุณาเลือกอย่างน้อย 1 คน', 'warning', 'คำเตือน');
+          return;
+        }
+        const ids = Array.from(checks).map(cb => cb.value);
+        try {
+          await Promise.all(ids.map(id => fetch(`../api/subject_student_add.php?subject=${subjectIdGlobal}&student=${id}`)));
+          showModal('เพิ่มนักศึกษาเรียบร้อย', 'success', 'สำเร็จ');
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) {
+          showModal('เกิดข้อผิดพลาด: ' + e.message, 'error', 'ข้อผิดพลาด');
+        }
       }
 
       let importData = null;
@@ -447,9 +475,13 @@ unset($_SESSION['error']);
       }
 
       window.onclick = function(event) {
-        const modal = document.getElementById('importModal');
-        if (event.target === modal) {
+        const importModal = document.getElementById('importModal');
+        const availModal = document.getElementById('availableModal');
+        if (event.target === importModal) {
           closeImportModal();
+        }
+        if (event.target === availModal) {
+          closeAvailableModal();
         }
       }
       </script>
@@ -493,14 +525,25 @@ unset($_SESSION['error']);
             this.style.backgroundColor = ob || '';
           });
         });
+        // register available modal button handler
+        const availBtn = document.getElementById('openAvailableBtn');
+        if (availBtn) availBtn.addEventListener('click', openAvailableModal);
       });
       </script>
-      <script src="js/modal-popup.js"></script>
 
-      </body>
-      </html>
-    
-</script>
+      <!-- Handle delete with popup confirmation -->
+      <script>
+      function handleDeleteStudent(subjectId, studentId) {
+        showConfirmModal(
+          'คุณต้องการลบนักศึกษาคนนี้ออกจากรายวิชาหรือไม่?',
+          function() {
+            window.location.href = '../api/subject_student_remove.php?subject=' + subjectId + '&student=' + studentId;
+          },
+          'ยืนยันการลบ'
+        );
+      }
+      </script>
+      <script src="js/modal-popup.js"></script>
 
 </body>
 </html>

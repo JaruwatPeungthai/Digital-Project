@@ -21,7 +21,7 @@ $menuItems = [
   ],
   [
     'url' => 'advisor_students.php',
-    'title' => '👨‍🎓 รายชื่อที่ปรึกษา',
+    'title' => '👨‍🎓 รายชื่อนักศึกษา',
     'icon' => 'advisor'
   ],
   [
