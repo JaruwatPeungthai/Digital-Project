@@ -358,7 +358,7 @@
 
 <div class="container">
   <div class="header">
-    <h1>📋 เช็คชื่อเข้า/ออก</h1>
+    <h1>เช็คชื่อเข้า/ออก</h1>
     <p>ระบบเช็คชื่อแบบ GPS ด้วย LINE</p>
   </div>
 
@@ -378,8 +378,16 @@
           <span class="info-value" id="subjectName">-</span>
         </div>
         <div class="info-row">
-          <span class="info-label">รายละเอียด Session</span>
+          <span class="info-label">รายละเอียดเนื้อหาในคาบนี้</span>
           <span class="info-value" id="roomName">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">อาจารย์ผู้สอน</span>
+          <span class="info-value" id="teacherName">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">กลุ่มเรียน</span>
+          <span class="info-value" id="section">-</span>
         </div>
         <div class="info-row">
           <span class="info-label">รหัสนักศึกษา</span>
@@ -407,19 +415,19 @@
       <div class="action-section">
         <div class="button-group">
           <button id="btnCheckin" class="btn-checkin" onclick="performCheckin()">
-            📌 เช็คชื่อเข้า
+            เช็คชื่อเข้า
           </button>
         </div>
 
         <div class="button-group">
           <button id="btnCheckout" class="btn-checkout" onclick="performCheckout()" disabled>
-            📤 เช็คชื่อออก
+            เช็คชื่อออก
           </button>
         </div>
 
         <div class="button-group">
           <a href="student_dashboard.html" style="flex: 1; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; text-decoration: none; padding: 15px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 15px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 20px rgba(0, 116, 105, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-            👨‍🎓 Dashboard
+            Dashboard
           </a>
         </div>
       </div>
@@ -520,10 +528,27 @@
   }
 
   function updateSessionInfo() {
+    const subjectCode = sessionDetails.subject_code || "-"; // Assuming subject_code is available in sessionDetails
+    const subjectName = sessionDetails.subject_name || "-";
+    const teacherName = sessionDetails.teacher_name || "-"; // Assuming teacher_name is available in sessionDetails
+    const section = sessionDetails.section || "-"; // Assuming section is available in sessionDetails
+
     document.getElementById("studentCode").textContent = sessionDetails.student_code || "-";
     document.getElementById("fullName").textContent = sessionDetails.full_name || "-";
-    document.getElementById("subjectName").textContent = sessionDetails.subject_name || "-";
+    document.getElementById("subjectName").textContent = `${subjectCode} - ${subjectName}`;
     document.getElementById("roomName").textContent = sessionDetails.room_name || "-";
+
+    // Add teacher name and section display
+    const teacherNameElement = document.getElementById("teacherName");
+    const sectionElement = document.getElementById("section");
+
+    if (teacherNameElement) {
+        teacherNameElement.textContent = teacherName;
+    }
+
+    if (sectionElement) {
+        sectionElement.textContent = section;
+    }
   }
 
   async function checkStatus() {
@@ -564,9 +589,9 @@
     if (currentStatus.has_checked_in) {
       // Show check-in status
       let badge = currentStatus.checkin_status === "late" 
-        ? '<span class="status-badge badge-late">⏱️ สาย</span>'
-        : '<span class="status-badge badge-checkin">✅ ตรงเวลา</span>';
-      checkinMsg.innerHTML = `✅ เช็คชื่อเข้าแล้ว เวลา ${currentStatus.checkin_time}${badge}`;
+        ? '<span class="status-badge badge-late">สาย</span>'
+        : '<span class="status-badge badge-checkin">ตรงเวลา</span>';
+      checkinMsg.innerHTML = `เช็คชื่อเข้าแล้ว เวลา ${currentStatus.checkin_time}${badge}`;
       checkinMsg.style.display = "block";
 
       // Disable check-in button
@@ -574,7 +599,7 @@
 
       if (currentStatus.has_checked_out) {
         // Show check-out status
-        checkoutMsg.innerHTML = `✅ เช็คชื่อออกแล้ว เวลา ${currentStatus.checkout_time}`;
+        checkoutMsg.innerHTML = `เช็คชื่อออกแล้ว เวลา ${currentStatus.checkout_time}`;
         checkoutMsg.style.display = "block";
         btnCheckout.disabled = true;
       } else {
@@ -584,7 +609,7 @@
           btnCheckout.disabled = false;
         } else {
           // Show countdown and disable button
-          warningMsg.innerHTML = "⏳ รอเวลาเช็คชื่อออก...";
+          warningMsg.innerHTML = "รอเวลาเช็คชื่อออก...";
           warningMsg.style.display = "block";
           updateCountdown();
           btnCheckout.disabled = true;
@@ -592,7 +617,7 @@
       }
     } else {
       // Not checked in
-      warningMsg.innerHTML = "⏳ กรุณาเช็คชื่อเข้าเสียก่อน";
+      warningMsg.innerHTML = "กรุณาเช็คชื่อเข้าเสียก่อน";
       warningMsg.style.display = "block";
       btnCheckin.disabled = false;
       btnCheckout.disabled = true;
@@ -613,7 +638,7 @@
       const minutes = Math.floor(timeDiff / 60000);
       const seconds = Math.floor((timeDiff % 60000) / 1000);
       const countdownMsg = document.getElementById("countdownMsg");
-      countdownMsg.textContent = `⏰ เช็คชื่อออกได้ใน ${minutes} นาที ${seconds} วินาที`;
+      countdownMsg.textContent = `เช็คชื่อออกได้ใน ${minutes} นาที ${seconds} วินาที`;
       countdownMsg.style.display = "block";
     }
   }
@@ -621,13 +646,13 @@
   async function performCheckin() {
     const btn = document.getElementById("btnCheckin");
     btn.disabled = true;
-    btn.textContent = "⏳ กำลังเช็คชื่อ...";
+    btn.textContent = "กำลังเช็คชื่อ...";
 
     try {
       if (!navigator.geolocation) {
         showModal("อุปกรณ์นี้ไม่รองรับ GPS", "error", "ข้อผิดพลาด");
         btn.disabled = false;
-        btn.textContent = "📌 เช็คชื่อเข้า";
+        btn.textContent = "เช็คชื่อเข้า";
         return;
       }
 
@@ -653,43 +678,43 @@
             } catch {
               showModal("Response ไม่ใช่ JSON:\n" + text, "error", "ข้อผิดพลาด");
               btn.disabled = false;
-              btn.textContent = "📌 เช็คชื่อเข้า";
+              btn.textContent = "เช็คชื่อเข้า";
               return;
             }
 
             showModal(data.message, "success", "ระบบเช็คชื่อ");
             await checkStatus();
-            btn.textContent = "📌 เช็คชื่อเข้า";
+            btn.textContent = "เช็คชื่อเข้า";
           } catch (err) {
             showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
             btn.disabled = false;
-            btn.textContent = "📌 เช็คชื่อเข้า";
+            btn.textContent = "เช็คชื่อเข้า";
           }
         },
         () => {
           showModal("กรุณาอนุญาตแชร์ตำแหน่ง", "warning", "คำเตือน");
           btn.disabled = false;
-          btn.textContent = "📌 เช็คชื่อเข้า";
+          btn.textContent = "เช็คชื่อเข้า";
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } catch (err) {
       showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
       btn.disabled = false;
-      btn.textContent = "📌 เช็คชื่อเข้า";
+      btn.textContent = "เช็คชื่อเข้า";
     }
   }
 
   async function performCheckout() {
     const btn = document.getElementById("btnCheckout");
     btn.disabled = true;
-    btn.textContent = "⏳ กำลังเช็คชื่อออก...";
+    btn.textContent = "กำลังเช็คชื่อออก...";
 
     try {
       if (!navigator.geolocation) {
         showModal("อุปกรณ์นี้ไม่รองรับ GPS", "error", "ข้อผิดพลาด");
         btn.disabled = false;
-        btn.textContent = "📤 เช็คชื่อออก";
+        btn.textContent = "เช็คชื่อออก";
         return;
       }
 
@@ -715,37 +740,37 @@
             } catch {
               showModal("Response ไม่ใช่ JSON:\n" + text, "error", "ข้อผิดพลาด");
               btn.disabled = false;
-              btn.textContent = "📤 เช็คชื่อออก";
+              btn.textContent = "เช็คชื่อออก";
               return;
             }
 
             showModal(data.message, "success", "ระบบเช็คชื่อ");
             await checkStatus();
-            btn.textContent = "📤 เช็คชื่อออก";
+            btn.textContent = "เช็คชื่อออก";
           } catch (err) {
             showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
             btn.disabled = false;
-            btn.textContent = "📤 เช็คชื่อออก";
+            btn.textContent = "เช็คชื่อออก";
           }
         },
         () => {
           showModal("กรุณาอนุญาตแชร์ตำแหน่ง", "warning", "คำเตือน");
           btn.disabled = false;
-          btn.textContent = "📤 เช็คชื่อออก";
+          btn.textContent = "เช็คชื่อออก";
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } catch (err) {
       showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
       btn.disabled = false;
-      btn.textContent = "📤 เช็คชื่อออก";
+      btn.textContent = "เช็คชื่อออก";
     }
   }
 
   function showError(message) {
     document.getElementById("loading").style.display = "none";
     const errorContainer = document.getElementById("errorContainer");
-    errorContainer.textContent = "❌ " + message;
+    errorContainer.textContent = "" + message;
     errorContainer.style.display = "block";
   }
 

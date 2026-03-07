@@ -99,11 +99,47 @@ unset($_SESSION['error']);
     background: #f9f9f9;
   }
 
+  /* Align name column to left */
+  .col-name {
+    text-align: left;
+    padding-left: 86px;
+  }
+
   /* filter UI inside modal */
-  .filter-section { background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-  .filter-group { display: inline-block; margin-right: 20px; }
-  .filter-label { margin-right: 8px; font-weight: 600; }
-  .filter-input, .filter-select { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; }
+  .filters-section {
+    display: flex;
+    gap: 20px;
+    align-items: end;
+    background: white;
+    border: 1px solid #e9f4ff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .filter-group {
+    flex: 1;
+  }
+  .filter-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #222;
+    font-size: 14px;
+  }
+  .filter-input, .filter-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .filter-input:focus, .filter-select:focus {
+    outline: none;
+    border-color: #007469;
+    box-shadow: 0 0 4px rgba(0, 118, 105, 0.2);
+  }
   .col-select { width: 40px; }
 
   /* modal visibility and layout (hide until opened) */
@@ -111,7 +147,7 @@ unset($_SESSION['error']);
   .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 700px; border-radius: 8px; max-height: 80vh; overflow-y: auto; }
 
   /* card action container for buttons */
-  .card-actions { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .card-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -121,10 +157,13 @@ unset($_SESSION['error']);
 
 <div class="main-wrapper">
   <div class="header">
-    <h2 id="page-title">👥 รายวิชา: <?= htmlspecialchars($subject['subject_name']) ?></h2>
+    <h2 id="page-title">รายวิชา: <?= htmlspecialchars($subject['subject_name']) ?></h2>
   </div>
   <div class="content-area">
     <div class="container page-container">
+      <div class="footer-section" style="margin-bottom: 20px;">
+        <a href="courses.php" class="button-65">กลับหน้ารายวิชา</a>
+      </div>
       <!-- Excel import section -->
       
 
@@ -140,10 +179,10 @@ unset($_SESSION['error']);
             <!-- Excel import section -->
             <div class="card import-card">
               <div class="upload-section">
-                <h3 class="section-title">📁 นำเข้านักศึกษาจากไฟล์ Excel</h3>
+                <h3 class="section-title">นำเข้านักศึกษาจากไฟล์ Excel</h3>
                 <p class="section-description">เลือกไฟล์ .xlsx ที่มีรหัสนักศึกษาในคอลัมน์ B</p>
                 <input type="file" id="excelFile" class="file-input" accept=".xlsx" />
-                <button onclick="importExcel(<?= $subjectId ?>)" class="btn btn-import">📤 อ่านไฟล์</button>
+                <button onclick="importExcel(<?= $subjectId ?>)" class="btn btn-import">อ่านไฟล์</button>
                 <div id="uploadStatus" class="upload-status"></div>
               </div>
             </div>
@@ -151,10 +190,9 @@ unset($_SESSION['error']);
             <!-- Enrolled students section -->
             <div class="card advisees-card">
               <div class="card-actions">
-                <a href="courses.php" class="button-65">⬅ กลับหน้ารายวิชา</a>
                 <button id="openAvailableBtn" class="btn">เพิ่มรายชื่อนักศึกษา (<?= count($not_enrolled_students) ?>)</button>
               </div>
-              <h3 class="section-header enrolled-section">✅ นักศึกษาในวิชานี้ (<?= count($enrolled_students) ?>)</h3>
+              <h3 class="section-header enrolled-section" style="margin-top: 0;">นักศึกษาในวิชานี้ (<?= count($enrolled_students) ?>)</h3>
               <table class="advisees-table">
                 <thead>
                   <tr class="table-header">
@@ -172,7 +210,7 @@ unset($_SESSION['error']);
                       <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
                       <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
                       <td class="col-actions">
-                        <button class="btn btn-danger" onclick="handleDeleteStudent(<?= $subjectId ?>, <?= $st['user_id'] ?>); return false;">❌ ลบ</button>
+                        <button class="btn btn-danger" onclick="handleDeleteStudent(<?= $subjectId ?>, <?= $st['user_id'] ?>); return false;">ลบ</button>
                       </td>
                     </tr>
                     <?php endforeach; ?>
@@ -192,20 +230,19 @@ unset($_SESSION['error']);
       <!-- Modal for managing not-enrolled students -->
       <div id="availableModal" class="modal" role="dialog" aria-modal="true">
         <div class="modal-content">
-          <div class="modal-header" style="position:relative;">
+          <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
             <h2 class="modal-title">รายชื่อนักศึกษาที่ยังไม่ได้เพิ่มในรายวิชานี้</h2>
-            <div class="modal-actions" style="position:absolute; top:10px; right:10px;">
+            <div class="modal-actions">
               <button onclick="confirmAddSelected()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
               <button onclick="closeAvailableModal()" class="btn btn-cancel">ยกเลิก</button>
             </div>
-            <span class="modal-close" onclick="closeAvailableModal()" role="button" aria-label="Close">&times;</span>
           </div>
-          <div class="modal-body">
-            <div class="filters-section">
+          <div class="modal-body" style="margin-top: -10px;">
+            <div class="filters-section" style="margin-top: 10px;">
               <div class="filter-group">
-                <label for="departmentFilter" class="filter-label">กรองตามสาขา (Department):</label>
+                <label for="departmentFilter" class="filter-label">กรองตามสาขา </label>
                 <select id="departmentFilter" class="filter-select" onchange="filterStudents()">
-                  <option value="">-- ทั้งหมด --</option>
+                  <option value="">ทั้งหมด</option>
                   <option value="ธุรกิจ">ธุรกิจ</option>
                   <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
                   <option value="ออกแบบแอพ">ออกแบบแอพ</option>
@@ -214,7 +251,7 @@ unset($_SESSION['error']);
                 </select>
               </div>
               <div class="filter-group">
-                <label for="searchInput" class="filter-label">ค้นหา (ชื่อ/รหัส):</label>
+                <label for="searchInput" class="filter-label">ค้นหา (ชื่อ/รหัส)</label>
                 <input type="text" id="searchInput" class="filter-input" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา" onkeyup="filterStudents()">
               </div>
             </div>
@@ -253,15 +290,15 @@ unset($_SESSION['error']);
       <!-- Modal dialog for import preview -->
       <div id="importModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
         <div class="modal-content">
-          <div class="modal-header" style="position:relative;">
-            <h2 id="modal-title" class="modal-title">📋 ตรวจสอบรายชื่อที่จะนำเข้า</h2>
-            <div class="modal-actions" style="position:absolute; top:10px; right:10px;">
+          <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+            <h2 id="modal-title" class="modal-title">ตรวจสอบรายชื่อที่จะนำเข้า</h2>
+            <div class="modal-actions">
               <button onclick="confirmImport()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
               <button onclick="closeImportModal()" class="btn btn-cancel">ยกเลิก</button>
             </div>
-            <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close">&times;</span>
+            <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close" style="position: absolute; top: 10px; right: 10px;">&times;</span>
           </div>
-          <div id="importPreview" class="modal-body preview-section"></div>
+          <div id="importPreview" class="modal-body preview-section" style="margin-top: -10px;"></div>
         </div>
       </div>
 
@@ -322,7 +359,7 @@ unset($_SESSION['error']);
           const data = await res.json();
           if (data.error) {
             document.getElementById('uploadStatus').innerHTML = 
-              '<div class="import-status error">❌ ' + data.error + '</div>';
+              '<div class="import-status error">' + data.error + '</div>';
             return;
           }
           importData = {
@@ -335,7 +372,7 @@ unset($_SESSION['error']);
           document.getElementById('uploadStatus').innerHTML = '';
         } catch (error) {
           document.getElementById('uploadStatus').innerHTML = 
-            '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
+            '<div class="import-status error">เกิดข้อผิดพลาด: ' + error.message + '</div>';
         }
       }
 
@@ -344,7 +381,7 @@ unset($_SESSION['error']);
         
         // แสดงรหัสที่ซ้ำกัน
         if (data.duplicates && data.duplicates.length > 0) {
-          html += '<h4 style="color: orange;">⚠️ รหัสที่ซ้ำกันในระบบ - เลือกคนที่ต้องการเพิ่ม (' + data.duplicates.length + ')</h4>';
+          html += '<h4 style="color: orange;">รหัสที่ซ้ำกันในระบบ - เลือกคนที่ต้องการเพิ่ม (' + data.duplicates.length + ')</h4>';
           data.duplicates.forEach(dup => {
             html += '<div style="border: 2px solid #ffc107; padding: 12px; margin-bottom: 12px; border-radius: 5px; background-color: #fffbf0;">';
             html += '<strong>รหัส: ' + dup.student_code + '</strong> (พบ ' + dup.count + ' คน)<br>';
@@ -359,7 +396,7 @@ unset($_SESSION['error']);
         }
         
         if (data.matched.length > 0) {
-          html += '<h4 style="color: green;">✅ นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
+          html += '<h4 style="color: green;">นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
           html += '<table id="matchedTable" style="width: 100%; border-collapse: collapse;">';
           html += '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th><th style="border: 1px solid #ccc; padding: 8px; width: 40px;">ลบ</th></tr>';
           data.matched.forEach((student, idx) => {
@@ -372,7 +409,7 @@ unset($_SESSION['error']);
         }
         
         if (data.not_found.length > 0) {
-          html += '<h4 style="color: red;">❌ รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
+          html += '<h4 style="color: red;">รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
           html += '<table style="width: 100%; border-collapse: collapse;">';
           html += '<tr style="background-color: #f8d7da;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ (จากไฟล์)</th></tr>';
           data.not_found.forEach(item => {
@@ -460,17 +497,17 @@ unset($_SESSION['error']);
           const result = await res.json();
           if (result.success) {
             document.getElementById('uploadStatus').innerHTML = 
-              '<div class="import-status success">✅ นำเข้า ' + result.added + ' คนสำเร็จ (ซ้ำ ' + result.skipped + ' คน)</div>';
+              '<div class="import-status success">นำเข้า ' + result.added + ' คนสำเร็จ (ซ้ำ ' + result.skipped + ' คน)</div>';
             closeImportModal();
             document.getElementById('excelFile').value = '';
             setTimeout(() => { location.reload(); }, 2000);
           } else {
             document.getElementById('uploadStatus').innerHTML = 
-              '<div class="import-status error">❌ ' + (result.error || 'การนำเข้าล้มเหลว') + '</div>';
+              '<div class="import-status error">' + (result.error || 'การนำเข้าล้มเหลว') + '</div>';
           }
         } catch (error) {
           document.getElementById('uploadStatus').innerHTML = 
-            '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
+            '<div class="import-status error">เกิดข้อผิดพลาด: ' + error.message + '</div>';
         }
       }
 

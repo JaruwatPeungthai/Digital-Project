@@ -60,7 +60,7 @@ $subjects = $subjects->get_result();
 
 <div class="main-wrapper">
     <div class="header">
-        <h2 id="page-title">📊 สรุปผลการเข้าเรียน</h2>
+        <h2 id="page-title">สรุปผลการเข้าเรียน</h2>
     </div>
     <div class="content-area">
         <div class="container">
@@ -84,10 +84,10 @@ $subjects = $subjects->get_result();
                     <br><br>
                     <button class="btn" style="width:100%;font-size:17px;"
                         onclick="return confirm('ยืนยันการสรุปผล?\nนักศึกษาที่อยู่ในรายวิชานี้แต่ไม่เช็คชื่อ จะถูกบันทึกว่าขาด')"
-                    >✅ สรุปผล</button>
+                    >สรุปผล</button>
                 </form>
                 <div style="margin-top:18px;text-align:center;">
-                  <a href="sessions.php" class="button-65">⬅ กลับ</a>
+                  <a href="sessions.php" class="button-65">กลับ</a>
                 </div>
             </div>
         </div>
@@ -98,13 +98,13 @@ $subjects = $subjects->get_result();
 <div id="importModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeImportModal()">&times;</span>
-    <h2>📋 ตรวจสอบรายชื่อที่จะนำเข้า</h2>
+    <h2>ตรวจสอบรายชื่อที่จะนำเข้า</h2>
     
     <div id="importPreview"></div>
     
     <div style="margin-top: 20px;">
-      <button onclick="confirmImport()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">✅ ยืนยันการนำเข้า</button>
-      <button onclick="closeImportModal()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">❌ ยกเลิก</button>
+      <button onclick="confirmImport()" style="background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">ยืนยันการนำเข้า</button>
+      <button onclick="closeImportModal()" style="background-color: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -116,7 +116,7 @@ function showImportPreview(data) {
   let html = '<h3>พบ ' + data.found_count + ' คน, ไม่พบ ' + data.not_found_count + ' คน</h3>';
   
   if (data.matched.length > 0) {
-    html += '<h4 style="color: green;">✅ นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
+    html += '<h4 style="color: green;">นักศึกษาที่พบในระบบ (' + data.matched.length + ')</h4>';
     html += '<table style="width: 100%; border-collapse: collapse;">';
     html += '<tr style="background-color: #d4edda;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ</th><th style="border: 1px solid #ccc; padding: 8px;">สาขา</th></tr>';
     
@@ -130,7 +130,7 @@ function showImportPreview(data) {
   }
   
   if (data.not_found.length > 0) {
-    html += '<h4 style="color: red;">❌ รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
+    html += '<h4 style="color: red;">รหัสนักศึกษาที่ไม่พบในระบบ (' + data.not_found.length + ')</h4>';
     html += '<table style="width: 100%; border-collapse: collapse;">';
     html += '<tr style="background-color: #f8d7da;"><th style="border: 1px solid #ccc; padding: 8px;">รหัส</th><th style="border: 1px solid #ccc; padding: 8px;">ชื่อ (จากไฟล์)</th></tr>';
     
@@ -173,7 +173,7 @@ async function confirmImport() {
 
     if (result.success) {
       document.getElementById('uploadStatus').innerHTML = 
-        '<div class="import-status success">✅ นำเข้า ' + result.added + ' คนสำเร็จ (ซ้ำ ' + result.skipped + ' คน)</div>';
+        '<div class="import-status success">นำเข้า ' + result.added + ' คนสำเร็จ (ซ้ำ ' + result.skipped + ' คน)</div>';
       closeImportModal();
       document.getElementById('excelFile').value = '';
       
@@ -183,11 +183,11 @@ async function confirmImport() {
       }, 2000);
     } else {
       document.getElementById('uploadStatus').innerHTML = 
-        '<div class="import-status error">❌ ' + (result.error || 'การนำเข้าล้มเหลว') + '</div>';
+        '<div class="import-status error">' + (result.error || 'การนำเข้าล้มเหลว') + '</div>';
     }
   } catch (error) {
     document.getElementById('uploadStatus').innerHTML = 
-      '<div class="import-status error">❌ เกิดข้อผิดพลาด: ' + error.message + '</div>';
+      '<div class="import-status error">เกิดข้อผิดพลาด: ' + error.message + '</div>';
   }
 }
 

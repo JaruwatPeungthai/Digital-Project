@@ -1,7 +1,17 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Prevent any output before JSON
+ob_start();
+
+header("Content-Type: application/json; charset=utf-8");
+
 include("../config.php");
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    ob_end_clean();
     http_response_code(405);
     echo json_encode(["error" => "Method not allowed"]);
     exit;
@@ -83,6 +93,8 @@ foreach ($subjects as $subjectName => $sub) {
 }
 
 // Return both result data and subject metadata
+ob_end_clean();
+header("Content-Type: application/json; charset=utf-8");
 echo json_encode([
     'sessions' => $result,
     'subjects' => $allSubjectData

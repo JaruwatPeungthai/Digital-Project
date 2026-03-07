@@ -75,27 +75,25 @@ if ($action === "approve") {
   }
 } 
 
-// อัปเดต status ของ request
-$statusValue = ($action === "approve") ? "approved" : "rejected";
-$updateRequestStmt = $conn->prepare("
-  UPDATE student_edit_requests
-  SET status = ?, reviewed_at = NOW(), reviewed_by = ?
+// ลบ request จากฐานข้อมูล
+$deleteStmt = $conn->prepare("
+  DELETE FROM student_edit_requests
   WHERE request_id = ?
 ");
 
-if (!$updateRequestStmt) {
+if (!$deleteStmt) {
   echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
   exit;
 }
 
-$updateRequestStmt->bind_param("sis", $statusValue, $_SESSION['teacher_id'], $requestId);
+$deleteStmt->bind_param("s", $requestId);
 
-if ($updateRequestStmt->execute()) {
+if ($deleteStmt->execute()) {
   echo json_encode([
     "status" => "success",
     "message" => ($action === "approve") ? "ยืนยันการแก้ไขสำเร็จ" : "ปฏิเสธการแก้ไขสำเร็จ"
   ]);
 } else {
-  echo json_encode(["status" => "error", "message" => "Failed to update request status"]);
+  echo json_encode(["status" => "error", "message" => "Failed to delete request"]);
 }
 ?>

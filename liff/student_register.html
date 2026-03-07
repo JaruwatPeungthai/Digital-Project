@@ -32,14 +32,14 @@
 
     <h2>ลงทะเบียนนักศึกษา</h2>
 
-    <input id="code" placeholder="รหัสนักศึกษา">
+    <input id="code" placeholder="รหัสนักศึกษา" pattern="[0-9]{9}" maxlength="9">
     <input id="first_name" placeholder="ชื่อ" style="margin-bottom:8px;">
     <input id="last_name" placeholder="นามสกุล">
     <input type="hidden" id="full_name" name="full_name">
 
     <div class="select-wrapper">
       <select id="major">
-        <option value="">-- เลือกสาขา --</option>
+        <option value="">เลือกสาขา</option>
         <option value="ธุรกิจ">ธุรกิจ</option>
         <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
         <option value="ออกแบบแอพ">ออกแบบแอพ</option>
@@ -59,6 +59,8 @@ const LIFF_ID = "2008718294-WzVz06TP";
 
 // Show confirmation modal before sending registration
 async function register() {
+  if (!validateForm()) return;
+
   await liff.init({ liffId: LIFF_ID });
 
   if (!liff.isLoggedIn()) {
@@ -148,6 +150,30 @@ async function sendRegistration(data) {
     showModal('เกิดข้อผิดพลาด: ' + err.message, 'error', 'ข้อผิดพลาด');
   }
 }
+
+function validateForm() {
+  const code = document.getElementById("code").value.trim();
+  const first = document.getElementById("first_name").value.trim();
+  const last = document.getElementById("last_name").value.trim();
+  const major = document.getElementById("major").value;
+
+  if (!/^\d{9}$/.test(code)) {
+    showModal('รหัสนักศึกษาต้องเป็นตัวเลข 9 หลัก', 'error', 'ข้อผิดพลาด');
+    return false;
+  }
+
+  if (!first || !last) {
+    showModal('กรุณากรอกชื่อและนามสกุล', 'error', 'ข้อผิดพลาด');
+    return false;
+  }
+
+  if (!major) {
+    showModal('กรุณาเลือกสาขา', 'error', 'ข้อผิดพลาด');
+    return false;
+  }
+
+  return true;
+}
 </script>
 
 <!-- Confirmation modal -->
@@ -160,8 +186,8 @@ async function sendRegistration(data) {
     <div id="confirmWarning" style="color:#b00020; background:#fff5f5; padding:10px; border-radius:6px; margin-bottom:12px;">กรุณาเช็คข้อมูลของตัวเองให้ถูกต้อง เพื่อผลประโยชน์ของตัวนักศึกษาเอง</div>
 
     <div style="display:flex; gap:10px; justify-content:center;">
-      <button id="cancelBtn" type="button" style="padding:8px 14px; background:#efefef; border:none; border-radius:6px; cursor:pointer;">ยกเลิก</button>
-      <button id="confirmBtn" type="button" style="padding:8px 14px; background:#007469; color:#fff; border:none; border-radius:6px; cursor:pointer;">ตกลง</button>
+      <button id="cancelBtn" type="button" class="modal-btn cancel-btn">ยกเลิก</button>
+      <button id="confirmBtn" type="button" class="modal-btn confirm-btn">ตกลง</button>
     </div>
   </div>
 </div>

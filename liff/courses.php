@@ -39,6 +39,7 @@ krsort($groupedByYear);
 <title>รายวิชา</title>
 <!-- Front-end: edit styles in liff/css/courses.css -->
 <link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/create_session.css">
 <link rel="stylesheet" href="css/courses.css">
 <style>
 table {
@@ -81,6 +82,9 @@ tr:hover {
   justify-content: space-between;
   align-items: center;
 }
+.kbbb{
+  backgroundColor='#02baa7' !important;
+}
 
 /* button hover styling */
 .btn:hover { background: #005f56 !important; cursor: pointer; color: white; }
@@ -96,7 +100,7 @@ tr:hover {
 <div class="main-wrapper">
   <!-- Page header with title -->
   <div class="header">
-    <h2 id="page-title">📚 รายวิชา</h2>
+    <h2 id="page-title">รายวิชา</h2>
   </div>
 
   <!-- Content area -->
@@ -106,48 +110,50 @@ tr:hover {
 
       <!-- Modal popup for editing subject -->
       <div id="editModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;">
-        <div style="background:#fff; padding:20px; border-radius:8px; max-width:500px; width:90%;">
-          <h3 style="margin-top:0;">✏️ แก้ไขรายวิชา</h3>
+        <div style="background:#fff; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto;">
+          <h3 style="margin-top:0; color:#007469; font-size:20px;">แก้ไขรายวิชา</h3>
           <form id="editSubjectForm" method="post" action="../api/subject_update.php" class="form-section">
             <input type="hidden" name="subject_id" id="edit_subject_id">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-              <!-- row1 -->
-              <div style="grid-column:1/ -1;">
-                <label>ชื่อรายวิชา:</label>
-                <input name="subject_name" id="edit_subject_name" class="form-input" required style="width:100%;">
+            
+            <div class="form-group">
+              <label class="form-label">ชื่อรายวิชา</label>
+              <input name="subject_name" id="edit_subject_name" class="form-input" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">รหัสวิชา</label>
+                <input name="subject_code" id="edit_subject_code" class="form-input" required>
               </div>
-              <!-- row2 : code + semester -->
-              <div>
-                <label>รหัสวิชา:</label>
-                <input name="subject_code" id="edit_subject_code" class="form-input" required style="width:100%;">
-              </div>
-              <div>
-                <label>เทอม:</label>
-                <select name="semester" id="edit_semester" class="form-input" required style="width:100%;">
+              
+              <div class="form-group">
+                <label class="form-label">เทอม</label>
+                <select name="semester" id="edit_semester" class="form-input" required>
                   <option value="">-- เลือกเทอม --</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
                 </select>
               </div>
-              <!-- row3 section + years -->
-              <div>
-                <label>เซค(กลุ่มเรียน):</label>
-                <input name="section" id="edit_section" class="form-input" required style="width:100%;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">กลุ่มเรียน (กลุ่มเรียน)</label>
+                <input name="section" id="edit_section" class="form-input" required>
               </div>
-              <div>
-                <label>ปีการศึกษา:</label>
-                <select name="years" id="edit_years" class="form-input" required style="width:100%;">
+              
+              <div class="form-group">
+                <label class="form-label">ปีการศึกษา</label>
+                <select name="years" id="edit_years" class="form-input" required>
                   <option value="">-- เลือกปีการศึกษา --</option>
                 </select>
               </div>
-              <!-- row4 buttons -->
-              <div style="grid-column:1/2; text-align:left;">
-                <button type="button" class="btn" id="cancelEdit">ยกเลิก</button>
-              </div>
-              <div style="grid-column:2/ -1; text-align:right;">
-                <button type="submit" class="btn btn-primary">แก้ไข</button>
-              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+              <button type="button" class="btn" id="cancelEdit" style="background: #999; padding: 10px 20px;">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">แก้ไข</button>
             </div>
           </form>
         </div>
@@ -155,47 +161,49 @@ tr:hover {
 
       <!-- Modal popup for creating subject -->
       <div id="addModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center;">
-        <div style="background:#fff; padding:20px; border-radius:8px; max-width:500px; width:90%;">
-          <h3 style="margin-top:0;">➕ สร้างรายวิชาใหม่</h3>
+        <div style="background:#fff; padding:30px; border-radius:12px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto;">
+          <h3 style="margin-top:0; color:#007469; font-size:20px;">สร้างรายวิชาใหม่</h3>
           <form id="createSubjectForm" method="post" action="../api/subject_create.php" class="form-section">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-              <!-- row1 -->
-              <div style="grid-column:1/ -1;">
-                <label>ชื่อรายวิชา:</label>
-                <input name="subject_name" id="subject_name" class="form-input" required style="width:100%;">
+            
+            <div class="form-group">
+              <label class="form-label">ชื่อรายวิชา</label>
+              <input name="subject_name" id="subject_name" class="form-input" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">รหัสวิชา</label>
+                <input name="subject_code" id="subject_code" class="form-input" required>
               </div>
-              <!-- row2 : code + semester -->
-              <div>
-                <label>รหัสวิชา:</label>
-                <input name="subject_code" id="subject_code" class="form-input" required style="width:100%;">
-              </div>
-              <div>
-                <label>เทอม:</label>
-                <select name="semester" id="semester" class="form-input" required style="width:100%;">
+              
+              <div class="form-group">
+                <label class="form-label">เทอม</label>
+                <select name="semester" id="semester" class="form-input" required>
                   <option value="">-- เลือกเทอม --</option>
                   <option value="1">1</option>
                   <option value="2">2</option>
                   <option value="3">3</option>
                 </select>
               </div>
-              <!-- row3 section + years -->
-              <div>
-                <label>เซค(กลุ่มเรียน):</label>
-                <input name="section" id="section" class="form-input" required style="width:100%;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">กลุ่มเรียน (กลุ่มเรียน)</label>
+                <input name="section" id="section" class="form-input" required>
               </div>
-              <div>
-                <label>ปีการศึกษา:</label>
-                <select name="years" id="years" class="form-input" required style="width:100%;">
+              
+              <div class="form-group">
+                <label class="form-label">ปีการศึกษา</label>
+                <select name="years" id="years" class="form-input" required>
                   <option value="">-- เลือกปีการศึกษา --</option>
                 </select>
               </div>
-              <!-- row4 buttons -->
-              <div style="grid-column:1/2; text-align:left;">
-                <button type="button" class="btn" id="cancelAdd">ยกเลิก</button>
-              </div>
-              <div style="grid-column:2/ -1; text-align:right;">
-                <button type="submit" class="btn btn-primary">สร้าง</button>
-              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+              <button type="button" class="btn" id="cancelAdd" style="background: #999; padding: 10px 20px;">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">สร้าง</button>
             </div>
           </form>
         </div>
@@ -203,7 +211,7 @@ tr:hover {
 
       <div class="card" style="position: relative;">
         <h3 class="section-header" style="display: inline-block;">รายวิชาของฉัน</h3>
-        <button id="openAddBtn" class="btn" style="position:absolute; top:12px; right:12px; padding:6px 12px;">➕ สร้างรายวิชา</button>
+        <button id="openAddBtn" class="btn" style="position:absolute; top:12px; right:12px; padding:6px 12px;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 12.998h-6v6h-2v-6H5v-2h6v-6h2v6h6z"/></svg>สร้างรายวิชา</button>
         
         <!-- Filter controls (outside year-sections) -->
         <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
@@ -214,7 +222,8 @@ tr:hover {
             </select>
           </div>
           <div style="display: flex; gap: 0; border-radius: 6px; overflow: hidden; background: #f0f0f0; border: 1px solid #ddd;">
-            <button class="semester-btn" data-semester="1" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s; border-radius: 6px 0 0 6px;">เทอม 1</button>
+            <button class="semester-btn" data-semester="" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; font-weight: 600; color: #333; transition: all 0.3s; border-radius: 6px 0 0 6px;">ทั้งหมด</button>
+            <button class="semester-btn" data-semester="1" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; border-left: 1px solid #ddd; font-weight: 600; color: #333; transition: all 0.3s;">เทอม 1</button>
             <button class="semester-btn" data-semester="2" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; border-left: 1px solid #ddd; font-weight: 600; color: #333; transition: all 0.3s;">เทอม 2</button>
             <button class="semester-btn" data-semester="3" style="padding: 8px 14px; background: #f0f0f0; border: none; cursor: pointer; border-left: 1px solid #ddd; font-weight: 600; color: #333; transition: all 0.3s; border-radius: 0 6px 6px 0;">เทอม 3</button>
           </div>
@@ -224,7 +233,7 @@ tr:hover {
           <?php foreach ($groupedByYear as $year => $yearSubjects): ?>
             <div class="year-section" data-year="<?= htmlspecialchars($year) ?>">
               <div class="year-header">
-                <span>📚 ปีการศึกษา <?= htmlspecialchars($year) ?></span>
+                <span>ปีการศึกษา <?= htmlspecialchars($year) ?></span>
                 <span style="font-size: 14px; font-weight: normal;"><?= count($yearSubjects) ?> รายวิชา</span>
               </div>
               <div class="section-content">
@@ -233,9 +242,9 @@ tr:hover {
                   <tr>
                     <th>รหัสวิชา</th>
                     <th style="text-align: left;">ชื่อวิชา</th>
-                    <th>เซค</th>
+                    <th>กลุ่มเรียน</th>
                     <th>ดูรายชื่อนักศึกษา</th>
-                    <th>ดูเซสชัน QR</th>
+                    <th>ดูคาบเรียน</th>
                     <th>จัดการ</th>
                   </tr>
 
@@ -246,21 +255,21 @@ tr:hover {
                     <td><?= htmlspecialchars($row['section']) ?></td>
                     <td>
                         <a href="subject_students.php?id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">
-                        👥 นักศึกษา
+                        นักศึกษา
                       </a>
                     </td>
                     <td>
-                        <a href="sessions_by_subject.php?subject_id=<?= $row['subject_id'] ?>" class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">
-                        📋 เซสชัน
+                        <a href="sessions_by_subject.php?subject_id=<?= $row['subject_id'] ?>" class="btn btn-small kbbb" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #4CAF50;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#4CAF50'">
+                        คาบเรียน
                       </a>
                     </td>
                     <td>
-                      <button class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="openEditModal(<?= $row['subject_id'] ?>, '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['section'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['years'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['semester'], ENT_QUOTES) ?>')" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">✏️ แก้ไข</button>
-                      <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="confirmDelete(
+                      <button class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="openEditModal(<?= $row['subject_id'] ?>, '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['section'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['years'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['semester'], ENT_QUOTES) ?>')" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3"/></g></svg></button>
+                      <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #f44336;" onclick="confirmDelete(
                       <?= $row['subject_id'] ?>,
                       '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>',
                       '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>'
-                      )" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'">❌ ลบ</button>
+                      )" onmouseover="this.style.backgroundColor='#d32f2f'" onmouseout="this.style.backgroundColor='#f44336'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3.713-4.288Q11 16.426 11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17t.713-.288m4 0Q15 16.426 15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17t.713-.288"/></svg></button>
                   </td>
                   </tr>
                   <?php endforeach; ?>
@@ -303,11 +312,11 @@ z-index:1000;
     text-align:center;
     border-radius: 8px;
   ">
-    <h3>⚠️ ยืนยันการลบรายวิชา</h3>
+    <h3>ยืนยันการลบรายวิชา</h3>
     <p id="modalText"></p>
 
     <div style="color:red; background:#ffe6e6; padding:12px; border-radius: 6px; margin-bottom:15px; font-size:13px; line-height:1.6;">
-      <strong>⚠️ คำเตือน:</strong><br>
+      <strong>คำเตือน:</strong><br>
       • รายชื่อนักศึกษาที่เพิ่มไว้<br>
       &nbsp;&nbsp;จะถูกลบออกทั้งหมด<br>
       • <strong>เซสชัน (Session) ทั้งหมด</strong><br>
@@ -422,7 +431,7 @@ function showDuplicateModal(subjectName) {
   `;
   
   content.innerHTML = `
-    <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+    <div style="font-size: 48px; margin-bottom: 20px;"></div>
     <h3 style="color: #d32f2f; margin: 0 0 15px 0; font-size: 20px;">มีรายวิชาที่ซ้ำซ้อน</h3>
     <p style="color: #666; margin: 0 0 20px 0; line-height: 1.6;">
       มีรายวิชา <strong>"${escapeHtml(subjectName)}"</strong> ที่ใช้ชุดข้อมูลนี้อยู่แล้ว
@@ -685,6 +694,7 @@ function populateYearSelects() {
 }
 
 // === Filter Table by Year and Semester ===
+// === Initialize Filter on Page Load ===
 function initializeFilter() {
   // Get current Thai year
   const currentYear = new Date().getFullYear() + 543;
@@ -701,14 +711,6 @@ function initializeFilter() {
       }
       yearSelect.appendChild(option);
     }
-  }
-  
-  // Set semester 1 as active by default
-  const semesterBtns = document.querySelectorAll('.semester-btn');
-  if (semesterBtns.length > 0) {
-    semesterBtns[0].style.backgroundColor = '#007469';
-    semesterBtns[0].style.color = 'white';
-    semesterBtns[0].dataset.active = 'true';
   }
   
   filterTable();
@@ -738,7 +740,10 @@ function filterTable() {
       const rowYear = row.dataset.years;
       const rowSemester = row.dataset.semester;
       
-      if (rowYear === selectedYear && rowSemester === selectedSemester) {
+      // If selectedSemester is empty, show all semesters (ทั้งหมด)
+      const semesterMatch = selectedSemester === '' || rowSemester === selectedSemester;
+      
+      if (rowYear === selectedYear && semesterMatch) {
         row.style.display = '';
         visibleRowCount++;
       } else {
@@ -774,6 +779,13 @@ function filterTable() {
 // Semester button toggle
 document.addEventListener('DOMContentLoaded', function() {
   const semesterBtns = document.querySelectorAll('.semester-btn');
+  
+  // Set first button (ทั้งหมด) as active by default
+  if (semesterBtns.length > 0) {
+    semesterBtns[0].style.backgroundColor = '#007469';
+    semesterBtns[0].style.color = 'white';
+    semesterBtns[0].dataset.active = 'true';
+  }
   
   semesterBtns.forEach(btn => {
     btn.addEventListener('click', function(e) {

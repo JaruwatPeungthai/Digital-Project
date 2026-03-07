@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = "รหัสผ่านไม่ถูกต้อง";
   }
   else {
-    // ✅ login สำเร็จ
+    //  login สำเร็จ
     $_SESSION['teacher_id'] = $teacher['id'];
     $_SESSION['teacher_name'] = $teacher['full_name'];
 
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <img src="pic/logo.jpg" class="logo">
 
-    <h2>Login Admin</h2>
+    <h2>เข้าสู่ระบบอาจารย์</h2>
 
     <form method="post">
 

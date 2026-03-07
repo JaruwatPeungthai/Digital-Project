@@ -181,6 +181,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   .hover-effect { cursor: pointer; transition: background-color .35s; }
   .hover-effect:focus { outline: none; }
 </style>
+<style>
+/* CSS */
+.button-65 {
+  appearance: none;
+  backface-visibility: hidden;
+  background-color: #007469;
+  border-radius: 10px;
+  border-style: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-family: Inter,-apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  height: 50px;
+  letter-spacing: normal;
+  line-height: 1.5;
+  outline: none;
+  overflow: hidden;
+  padding: 14px 30px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all .3s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.button-65:hover {
+  background-color: #005f56;
+  box-shadow: rgba(0, 0, 0, .05) 0 5px 30px, rgba(0, 0, 0, .05) 0 1px 4px;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}
+
+.button-65:hover:after {
+  opacity: .5;
+}
+
+.button-65:active {
+  box-shadow: rgba(0, 0, 0, .1) 0 3px 6px 0, rgba(0, 0, 0, .1) 0 0 10px 0, rgba(0, 0, 0, .1) 0 1px 4px -1px;
+  transform: translateY(2px);
+  transition-duration: .35s;
+}
+</style>
 </head>
 
 <body>
@@ -192,7 +244,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="main-wrapper">
   <!-- Page header with title -->
   <div class="header">
-    <h2 id="page-title">📌 สร้าง QR เช็คชื่อ</h2>
+    <h2 id="page-title">สร้าง QR เช็คชื่อ</h2>
   </div>
 
   <!-- Content area -->
@@ -200,26 +252,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <!-- Container for main content -->
     <div class="container">
 
+      <?php if ($subject_details): ?>
+      <div class="footer-section" style="margin-bottom: 20px;">
+        <a href="sessions_by_subject.php?subject_id=<?= $subject_details['subject_id'] ?>" class="button-65">ย้อนกลับ</a>
+      </div>
+      <?php endif; ?>
+
       <?php if ($error_msg): ?>
       <div style="background: #ffebee; border-left: 4px solid #c62828; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-        ❌ <?= htmlspecialchars($error_msg) ?>
+        <?= htmlspecialchars($error_msg) ?>
       </div>
       <?php endif; ?>
 
       <?php if ($subject_details): ?>
       <!-- Subject Info Card (when coming from a specific subject) -->
-      <div class="card" style="background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; margin-bottom: 20px; padding: 20px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 18px;">📌 ข้อมูลรายวิชา</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; line-height: 1.8;">
-          <div>
-            <p style="margin: 4px 0;"><strong>ชื่อวิชา:</strong> <?= htmlspecialchars($subject_details['subject_name']) ?></p>
-            <p style="margin: 4px 0;"><strong>รหัสวิชา:</strong> <?= htmlspecialchars($subject_details['subject_code']) ?></p>
-            <p style="margin: 4px 0;"><strong>เซค:</strong> <?= htmlspecialchars($subject_details['section']) ?></p>
-          </div>
-          <div>
-            <p style="margin: 4px 0;"><strong>ปีการศึกษา:</strong> <?= htmlspecialchars($subject_details['years']) ?></p>
-            <p style="margin: 4px 0;"><strong>เทอม:</strong> <?= htmlspecialchars($subject_details['semester']) ?></p>
-            <p style="margin: 4px 0;"><a href="sessions_by_subject.php?subject_id=<?= $subject_details['subject_id'] ?>" style="color: white; text-decoration: underline; font-weight: 600;">← กลับไปยังรายวิชา</a></p>
+      <div class="card" style="margin-bottom: 20px; border-radius: 10px;">
+        <div style="background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0;">
+          <h3 style="margin: 0 0 15px 0; font-size: 18px;">ข้อมูลรายวิชา</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; line-height: 1.8;">
+            <div>
+              <p style="margin: 4px 0;"><strong>ชื่อวิชา:</strong> <?= htmlspecialchars($subject_details['subject_name']) ?></p>
+              <p style="margin: 4px 0;"><strong>รหัสวิชา:</strong> <?= htmlspecialchars($subject_details['subject_code']) ?></p>
+              <p style="margin: 4px 0;"><strong>กลุ่มเรียน:</strong> <?= htmlspecialchars($subject_details['section']) ?></p>
+            </div>
+            <div>
+              <p style="margin: 4px 0;"><strong>ปีการศึกษา:</strong> <?= htmlspecialchars($subject_details['years']) ?></p>
+              <p style="margin: 4px 0;"><strong>เทอม:</strong> <?= htmlspecialchars($subject_details['semester']) ?></p>
+            </div>
           </div>
         </div>
       </div>
@@ -229,8 +288,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h3 class="section-header">สร้าง QR Code ใหม่</h3>
         <?php if (!$subject_details && !$hasSubjects): ?>
           <div style="background:#fff3e0; border-left:4px solid #ff9800; color:#e65100; padding:12px; border-radius:4px; margin:15px 0;">
-            ⚠️ ยังไม่มีรายวิชาที่สร้างไว้
-            <a href="courses.php" class="btn" style="margin-left:10px; white-space:nowrap;">➕ สร้างรายวิชา</a>
+            ยังไม่มีรายวิชาที่สร้างไว้
+            <a href="courses.php" class="btn" style="margin-left:10px; white-space:nowrap;">สร้างรายวิชา</a>
           </div>
         <?php endif; ?>
         
@@ -257,35 +316,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <?php endif; ?>
 
           <div class="form-group">
-            <label class="form-label">รายละเอียด session:</label>
+            <label class="form-label">รายละเอียดเนื้อหาในคาบนี้</label>
             <input name="room" class="form-input" required>
           </div>
 
           <div style="border-top: 2px solid #ddd; padding-top: 15px; margin-top: 15px; margin-bottom: 15px;">
-            <h4 style="color: #007469; margin-bottom: 15px;">⏰ กำหนดเวลาเช็คเข้า/ออก</h4>
+            <h4 style="color: #007469; margin-bottom: 15px;">กำหนดเวลาเช็คเข้า/ออก</h4>
             
-            <div class="form-group">
-              <label class="form-label">เวลาเปิดช่องเช็คชื่อเข้า:</label>
-              <input type="datetime-local" name="checkin_start" class="form-input" required>
-              <small style="color: #999;">เวลาที่นักศึกษาสามารถเช็คชื่อเข้าได้</small>
-            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="form-group">
+                <label class="form-label">เริ่มเช็คเข้า:</label>
+                <input type="datetime-local" name="checkin_start" class="form-input" required>
+                <small style="color: #999;">เวลาที่นักศึกษาสามารถเช็คชื่อเข้าได้</small>
+              </div>
 
-            <div class="form-group">
-              <label class="form-label">เวลาปิดช่องเช็คชื่อเข้า (ตรงเวลา/สาย):</label>
-              <input type="datetime-local" name="checkin_deadline" class="form-input" required>
-              <small style="color: #999;">หลังเวลานี้ = สาย</small>
-            </div>
+              <div class="form-group">
+                <label class="form-label">หลังเวลานี้ = สาย:</label>
+                <input type="datetime-local" name="checkin_deadline" class="form-input" required>
+                <small style="color: #999;">หลังเวลานี้ถ้านศ.เช็คเข้าจะนับว่าสาย</small>
+              </div>
 
-            <div class="form-group">
-              <label class="form-label">เวลาเปิดช่องเช็คชื่อออก:</label>
-              <input type="datetime-local" name="checkout_start" class="form-input" required>
-              <small style="color: #999;">เวลาที่นักศึกษาสามารถเช็คชื่อออกได้</small>
-            </div>
+              <div class="form-group">
+                <label class="form-label">เริ่มเช็คออก:</label>
+                <input type="datetime-local" name="checkout_start" class="form-input" required>
+                <small style="color: #999;">เวลาที่นักศึกษาสามารถเช็คชื่อออกได้</small>
+              </div>
 
-            <div class="form-group">
-              <label class="form-label">เวลาปิดช่องเช็คชื่อออก:</label>
-              <input type="datetime-local" name="checkout_deadline" class="form-input" required>
-              <small style="color: #999;">หลังเวลานี้ = ไม่ได้เช็คชื่อออก</small>
+              <div class="form-group">
+                <label class="form-label">หมดเวลาเช็คออก:</label>
+                <input type="datetime-local" name="checkout_deadline" class="form-input" required>
+                <small style="color: #999;">หลังเวลานี้ = ไม่ได้เช็คชื่อออก</small>
+              </div>
             </div>
           </div>
 
@@ -294,24 +355,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div id="map" style="height: 400px; border-radius: 8px; margin-bottom: 16px;"></div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">ละติจูด (Lat):</label>
-            <input id="lat" name="lat" class="form-input" readonly style="background-color: #f0f0f0; cursor: not-allowed;" required>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label class="form-label">ละติจูด (Lat):</label>
+              <input id="lat" name="lat" class="form-input" readonly style="background-color: #f0f0f0; cursor: not-allowed;" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">ลองจิจูด (Lng):</label>
+              <input id="lng" name="lng" class="form-input" readonly style="background-color: #f0f0f0; cursor: not-allowed;" required>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">ลองจิจูด (Lng):</label>
-            <input id="lng" name="lng" class="form-input" readonly style="background-color: #f0f0f0; cursor: not-allowed;" required>
-          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end;">
+            <div class="form-group">
+              <label class="form-label">รัศมี (เมตร):</label>
+              <input id="radius" name="radius" class="form-input" value="50" type="number" min="0" step="1" inputmode="numeric" pattern="\d*" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+            </div>
 
-          <div class="form-group">
-            <label class="form-label">รัศมี (เมตร):</label>
-            <input id="radius" name="radius" class="form-input" value="50" type="number" min="0" step="1" inputmode="numeric" pattern="\d*" oninput="this.value=this.value.replace(/[^0-9]/g,'');">
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn" onclick="useMyLocation()">📍 ใช้ตำแหน่งปัจจุบัน</button>
-            <button type="submit" id="submitBtn" class="btn btn-primary">✅ สร้าง QR</button>
+            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 16px; align-items: flex-end;">
+              <button type="button" class="btn" onclick="useMyLocation()">ใช้ตำแหน่งปัจจุบัน</button>
+              <button type="submit" id="submitBtn" class="btn btn-primary">สร้าง QR</button>
+            </div>
           </div>
           
           <!-- ข้อความเตือน -->
@@ -322,7 +387,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php if ($qr_url): ?>
       <div class="card">
-        <h3 class="section-header">✅ QR Code สำเร็จ</h3>        <?php if (isset($imported_students)): ?>
+        <h3 class="section-header">QR Code สำเร็จ</h3>        <?php if (isset($imported_students)): ?>
           <p style="color:#155724; padding:10px; background:#d4edda; border-radius:4px;">
             นำเข้านักศึกษา <?= (int)$imported_students ?> คนจากรายวิชานี้เรียบร้อยแล้ว
           </p>
@@ -388,11 +453,11 @@ function validateTimes() {
   let errorMsg = '';
 
   if (checkinStart >= checkinDeadline) {
-    errorMsg = '⏰ เวลาหมดเขตเช็คเข้าต้องมาหลังเวลาเริ่มเช็คเข้า';
+    errorMsg = 'เวลาหมดเขตเช็คเข้าต้องมาหลังเวลาเริ่มเช็คเข้า';
   } else if (checkinDeadline >= checkoutStart) {
-    errorMsg = '⏰ เวลาเริ่มเช็คออกต้องมาหลังเวลาหมดเขตเช็คเข้า';
+    errorMsg = 'เวลาเริ่มเช็คออกต้องมาหลังเวลาหมดเขตเช็คเข้า';
   } else if (checkoutStart >= checkoutDeadline) {
-    errorMsg = '⏰ เวลาหมดเขตเช็คออกต้องมาหลังเวลาเริ่มเช็คออก';
+    errorMsg = 'เวลาหมดเขตเช็คออกต้องมาหลังเวลาเริ่มเช็คออก';
   }
 
   const errorContainer = document.getElementById('timeError');
@@ -410,12 +475,12 @@ function validateTimes() {
 
   if (errorMsg) {
     errorDiv.style.display = 'block';
-    errorDiv.innerHTML = '❌ ' + errorMsg;
+    errorDiv.innerHTML = '' + errorMsg;
     submitBtn.disabled = true;
     submitBtn.style.opacity = '0.5';
     submitBtn.style.cursor = 'not-allowed';
     submitWarning.style.display = 'block';
-    submitWarning.innerHTML = '⚠️ ' + errorMsg;
+    submitWarning.innerHTML = '' + errorMsg;
   } else {
     errorDiv.style.display = 'none';
     submitBtn.disabled = false;

@@ -10,7 +10,7 @@ if (!isset($_SESSION['teacher_id'])) {
 $teacherId = $_SESSION['teacher_id'];
 $studentId = intval($_GET['student']);
 
-// ตรวจสอบว่านักศึกษาเป็นลูกศิษย์ของอาจารย์คนนี้หรือไม่
+// ตรวจสอบว่านักศึกษาเป็นนักศึกษาของอาจารย์คนนี้หรือไม่
 $checkStmt = $conn->prepare("
   SELECT advisor_id
   FROM students

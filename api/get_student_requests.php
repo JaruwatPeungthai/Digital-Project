@@ -1,15 +1,24 @@
 <?php
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 header("Content-Type: application/json; charset=utf-8");
 
+// Prevent any output before JSON
+ob_start();
+
 if (!file_exists(__DIR__ . "/../config.php")) {
+  ob_end_clean();
+  http_response_code(500);
   die(json_encode(["error" => "Config file not found"]));
 }
 
 require __DIR__ . "/../config.php";
 
 if (!isset($conn) || !$conn) {
+  ob_end_clean();
+  http_response_code(500);
   die(json_encode(["error" => "Database connection failed"]));
 }
 
@@ -93,5 +102,7 @@ while ($row = $result->fetch_assoc()) {
   $requests[] = $row;
 }
 
+ob_end_clean();
+header("Content-Type: application/json; charset=utf-8");
 echo json_encode($requests);
 ?>

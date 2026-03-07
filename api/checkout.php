@@ -48,9 +48,18 @@ try {
   if ($nowDt < $checkoutStartDt) {
     response(["message"=>"ยังไม่ถึงเวลาเช็คชื่อออก"]);
   }
+  
+  // Check if current time is past the checkout_deadline
+  $checkoutDeadlineDt = new DateTime($session['checkout_deadline'] ?: $session['end_time'], new DateTimeZone('Asia/Bangkok'));
+  if ($nowDt > $checkoutDeadlineDt) {
+    response(["message"=>"เกินเวลาการเช็คชื่อออก ไม่สามารถเช็คชื่อออกได้"]);
+  }
 } catch (Exception $e) {
   if ($now < $session['end_time']) {
     response(["message"=>"ยังไม่ถึงเวลาเช็คชื่อออก"]);
+  }
+  if ($now > ($session['checkout_deadline'] ?: $session['end_time'])) {
+    response(["message"=>"เกินเวลาการเช็คชื่อออก ไม่สามารถเช็คชื่อออกได้"]);
   }
 }
 

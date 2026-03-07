@@ -1,15 +1,24 @@
 <?php
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
 header("Content-Type: application/json; charset=utf-8");
 
+// Prevent any output before JSON
+ob_start();
+
 if (!file_exists(__DIR__ . "/../config.php")) {
+  ob_end_clean();
+  http_response_code(500);
   die(json_encode(["error" => "Config file not found"]));
 }
 
 require __DIR__ . "/../config.php";
 
 if (!isset($conn) || !$conn) {
+  ob_end_clean();
+  http_response_code(500);
   die(json_encode(["error" => "Database connection failed"]));
 }
 
@@ -20,6 +29,8 @@ $newName = $data['full_name'] ?? '';
 $newClass = $data['class_group'] ?? '';
 
 if (empty($lineId)) {
+  ob_end_clean();
+  http_response_code(400);
   echo json_encode(["status" => "error", "message" => "Missing line_user_id"]);
   exit;
 }
@@ -33,12 +44,16 @@ $stmt = $conn->prepare("
 ");
 
 if (!$stmt) {
+  ob_end_clean();
+  http_response_code(500);
   echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
   exit;
 }
 
 $stmt->bind_param("s", $lineId);
 if (!$stmt->execute()) {
+  ob_end_clean();
+  http_response_code(500);
   echo json_encode(["status" => "error", "message" => "Database execute failed"]);
   exit;
 }
@@ -46,6 +61,8 @@ if (!$stmt->execute()) {
 $student = $stmt->get_result()->fetch_assoc();
 
 if (!$student) {
+  ob_end_clean();
+  http_response_code(404);
   echo json_encode(["status" => "error", "message" => "ไม่พบข้อมูลนักศึกษา"]);
   exit;
 }
@@ -62,6 +79,8 @@ $insertStmt = $conn->prepare("
 ");
 
 if (!$insertStmt) {
+  ob_end_clean();
+  http_response_code(500);
   echo json_encode(["status" => "error", "message" => "Database prepare failed"]);
   exit;
 }
@@ -82,12 +101,16 @@ $insertStmt->bind_param(
 );
 
 if ($insertStmt->execute()) {
+  ob_end_clean();
+  header("Content-Type: application/json; charset=utf-8");
   echo json_encode([
     "status" => "success",
     "message" => "ส่งคำขอแก้ไขข้อมูลสำเร็จ",
     "request_id" => $requestId
   ]);
 } else {
+  ob_end_clean();
+  header("Content-Type: application/json; charset=utf-8");
   echo json_encode(["status" => "error", "message" => "Database insert failed"]);
 }
 ?>

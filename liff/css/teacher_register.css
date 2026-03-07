@@ -14,20 +14,20 @@ body {
 }
 
 .form-container {
-  width: 590px;
+  width: 650px;  /* reduced width to prevent extending right */
   background: white;
-  padding: 30px 70px 30px 30px;
+  padding: 30px;  /* symmetric padding for true centering */
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
   text-align: center;   /* คงไว้ */
+  margin-left: -30px;  /* shift left */
 }
 
 /* จัดโลโก้ให้อยู่กลางจริง */
 .logo {
   display: block;
-  margin-left: 200px;       /* ลบ 20px ล่างออก */
+  margin: 15px auto;       /* center horizontally */
   width: 120px;
-
 }
 
 /* จัดหัวข้อให้อยู่กลางชัด ๆ */
@@ -37,14 +37,13 @@ h2 {
   font-weight: 600;
   color: #4c3126;
   text-align: center;   /* บังคับกลาง */
-  transform: translateX(20px);  /* ขยับไปขวา */
 }
 
 
 /* ===== GRID ===== */
 .form-grid {
   display: grid;
-  grid-template-columns: 30% 35% 35%;
+  grid-template-columns: 30% 35% 30%;  /* reduced third column to fit */
   gap: 18px;
   text-align: right;
   

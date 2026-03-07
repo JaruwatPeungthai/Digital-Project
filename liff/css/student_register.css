@@ -121,3 +121,29 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+/* Modal button styles */
+.modal-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-btn {
+  background: #bdbdbd;
+}
+
+.cancel-btn:hover {
+  background: #a0a0a0;
+}
+
+.confirm-btn {
+  background: #24B8AB;
+  color: #fff;
+}
+
+.confirm-btn:hover {
+  background: #005f56;
+}

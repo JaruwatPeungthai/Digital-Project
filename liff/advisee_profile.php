@@ -10,7 +10,7 @@ if (!isset($_SESSION['teacher_id'])) {
 $teacherId = $_SESSION['teacher_id'];
 $studentId = intval($_GET['id']);
 
-// ตรวจสอบว่านักศึกษาเป็นลูกศิษย์ของอาจารย์คนนี้หรือไม่
+// ตรวจสอบว่านักศึกษาเป็นนักศึกษาของอาจารย์คนนี้หรือไม่
 $check = $conn->prepare("
   SELECT 1
   FROM students
@@ -109,14 +109,14 @@ foreach ($historyBySubject as $subjectName => $sessions) {
         if (!empty($log['checkin_time']) || !empty($log['checkin_status'])) {
             if (!empty($log['checkout_time']) || !empty($log['checkout_status'])) {
                 $summ['present_checkout']++;
+                // Determine status
+                if ($log['checkin_status'] === 'late') {
+                    $summ['late']++;
+                } else {
+                    $summ['on_time']++;
+                }
             } else {
                 $summ['present_no_checkout']++;
-            }
-            // Determine status
-            if ($log['checkin_status'] === 'late') {
-                $summ['late']++;
-            } else {
-                $summ['on_time']++;
             }
         } else {
             $summ['absent']++;
@@ -177,6 +177,34 @@ foreach ($historyBySubject as $subjectName => $sessions) {
   .btn-secondary { background:#f3f6fb; color:#173a66; border:1px solid #e6eef6; }
   .btn-secondary:hover { background:#e9f2ff; }
   .footer-section .btn { /* keep compatibility */ }
+
+  /* Semester button styling */
+  .semester-btn-adv {
+    padding: 8px 14px;
+    background: #f0f0f0;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.3s;
+  }
+  .semester-btn-adv:first-child {
+    border-radius: 6px 0 0 6px;
+  }
+  .semester-btn-adv:not(:first-child) {
+    border-left: 1px solid #ddd;
+  }
+  .semester-btn-adv:last-child {
+    border-radius: 0 6px 6px 0;
+  }
+  .semester-btn-adv.active {
+    background-color: #007469;
+    color: white;
+  }
+  .semester-btn-adv.active:hover {
+    background-color: #005f56;
+  }
+  .adv-summary-card { flex: 1 0 280px; }
 </style>
 </head>
 <body>
@@ -185,10 +213,13 @@ foreach ($historyBySubject as $subjectName => $sessions) {
 
 <div class="main-wrapper">
   <div class="header">
-    <h2 id="page-title">👤 ข้อมูลนักศึกษา</h2>
+    <h2 id="page-title"> ข้อมูลนักศึกษา</h2>
   </div>
   <div class="content-area">
     <div class="container page-container">
+      <div class="footer-section" style="margin-bottom: 20px;">
+        <a href="advisor_students.php" class="button-65">ย้อนกลับ</a>
+      </div>
       <div class="card" style="max-width:500px;margin:0 auto;">
         <div class="profile-info">
           <p><strong>รหัสนักศึกษา:</strong> <?= htmlspecialchars($student['student_code']) ?></p>
@@ -200,23 +231,20 @@ foreach ($historyBySubject as $subjectName => $sessions) {
       <!-- Summary by subject cards -->
       <?php if (!empty($summaryBySubject)): ?>
       <div class="card" style="margin-top:24px;">
-        <h3 style="color:#173e7a; font-size:18px; margin:0 0 16px 0;">📊 สรุปผลการเข้าเรียนรายวิชา</h3>
-        <div id="advFilterControls" style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-          <div style="display:flex; gap:8px; align-items:center;">
-            <label style="font-weight:700; color:#173e7a;">ปีการศึกษา:</label>
-            <select id="filterYearAdv" style="padding:6px 8px; border:1px solid #ddd; border-radius:6px;"></select>
+        <h3 style="color:#173e7a; font-size:18px; margin:0 0 16px 0;"> สรุปผลการเข้าเรียนรายวิชา</h3>
+        <div id="advFilterControls" style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="filterYearAdv" style="font-weight: 600; color: #333;">ปีการศึกษา:</label>
+            <select id="filterYearAdv" style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; cursor: pointer;" onchange="applyFiltersAdv()"></select>
           </div>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <label style="font-weight:700; color:#173e7a;">เทอม:</label>
-            <div id="filterSemesterAdv" style="display:flex; gap:6px;">
-              <button type="button" class="semester-btn-adv active" data-sem="all" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">ทั้งหมด</button>
-              <button type="button" class="semester-btn-adv" data-sem="1" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">1</button>
-              <button type="button" class="semester-btn-adv" data-sem="2" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">2</button>
-              <button type="button" class="semester-btn-adv" data-sem="3" style="padding:6px 10px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer;">3</button>
-            </div>
+          <div style="display: flex; gap: 0; border-radius: 6px; overflow: hidden; background: #f0f0f0; border: 1px solid #ddd;">
+            <button type="button" class="semester-btn-adv active" data-sem="all" style="">ทั้งหมด</button>
+            <button type="button" class="semester-btn-adv" data-sem="1" style="">เทอม 1</button>
+            <button type="button" class="semester-btn-adv" data-sem="2" style="">เทอม 2</button>
+            <button type="button" class="semester-btn-adv" data-sem="3" style="">เทอม 3</button>
           </div>
         </div>
-        <div id="advSummaryBySubjectCards" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:12px;">
+        <div id="advSummaryBySubjectCards" style="display: flex; flex-direction: row; gap: 12px; overflow-x: auto; padding-bottom: 10px;">
           <?php foreach ($summaryBySubject as $subjectName => $summ):
             $meta = $subjects[$subjectName] ?? [];
             $subjectCode = $meta['subject_code'] ?? 'N/A';
@@ -227,7 +255,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
               <?= htmlspecialchars($subjectCode) ?><br>
               <span style="font-size:13px; color:#555; font-weight:500;"><?= htmlspecialchars($subjectName) ?></span>
               <div style="font-size:12px; color:#777; margin-top:4px;">
-                เซค <?= htmlspecialchars($meta['section'] ?? '-') ?> / ปี <?= htmlspecialchars($meta['years'] ?? '-') ?> / เทอม <?= htmlspecialchars($meta['semester'] ?? '-') ?>
+                กลุ่มเรียน <?= htmlspecialchars($meta['section'] ?? '-') ?> / ปี <?= htmlspecialchars($meta['years'] ?? '-') ?> / เทอม <?= htmlspecialchars($meta['semester'] ?? '-') ?>
               </div>
             </div>
             
@@ -265,8 +293,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
 
       <div class="card" style="margin-top:24px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-          <h3 style="margin:0;">📋 ประวัติการเข้าเรียน</h3>
-          <a href="advisor_students.php" class="btn button-65">⬅ กลับหน้ารายชื่อ</a>
+          <h3 style="margin:0;">ประวัติการเข้าเรียน</h3>
         </div>
 
         <?php if (!empty($subjects)): ?>
@@ -287,7 +314,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#fff;">
               <div>
                 <div style="font-weight:700; font-size:15px;"><?= htmlspecialchars($subjectCode) ?> — <?= htmlspecialchars($subjectName) ?></div>
-                <div style="font-size:12px; color:#555; margin-top:3px;">เซค <?= htmlspecialchars($meta['section'] ?? '-') ?> / ปี <?= htmlspecialchars($meta['years'] ?? '-') ?> / เทอม <?= htmlspecialchars($meta['semester'] ?? '-') ?></div>
+                <div style="font-size:12px; color:#555; margin-top:3px;">กลุ่มเรียน <?= htmlspecialchars($meta['section'] ?? '-') ?> / ปี <?= htmlspecialchars($meta['years'] ?? '-') ?> / เทอม <?= htmlspecialchars($meta['semester'] ?? '-') ?></div>
                 <div style="color:#666; font-size:13px; margin-top:4px;">อาจารย์ผู้สอน: <?= htmlspecialchars($teacherName) ?></div>
               </div>
               <div style="text-align:right; background:#fff; border:1px solid #e6eef6; padding:8px 12px; border-radius:6px; font-size:13px; min-width:220px;">
@@ -304,8 +331,8 @@ foreach ($historyBySubject as $subjectName => $sessions) {
               <table class="table attendance-table">
                 <thead>
                   <tr class="table-header">
-                    <th>รายละเอียด session</th>
-                    <th>วันที่ session</th>
+                    <th>รายละเอียดเนื้อหาในคาบนี้</th>
+                    <th>วันที่เรียน</th>
                     <th>เวลาเช็คชื่อเข้า</th>
                     <th>สถานะเข้า</th>
                     <th>เวลาเช็คชื่อออก</th>
@@ -346,9 +373,9 @@ foreach ($historyBySubject as $subjectName => $sessions) {
                       <td>
                         <?php if (!empty($log['checkin_time']) || !empty($log['checkin_status'])): ?>
                           <?php if (($log['checkin_status'] ?? '') === 'late'): ?>
-                            <span class="status-badge badge-late">⏱️ สาย</span>
+                            <span class="status-badge badge-late">สาย</span>
                           <?php else: ?>
-                            <span class="status-badge badge-on-time">✅ ตรงเวลา</span>
+                            <span class="status-badge badge-on-time">ตรงเวลา</span>
                           <?php endif; ?>
                         <?php else: ?>
                           <span class="status-badge badge-not-checked-out">-</span>
@@ -360,7 +387,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
                         <?php elseif (!empty($log['checkout_status'])): ?>
                           <span style="color: #ff9800; font-size: 12px;">(เช็คแบบ manual)</span>
                         <?php elseif (!empty($log['checkin_time'])): ?>
-                          <span style="color: #ff9800;">⏳ รอเช็คชื่อออก</span>
+                          <span style="color: #ff9800;">รอเช็คชื่อออก</span>
                         <?php else: ?>
                           -
                         <?php endif; ?>
@@ -368,7 +395,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
                       <td>
                         <?php if (!empty($log['checkout_time']) || !empty($log['checkout_status'])): ?>
                           <span class="status-badge <?= ($log['checkout_status'] ?? '') === 'checked-out' ? 'badge-checked-out' : 'badge-not-checked-out' ?>">
-                            <?= ($log['checkout_status'] ?? '') === 'checked-out' ? '✅ เช็คออก' : '❌ ไม่เช็คออก' ?>
+                            <?= ($log['checkout_status'] ?? '') === 'checked-out' ? 'เช็คออก' : 'ไม่เช็คออก' ?>
                           </span>
                         <?php else: ?>
                           <span class="status-badge badge-not-checked-out">-</span>
@@ -413,7 +440,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
 
     function applyFiltersAdv() {
       const year = (document.getElementById('filterYearAdv') || {}).value || '';
-      const semBtn = document.querySelector('#filterSemesterAdv .semester-btn-adv.active');
+      const semBtn = document.querySelector('#advFilterControls .semester-btn-adv.active');
       const sem = semBtn ? semBtn.getAttribute('data-sem') : 'all';
 
       document.querySelectorAll('.adv-summary-card').forEach(el => {
@@ -453,7 +480,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
 
     function setupFilterControlsAdv() {
       populateYearSelectsAdv('filterYearAdv');
-      const semButtons = document.querySelectorAll('.semester-btn-adv');
+      const semButtons = document.querySelectorAll('#advFilterControls .semester-btn-adv');
       semButtons.forEach(btn => {
         btn.onclick = () => {
           semButtons.forEach(b => b.classList.remove('active'));
@@ -461,8 +488,6 @@ foreach ($historyBySubject as $subjectName => $sessions) {
           applyFiltersAdv();
         };
       });
-      const yearSel = document.getElementById('filterYearAdv');
-      if (yearSel) yearSel.onchange = applyFiltersAdv;
       setTimeout(applyFiltersAdv, 50);
     }
 

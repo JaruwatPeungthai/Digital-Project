@@ -338,7 +338,7 @@ tr:hover {
 <div class="main-wrapper">
   <!-- Page header with title -->
   <div class="header">
-    <h2 id="page-title">📚 <?= htmlspecialchars($subjectName) ?></h2>
+    <h2 id="page-title"><?= htmlspecialchars($subjectName) ?></h2>
   </div>
 
   <!-- Content area -->
@@ -346,9 +346,13 @@ tr:hover {
     <!-- Container for main content -->
     <div class="container">
 
+      <div class="footer-section" style="margin-bottom: 20px;">
+        <a href="courses.php" class="button-65">ย้อนกลับ</a>
+      </div>
+
       <!-- Subject Info Card -->
       <div class="card" style="position: relative; background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; margin-bottom: 20px; padding: 20px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 18px;">📌 ข้อมูลรายวิชา</h3>
+        <h3 style="margin: 0 0 15px 0; font-size: 18px;">ข้อมูลรายวิชา</h3>
         <div style="display: flex; justify-content: space-between; gap: 20px;">
           <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0;">
             <p style="margin: 4px 0;"><strong>ชื่อวิชา:</strong> <?= htmlspecialchars($subjectName) ?></p>
@@ -357,12 +361,11 @@ tr:hover {
             <p style="margin: 4px 0;"><strong>รหัสวิชา:</strong> <?= htmlspecialchars($subjectData['subject_code'] ?? '-') ?></p>
             <p style="margin: 4px 0;"><strong>เทอม:</strong> <?= htmlspecialchars($subjectData['semester'] ?? '-') ?></p>
             
-            <p style="margin: 4px 0;"><strong>เซค:</strong> <?= htmlspecialchars($subjectData['section'] ?? '-') ?></p>
-            <p style="margin: 4px 0;"><a href="courses.php" style="color: white; text-decoration: underline; font-weight: 600;">← กลับไปยังรายวิชา</a></p>
+            <p style="margin: 4px 0;"><strong>กลุ่มเรียน:</strong> <?= htmlspecialchars($subjectData['section'] ?? '-') ?></p>
           </div>
         </div>
         <?php if ($hasSessions): ?>
-          <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="create-session-btn">+ สร้าง QR ใหม่</a>
+          <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="create-session-btn">สร้าง QR ใหม่</a>
         <?php endif; ?>
       </div>
 
@@ -378,19 +381,19 @@ tr:hover {
           ?>
           <div class="date-section">
             <div class="date-header" style="color: white;">
-              <span>📅 <?= $formattedDate ?></span>
-              <span style="font-size: 14px; font-weight: normal;"><?= count($sessions) ?> เซสชั่น</span>
+              <span><?= $formattedDate ?></span>
+              <span style="font-size: 14px; font-weight: normal;"><?= count($sessions) ?> คาบเรียน</span>
             </div>
 
             <table>
               <tr>
                 <th>เวลา</th>
-                <th>รายละเอียด session</th>
+                <th>รายละเอียดเนื้อหา<br>ในคาบนี้</th>
                 <th style="min-width: 160px;">เวลาเช็คเข้า<br><small>(เข้า - ตรงเวลา)</small></th>
                 <th style="min-width: 160px;">เวลาเช็คออก<br><small>(ออก - หมดเขต)</small></th>
                 <th>QR</th>
-                <th>ผู้เข้า</th>
-                <th>การจัดการ</th>
+                <th>นักศึกษา</th>
+                <th>จัดการ</th>
               </tr>
 
               <?php foreach ($sessions as $session):
@@ -430,8 +433,8 @@ tr:hover {
                   <strong><?= (int)$session['present_count'] ?></strong> คน
                 </td>
                 <td style="white-space: nowrap;">
-                  <a href="session_attendance.php?id=<?= $session['id'] ?>" class="btn-small btn-attendance">👥 รายชื่อ</a><br><br>
-                  <button class="btn-small btn-delete" onclick="openDeleteModal(<?= $session['id'] ?>, '<?= htmlspecialchars($session['room_name']) ?>')">🗑️ ลบ</button>
+                  <a href="session_attendance.php?id=<?= $session['id'] ?>" class="btn-small btn-attendance">รายชื่อ</a><br><br>
+                  <button class="btn-small btn-delete" onclick="openDeleteModal(<?= $session['id'] ?>, '<?= htmlspecialchars($session['room_name']) ?>')"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3.713-4.288Q11 16.426 11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17t.713-.288m4 0Q15 16.426 15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17t.713-.288"/></svg></button>
                 </td>
               </tr>
               <?php endforeach; ?>
@@ -441,7 +444,7 @@ tr:hover {
         <?php else: ?>
           <div class="empty-state">
             <p>ยังไม่มีเซสชั่นสำหรับรายวิชานี้</p>
-            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn" style="margin-top: 20px;">+ สร้าง QR ใหม่</a>
+            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn" style="margin-top: 20px;">สร้าง QR ใหม่</a>
           </div>
         <?php endif; ?>
 
@@ -455,7 +458,7 @@ tr:hover {
 <!-- Delete Confirmation Modal -->
 <div id="deleteModal" onclick="closeDeleteModal()" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
   <div class="modal-box" onclick="event.stopPropagation()" style="background: white; width: 400px; padding: 30px; text-align: center; border-radius: 8px; box-shadow: 0 2px 20px rgba(0,0,0,0.2);">
-    <h3 style="color: #f44336; margin-bottom: 20px;">⚠️ ยืนยันการลบ Session</h3>
+    <h3 style="color: #f44336; margin-bottom: 20px;">ยืนยันการลบ Session</h3>
     
     <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 15px; margin-bottom: 20px; text-align: left;">
       <p style="margin: 0; color: #856404; font-weight: 600;">คำเตือน:</p>
