@@ -140,7 +140,6 @@ foreach ($historyBySubject as $subjectName => $sessions) {
   .card { background: #fff; border: 1px solid #e9f4ff; border-radius: 10px; padding: 14px; box-shadow: 0 6px 18px rgba(30,60,120,0.04); margin-bottom: 18px; }
   .profile-info { background-color: #fff; padding: 16px; border-radius: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); }
   .back-link { margin-top: 20px; display:inline-block; }
-  .header h2 { color: #173e7a; font-size: 20px; margin: 0 0 6px 0; }
 
   /* Status badges */
   .status-badge { display: inline-block; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; }
@@ -218,7 +217,7 @@ foreach ($historyBySubject as $subjectName => $sessions) {
   <div class="content-area">
     <div class="container page-container">
       <div class="footer-section" style="margin-bottom: 20px;">
-        <a href="advisor_students.php" class="button-65">ย้อนกลับ</a>
+        <a href="advisor_students.php" class="button-65" style="display: flex; align-items: center; gap: 8px; width: 140px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M15.287 18.693A.75.75 0 0 0 15.75 18V6a.75.75 0 0 0-1.28-.53l-6 6a.75.75 0 0 0 0 1.06l6 6a.75.75 0 0 0 .817.163" clip-rule="evenodd"/></svg>ย้อนกลับ</a>
       </div>
       <div class="card" style="max-width:500px;margin:0 auto;">
         <div class="profile-info">

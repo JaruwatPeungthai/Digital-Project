@@ -143,9 +143,10 @@ tr:hover {
 }
 
 .time-range {
-  font-size: 12px;
-  color: #666;
+  font-size: 14px;
+  color: #333;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .btn-small {
@@ -347,7 +348,7 @@ tr:hover {
     <div class="container">
 
       <div class="footer-section" style="margin-bottom: 20px;">
-        <a href="courses.php" class="button-65">ย้อนกลับ</a>
+        <a href="courses.php" class="button-65" style="display: flex; align-items: center; gap: 8px; width: 140px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M15.287 18.693A.75.75 0 0 0 15.75 18V6a.75.75 0 0 0-1.28-.53l-6 6a.75.75 0 0 0 0 1.06l6 6a.75.75 0 0 0 .817.163" clip-rule="evenodd"/></svg>ย้อนกลับ</a>
       </div>
 
       <!-- Subject Info Card -->
@@ -433,8 +434,8 @@ tr:hover {
                   <strong><?= (int)$session['present_count'] ?></strong> คน
                 </td>
                 <td style="white-space: nowrap;">
-                  <a href="session_attendance.php?id=<?= $session['id'] ?>" class="btn-small btn-attendance">รายชื่อ</a><br><br>
-                  <button class="btn-small btn-delete" onclick="openDeleteModal(<?= $session['id'] ?>, '<?= htmlspecialchars($session['room_name']) ?>')"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3.713-4.288Q11 16.426 11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17t.713-.288m4 0Q15 16.426 15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17t.713-.288"/></svg></button>
+                  <a href="session_attendance.php?id=<?= $session['id'] ?>" class="btn-small btn-attendance" style="padding: 12px 20px; font-size: 14px; border-radius: 6px; border:none;">รายชื่อผู้เข้าเรียน</a><br><br>
+                  <button class="btn-small btn-delete" style="background-color: #f44336; color: white; padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; border:none; border-radius: 4px;" onclick="openDeleteModal(<?= $session['id'] ?>, '<?= htmlspecialchars($session['room_name']) ?>')" onmouseover="this.style.backgroundColor='#d32f2f'" onmouseout="this.style.backgroundColor='#f44336'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3.713-4.288Q11 16.426 11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17t.713-.288m4 0Q15 16.426 15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17t.713-.288"/></svg></button>
                 </td>
               </tr>
               <?php endforeach; ?>
@@ -444,7 +445,7 @@ tr:hover {
         <?php else: ?>
           <div class="empty-state">
             <p>ยังไม่มีเซสชั่นสำหรับรายวิชานี้</p>
-            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn" style="margin-top: 20px;">สร้าง QR ใหม่</a>
+            <a href="create_session.php?subject_id=<?= $subjectData['subject_id'] ?>" class="btn" style="margin-top: 20px; border:none;">สร้าง QR ใหม่</a>
           </div>
         <?php endif; ?>
 
@@ -468,10 +469,10 @@ tr:hover {
     <p id="deleteSessionInfo" style="margin: 20px 0; color: #666; font-weight: 600;"></p>
 
     <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-      <button id="deleteConfirmBtn" class="btn-small btn-delete" onclick="confirmDelete()" disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 20px; font-weight: 600;">
+      <button id="deleteConfirmBtn" class="btn-small btn-delete" onclick="confirmDelete()" disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 20px; font-weight: 600; background-color: #f44336; color: white; border:none; border-radius: 4px; transition: background-color 0.35s ease;">
         ลบ (<span id="countdownText">3</span>วิ)
       </button>
-      <button class="btn-small" onclick="closeDeleteModal()" style="background: #999; color: white; padding: 10px 20px; font-weight: 600;">ยกเลิก</button>
+      <button class="btn-small" onclick="closeDeleteModal()" style="background: #999; color: white; padding: 10px 20px; font-weight: 600; border:none; border-radius: 4px;">ยกเลิก</button>
     </div>
   </div>
 </div>

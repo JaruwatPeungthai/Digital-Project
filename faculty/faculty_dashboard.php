@@ -236,14 +236,14 @@ th:nth-child(6) { width: 180px; }
 .detail-modal .data-section { margin-bottom: 20px; padding: 12px; background: #f5f9ff; border-radius: 6px; text-align: left; }
 .detail-modal .data-section h4 { margin: 0 0 10px 0; color: #007469; font-size: 14px; }
 .detail-modal .data-row { margin: 6px 0; font-size: 14px; }
-.detail-modal .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.detail-modal .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
 .detail-modal .approve-btn, .detail-modal .reject-btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .detail-modal .approve-btn { background-color: #4caf50; color: white; }
 .detail-modal .approve-btn:hover { background-color: #45a049; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
 .detail-modal .reject-btn { background-color: #f44336; color: white; }
 .detail-modal .reject-btn:hover { background-color: #d32f2f; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-.detail-modal .close-btn { background-color: #6c757d; color: white; }
-.detail-modal .close-btn:hover { background-color: #5a6268; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2);cursor: pointer; }
+.detail-modal .close-btn { grid-column: 1 / -1; width: 50%; justify-self: center; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.detail-modal .close-btn:hover { background-color: #5a6268; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; }
 
 .change-highlight { font-weight: bold; color: #007469; }
 </style>

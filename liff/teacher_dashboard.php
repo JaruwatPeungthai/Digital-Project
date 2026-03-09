@@ -90,6 +90,7 @@ function getAbsentStudentsBySubject($conn, $teacherId, $subjectId) {
 <!DOCTYPE html>
 <html>
 <head>
+  <title>ระบบอาจารย์</title>
   <meta charset="UTF-8">
   <!-- Front-end: edit styles in liff/css/teacher_dashboard.css -->
   <link rel="stylesheet" href="css/sidebar.css">
@@ -170,7 +171,7 @@ function getAbsentStudentsBySubject($conn, $teacherId, $subjectId) {
           <p class="number"><?= $totalAdvisees ?></p>
         </div>
         <div class="stat-card absent-card">
-          <h4>ขาดเรียนในรายวิชาของคุณวันนี้<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g class="alert-outline"><g fill="#ffc800" class="Vector"><path fill-rule="evenodd" d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10m-10 8a8 8 0 1 0 0-16a8 8 0 0 0 0 16" clip-rule="evenodd"/><path fill-rule="evenodd" d="M12 14a1 1 0 0 1-1-1V8a1 1 0 1 1 2 0v5a1 1 0 0 1-1 1" clip-rule="evenodd"/><path d="M11 16a1 1 0 1 1 2 0a1 1 0 0 1-2 0"/></g></g></svg></h4>
+          <h4 style="display: flex; align-items: center; gap: 8px;">ขาดเรียนในรายวิชาของคุณวันนี้<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g class="alert-outline"><g fill="#ffc800" class="Vector"><path fill-rule="evenodd" d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10m-10 8a8 8 0 1 0 0-16a8 8 0 0 0 0 16" clip-rule="evenodd"/><path fill-rule="evenodd" d="M12 14a1 1 0 0 1-1-1V8a1 1 0 1 1 2 0v5a1 1 0 0 1-1 1" clip-rule="evenodd"/><path d="M11 16a1 1 0 1 1 2 0a1 1 0 0 1-2 0"/></g></g></svg></h4>
           <p class="number"><?= $totalAbsentToday ?></p>
         </div>
       </div>

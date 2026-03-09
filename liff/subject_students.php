@@ -105,6 +105,19 @@ unset($_SESSION['error']);
     padding-left: 86px;
   }
 
+  /* upload section with yellow background */
+  .upload-section {
+    background-color: #fffacd;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #daa;
+  }
+  .upload-section input[type="file"],
+  .upload-section button {
+    padding: 8px 12px;
+  }
+
   /* filter UI inside modal */
   .filters-section {
     display: flex;
@@ -162,7 +175,7 @@ unset($_SESSION['error']);
   <div class="content-area">
     <div class="container page-container">
       <div class="footer-section" style="margin-bottom: 20px;">
-        <a href="courses.php" class="button-65">กลับหน้ารายวิชา</a>
+        <a href="courses.php" class="button-65" style="display: flex; align-items: center; gap: 8px; width: 140px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M15.287 18.693A.75.75 0 0 0 15.75 18V6a.75.75 0 0 0-1.28-.53l-6 6a.75.75 0 0 0 0 1.06l6 6a.75.75 0 0 0 .817.163" clip-rule="evenodd"/></svg>ย้อนกลับ</a>
       </div>
       <!-- Excel import section -->
       
@@ -180,17 +193,17 @@ unset($_SESSION['error']);
             <div class="card import-card">
               <div class="upload-section">
                 <h3 class="section-title">นำเข้านักศึกษาจากไฟล์ Excel</h3>
-                <p class="section-description">เลือกไฟล์ .xlsx ที่มีรหัสนักศึกษาในคอลัมน์ B</p>
-                <input type="file" id="excelFile" class="file-input" accept=".xlsx" />
-                <button onclick="importExcel(<?= $subjectId ?>)" class="btn btn-import">อ่านไฟล์</button>
-                <div id="uploadStatus" class="upload-status"></div>
-              </div>
+              <p class="section-description">เลือกไฟล์ .xlsx ที่มีรหัสนักศึกษาในคอลัมน์ B</p>
+              <input type="file" id="excelFile" class="file-input" accept=".xlsx" />
+              <button onclick="importExcel(<?= $subjectId ?>)" class="btn btn-import" style="border:none;">อ่านไฟล์</button>
+              <div id="uploadStatus" class="upload-status"></div>
+            </div>
             </div>
 
             <!-- Enrolled students section -->
             <div class="card advisees-card">
               <div class="card-actions">
-                <button id="openAvailableBtn" class="btn">เพิ่มรายชื่อนักศึกษา (<?= count($not_enrolled_students) ?>)</button>
+                <button id="openAvailableBtn" class="btn" style="border:none;">เพิ่มรายชื่อนักศึกษา (<?= count($not_enrolled_students) ?>)</button>
               </div>
               <h3 class="section-header enrolled-section" style="margin-top: 0;">นักศึกษาในวิชานี้ (<?= count($enrolled_students) ?>)</h3>
               <table class="advisees-table">
@@ -210,7 +223,7 @@ unset($_SESSION['error']);
                       <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
                       <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
                       <td class="col-actions">
-                        <button class="btn btn-danger" onclick="handleDeleteStudent(<?= $subjectId ?>, <?= $st['user_id'] ?>); return false;">ลบ</button>
+                        <button class="btn btn-danger" style="background-color: #f44336; color: white; padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; border:none; border-radius: 4px;" onclick="handleDeleteStudent(<?= $subjectId ?>, <?= $st['user_id'] ?>); return false;" onmouseover="this.style.backgroundColor='#d32f2f'" onmouseout="this.style.backgroundColor='#f44336'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3.713-4.288Q11 16.426 11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17t.713-.288m4 0Q15 16.426 15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17t.713-.288"/></svg></button>
                       </td>
                     </tr>
                     <?php endforeach; ?>
@@ -233,8 +246,8 @@ unset($_SESSION['error']);
           <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
             <h2 class="modal-title">รายชื่อนักศึกษาที่ยังไม่ได้เพิ่มในรายวิชานี้</h2>
             <div class="modal-actions">
-              <button onclick="confirmAddSelected()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
-              <button onclick="closeAvailableModal()" class="btn btn-cancel">ยกเลิก</button>
+              <button onclick="confirmAddSelected()" class="btn btn-confirm" style="border:none;">ยืนยันการเพิ่ม</button>
+              <button onclick="closeAvailableModal()" class="btn btn-cancel" style="background: #999; color: white; cursor:pointer; transition: background-color 0.35s ease; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600;" onmouseover="this.style.backgroundColor='#777'" onmouseout="this.style.backgroundColor='#999'">ยกเลิก</button>
             </div>
           </div>
           <div class="modal-body" style="margin-top: -10px;">
@@ -293,8 +306,8 @@ unset($_SESSION['error']);
           <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
             <h2 id="modal-title" class="modal-title">ตรวจสอบรายชื่อที่จะนำเข้า</h2>
             <div class="modal-actions">
-              <button onclick="confirmImport()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
-              <button onclick="closeImportModal()" class="btn btn-cancel">ยกเลิก</button>
+              <button onclick="confirmImport()" class="btn btn-confirm" style="border:none;">ยืนยันการเพิ่ม</button>
+              <button onclick="closeImportModal()" class="btn btn-cancel" style="background: #999; color: white; cursor:pointer; transition: background-color 0.35s ease; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600;" onmouseover="this.style.backgroundColor='#777'" onmouseout="this.style.backgroundColor='#999'">ยกเลิก</button>
             </div>
             <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close" style="position: absolute; top: 10px; right: 10px;">&times;</span>
           </div>

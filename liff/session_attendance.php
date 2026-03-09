@@ -285,7 +285,7 @@ while ($row = $result->fetch_assoc()) {
     <div class="content-area">
         <div class="container">
             <div class="footer-section" style="margin-bottom: 20px;">
-                <a href="sessions_by_subject.php?subject_id=<?= $sessionInfo['subject_id'] ?>" class="button-65">ย้อนกลับ</a>
+                <a href="sessions_by_subject.php?subject_id=<?= $sessionInfo['subject_id'] ?>" class="button-65" style="display: flex; align-items: center; gap: 8px; width: 140px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M15.287 18.693A.75.75 0 0 0 15.75 18V6a.75.75 0 0 0-1.28-.53l-6 6a.75.75 0 0 0 0 1.06l6 6a.75.75 0 0 0 .817.163" clip-rule="evenodd"/></svg>ย้อนกลับ</a>
             </div>
             <div class="card">
                 <?php if (!empty($groupedByDate) && count($groupedByDate) > 0): ?>
@@ -397,15 +397,15 @@ while ($row = $result->fetch_assoc()) {
                                             <?php if ($row['enrolled']): ?>
                                                 มีชื่ออยู่ในรายวิชานี้อยู่แล้ว
                                             <?php else: ?>
-                                                <button class="btn btn-small" onclick="confirmAddStudent(<?= $row['student_id'] ?>, '<?= htmlspecialchars($row['full_name']) ?>')">เพิ่ม</button>
+                                                <button class="btn btn-small" style="border:none;" onclick="confirmAddStudent(<?= $row['student_id'] ?>, '<?= htmlspecialchars($row['full_name']) ?>')">เพิ่ม</button>
                                             <?php endif; ?>
                                         </td>
 
                                         <!-- Manual Actions -->
                                         <td style="text-align:center;">
                                             <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">
-                                                <button class="btn btn-small" onclick="openCheckinModal(<?= $row['log_id'] ?>, '<?= htmlspecialchars($row['checkin_status'] ?? '', ENT_QUOTES) ?>')">เข้า</button>
-                                                <button class="btn btn-small" onclick="openCheckoutModal(<?= $row['log_id'] ?>, '<?= htmlspecialchars($row['checkout_status'] ?? '', ENT_QUOTES) ?>')">ออก</button>
+                                                <button class="btn btn-small" style="background: #007469; color: white; cursor: pointer; transition: background-color 0.35s ease; border:none;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'" onclick="openCheckinModal(<?= $row['log_id'] ?>, '<?= htmlspecialchars($row['checkin_status'] ?? '', ENT_QUOTES) ?>')">เข้า</button>
+                                                <button class="btn btn-small" style="background: #007469; color: white; cursor: pointer; transition: background-color 0.35s ease; border:none;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'" onclick="openCheckoutModal(<?= $row['log_id'] ?>, '<?= htmlspecialchars($row['checkout_status'] ?? '', ENT_QUOTES) ?>')">ออก</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -428,54 +428,51 @@ while ($row = $result->fetch_assoc()) {
 
 <!-- Modal for Check-in Status -->
 <div id="checkinModal" class="modal">
-    <div class="modal-content">
-        <h3>ปรับปรุงสถานะเช็คชื่อเข้า</h3>
+    <div class="modal-content" style="max-width: 450px; padding: 40px;">
+        <h3 style="color: #007469; margin: 0 0 30px 0; font-size: 22px; font-weight: 600;">ปรับปรุงสถานะเช็คชื่อเข้า</h3>
         <form method="post">
             <input type="hidden" id="checkinLogId" name="log_id">
-            <div style="margin: 20px 0;">
-                <p>เลือกสถานะเช็คชื่อเข้า:</p>
+            <div style="margin: 25px 0; text-align: center;">
+                <p style="color: #666; font-size: 15px; margin: 0;">เลือกสถานะเช็คชื่อเข้า:</p>
             </div>
-            <div class="modal-buttons">
-                <button type="button" class="btn-option on-time" onclick="submitCheckinForm('on-time')">
-                    ตรงเวลา
+            <div class="modal-buttons" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 30px 0;">
+                <button type="button" class="btn-option on-time" style="padding: 14px 16px; font-size: 15px; border:none;" onclick="submitCheckinForm('on-time')">
+                    ✓ ตรงเวลา
                 </button>
-                <button type="button" class="btn-option late" onclick="submitCheckinForm('late')">
-                    สาย
-                </button>
-            </div>
-            <div style="margin-top: 10px;">
-                <button type="button" class="btn-option" style="background-color: #f44336; width: 100%;" onclick="clearCheckinRecord()">
-                    ขาด (ลบข้อมูล)
+                <button type="button" class="btn-option late" style="padding: 14px 16px; font-size: 15px; border:none;" onclick="submitCheckinForm('late')">
+                    ⏱ สาย
                 </button>
             </div>
-            <button type="button" class="btn-cancel" onclick="closeCheckinModal()">ยกเลิก</button>
+            <div style="margin-top: 15px;">
+                <button type="button" class="btn-option" style="background-color: #f44336; width: 100%; padding: 12px; border-radius: 6px; color: white; font-weight: 600; border: none; cursor: pointer; font-size: 14px;" onclick="clearCheckinRecord()">
+                    ✕ ขาด (ลบข้อมูล)
+                </button>
+            </div>
+            <button type="button" class="btn-cancel" style="width: 100%; margin-top: 15px; padding: 12px; background-color: #ccc; color: black; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="closeCheckinModal()">ยกเลิก</button>
         </form>
     </div>
 </div>
 
 <!-- Modal for Check-out Status -->
 <div id="checkoutModal" class="modal">
-    <div class="modal-content">
-        <h3>ปรับปรุงสถานะเช็คชื่อออก</h3>
+    <div class="modal-content" style="max-width: 450px; padding: 40px;">
+        <h3 style="color: #007469; margin: 0 0 30px 0; font-size: 22px; font-weight: 600;">ปรับปรุงสถานะเช็คชื่อออก</h3>
         <form method="post">
             <input type="hidden" id="checkoutLogId" name="log_id">
-            <div style="margin: 20px 0;">
-                <p>เลือกสถานะเช็คชื่อออก:</p>
+            <div style="margin: 25px 0; text-align: center;">
+                <p style="color: #666; font-size: 15px; margin: 0;">เลือกสถานะเช็คชื่อออก:</p>
             </div>
-            <div class="modal-buttons">
-                <button type="button" class="btn-option checked-out" onclick="submitCheckoutForm('checked-out')">
-                    เช็คออก
-                </button>
-                <button type="button" class="btn-option not-checked-out" onclick="submitCheckoutForm('not-checked-out')">
-                    ไม่เช็คออก
+            <div class="modal-buttons" style="display: grid; grid-template-columns: 1fr; gap: 12px; margin: 30px 0;">
+                <button type="button" class="btn-option checked-out" style="padding: 14px 16px; font-size: 15px; width: 100%; border:none;" onclick="submitCheckoutForm('checked-out')">
+                    ✓ เช็คออก
                 </button>
             </div>
-            <div style="margin-top: 10px;">
-                <button type="button" class="btn-option" style="background-color: #f44336; width: 100%;" onclick="clearCheckoutRecord()">
-                    ขาด (ลบข้อมูล)
+            <div style="margin-top: 15px;">
+                <button type="button" class="btn-option" style="background-color: #f44336; width: 100%; padding: 12px; border-radius: 6px; color: white; font-weight: 600; border: none; cursor: pointer; font-size: 14px;" onclick="clearCheckoutRecord()">
+                    ✕ ขาด (ลบข้อมูล)
                 </button>
             </div>
-            <button type="button" class="btn-cancel" onclick="closeCheckoutModal()">ยกเลิก</button>
+            <button type="button" class="btn-cancel" style="width: 100%; margin-top: 15px; padding: 12px; background-color: #ccc; color: black; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="closeCheckoutModal()">ยกเลิก</button>
         </form>
     </div>
 </div>

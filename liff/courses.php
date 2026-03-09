@@ -87,7 +87,7 @@ tr:hover {
 }
 
 /* button hover styling */
-.btn:hover { background: #005f56 !important; cursor: pointer; color: white; }
+.btn:hover { cursor: pointer; color: white; }
 </style>
 </head>
 
@@ -152,8 +152,8 @@ tr:hover {
             </div>
 
             <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-              <button type="button" class="btn" id="cancelEdit" style="background: #999; padding: 10px 20px;">ยกเลิก</button>
-              <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">แก้ไข</button>
+              <button type="button" class="btn" id="cancelEdit" style="background: #999; padding: 10px 20px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#777'" onmouseout="this.style.backgroundColor='#999'">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background-color:#4caf50; color:white; border:none; border-radius:6px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#388e3c'" onmouseout="this.style.backgroundColor='#4caf50'">แก้ไข</button>
             </div>
           </form>
         </div>
@@ -202,8 +202,8 @@ tr:hover {
             </div>
 
             <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-              <button type="button" class="btn" id="cancelAdd" style="background: #999; padding: 10px 20px;">ยกเลิก</button>
-              <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">สร้าง</button>
+              <button type="button" class="btn" id="cancelAdd" style="background: #999; padding: 10px 20px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#777'" onmouseout="this.style.backgroundColor='#999'">ยกเลิก</button>
+              <button type="submit" class="btn btn-primary" style="padding: 10px 20px; background-color:#4caf50; color:white; border:none; border-radius:6px; cursor:pointer; transition: background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#388e3c'" onmouseout="this.style.backgroundColor='#4caf50'">สร้าง</button>
             </div>
           </form>
         </div>
@@ -211,7 +211,7 @@ tr:hover {
 
       <div class="card" style="position: relative;">
         <h3 class="section-header" style="display: inline-block;">รายวิชาของฉัน</h3>
-        <button id="openAddBtn" class="btn" style="position:absolute; top:12px; right:12px; padding:6px 12px;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 12.998h-6v6h-2v-6H5v-2h6v-6h2v6h6z"/></svg>สร้างรายวิชา</button>
+        <button id="openAddBtn" class="btn" style="position:absolute; top:12px; right:12px; padding:12px 18px; font-size:16px; display:flex; align-items:center; gap:8px; background-color:#007469; color:white; border:none; border-radius:6px; cursor:pointer; transition:background-color 0.35s ease;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M19 12.998h-6v6h-2v-6H5v-2h6v-6h2v6h6z"/></svg>สร้างรายวิชา</button>
         
         <!-- Filter controls (outside year-sections) -->
         <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
@@ -259,13 +259,13 @@ tr:hover {
                       </a>
                     </td>
                     <td>
-                        <a href="sessions_by_subject.php?subject_id=<?= $row['subject_id'] ?>" class="btn btn-small kbbb" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #4CAF50;" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#4CAF50'">
+                        <a href="sessions_by_subject.php?subject_id=<?= $row['subject_id'] ?>" class="btn btn-small kbbb" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #75a14f;" onmouseover="this.style.backgroundColor='#4f762e'" onmouseout="this.style.backgroundColor='#75a14f'">
                         คาบเรียน
                       </a>
                     </td>
                     <td>
-                      <button class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease;" onclick="openEditModal(<?= $row['subject_id'] ?>, '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['section'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['years'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['semester'], ENT_QUOTES) ?>')" onmouseover="this.style.backgroundColor='#005f56'" onmouseout="this.style.backgroundColor='#007469'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3"/></g></svg></button>
-                      <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #f44336;" onclick="confirmDelete(
+                      <button class="btn btn-small" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #FFB127; color: white; border:none;" onclick="openEditModal(<?= $row['subject_id'] ?>, '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['section'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['years'], ENT_QUOTES) ?>', '<?= htmlspecialchars($row['semester'], ENT_QUOTES) ?>')" onmouseover="this.style.backgroundColor='#FF9800'" onmouseout="this.style.backgroundColor='#FFB127'"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1"/><path d="M20.385 6.585a2.1 2.1 0 0 0-2.97-2.97L9 12v3h3zM16 5l3 3"/></g></svg></button>
+                      <button class="btn btn-delete" style="padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; background-color: #f44336; border:none;" onclick="confirmDelete(
                       <?= $row['subject_id'] ?>,
                       '<?= htmlspecialchars($row['subject_name'], ENT_QUOTES) ?>',
                       '<?= htmlspecialchars($row['subject_code'], ENT_QUOTES) ?>'
@@ -484,6 +484,13 @@ document.getElementById('cancelEdit').addEventListener('click', function() {
   document.getElementById('editModal').style.display = 'none';
 });
 
+// Close edit modal when clicking outside
+document.getElementById('editModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.style.display = 'none';
+  }
+});
+
 function openEditModal(id, name, code, section, years, semester) {
   document.getElementById('edit_subject_id').value = id;
   document.getElementById('edit_subject_name').value = name;
@@ -536,6 +543,14 @@ document.getElementById('openAddBtn').addEventListener('click', function() {
 document.getElementById('cancelAdd').addEventListener('click', function() {
   document.getElementById('addModal').style.display = 'none';
 });
+
+// Close add modal when clicking outside
+document.getElementById('addModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.style.display = 'none';
+  }
+});
+
 function escapeHtml(text) {
   const map = {
     '&': '&amp;',

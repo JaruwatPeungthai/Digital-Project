@@ -174,7 +174,7 @@ unset($_SESSION['error']);
 <div class="main-wrapper">
   <!-- Page header with title -->
   <div class="header">
-    <h2 id="page-title"> รายชื่อนักศึกษา</h2>
+    <h2 id="page-title"> รายชื่อนักศึกษา(อาจารย์ที่ปรึกษา)</h2>
   </div>
 
   <!-- Content area -->
@@ -197,7 +197,7 @@ unset($_SESSION['error']);
       <h3 class="section-title">นำเข้ารายชื่อนักศึกษาจากไฟล์ Excel</h3>
       <p class="section-description">เลือกไฟล์ .xlsx ที่มีรหัสนักศึกษาในคอลัมน์ B</p>
       <input type="file" id="excelFile" class="file-input" accept=".xlsx" />
-      <button onclick="importExcel()" class="btn btn-import">อ่านไฟล์</button>
+      <button onclick="importExcel()" class="btn btn-import" style="border:none;">อ่านไฟล์</button>
       <div id="uploadStatus" class="upload-status"></div>
     </div>
   </div>
@@ -205,7 +205,7 @@ unset($_SESSION['error']);
   <!-- My advisees section (card container) -->
   <div class="card advisees-card">
     <div class="card-actions">
-      <button id="openAvailableBtn" class="btn">เพิ่มรายชื่อนักศึกษา (<?= count($not_assigned) ?>)</button>
+      <button id="openAvailableBtn" class="btn" style="border:none;">เพิ่มรายชื่อนักศึกษา (<?= count($not_assigned) ?>)</button>
     </div>
     <h3 class="section-header my-advisees-section">นักศึกษาของคุณ (<?= count($my_advisees) ?>)</h3>
     <!-- Front-end: Style .advisees-table { width: 100%; border-collapse: collapse; } -->
@@ -226,8 +226,8 @@ unset($_SESSION['error']);
             <td class="col-name"><?= htmlspecialchars($st['full_name']) ?></td>
             <td class="col-dept"><?= htmlspecialchars($st['class_group']) ?></td>
             <td class="col-actions">
-              <a href="advisee_profile.php?id=<?= $st['user_id'] ?>" class="btn btn-primary" style="margin-right:6px;">ดูข้อมูลการเข้าเรียน</a>
-              <button class="btn btn-danger" onclick="handleDeleteAdvisee(<?= $st['user_id'] ?>); return false;">ลบ</button>
+              <a href="advisee_profile.php?id=<?= $st['user_id'] ?>" class="btn btn-primary" style="margin-right:6px; border:none;">ดูข้อมูลการเข้าเรียน</a>
+              <button class="btn btn-danger" style="background-color: #f44336; color: white; padding: 6px 10px; font-size: 12px; cursor:pointer; transition: background-color 0.35s ease; border:none; border-radius: 4px;" onclick="handleDeleteAdvisee(<?= $st['user_id'] ?>); return false;" onmouseover="this.style.backgroundColor='#d32f2f'" onmouseout="this.style.backgroundColor='#f44336'"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" d="M7 21q-.825 0-1.412-.587T5 19V6q-.425 0-.712-.288T4 5t.288-.712T5 4h4q0-.425.288-.712T10 3h4q.425 0 .713.288T15 4h4q.425 0 .713.288T20 5t-.288.713T19 6v13q0 .825-.587 1.413T17 21zm3.713-4.288Q11 16.426 11 16V9q0-.425-.288-.712T10 8t-.712.288T9 9v7q0 .425.288.713T10 17t.713-.288m4 0Q15 16.426 15 16V9q0-.425-.288-.712T14 8t-.712.288T13 9v7q0 .425.288.713T14 17t.713-.288"/></svg></button>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -284,8 +284,8 @@ unset($_SESSION['error']);
     <div class="modal-header" style="position:relative;">
       <h2 id="modal-title" class="modal-title">ตรวจสอบรายชื่อที่จะนำเข้า</h2>
       <div class="modal-actions" style="position:absolute; top:10px; right:10px;">
-        <button onclick="confirmImport()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
-        <button onclick="closeImportModal()" class="btn btn-cancel">ยกเลิก</button>
+        <button onclick="confirmImport()" class="btn btn-confirm" style="border:none;">ยืนยันการเพิ่ม</button>
+        <button onclick="closeImportModal()" class="btn btn-cancel" style="border:none;">ยกเลิก</button>
       </div>
       <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close">&times;</span>
     </div>
@@ -300,8 +300,8 @@ unset($_SESSION['error']);
     <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
       <h2 class="modal-title">เพิ่มรายชื่อนักศึกษา</h2>
       <div class="modal-actions">
-        <button onclick="confirmAddSelected()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
-        <button onclick="closeAvailableModal()" class="btn btn-cancel">ยกเลิก</button>
+        <button onclick="confirmAddSelected()" class="btn btn-confirm" style="border:none;">ยืนยันการเพิ่ม</button>
+        <button onclick="closeAvailableModal()" class="btn btn-cancel" style="background: #999; color: white; cursor:pointer; transition: background-color 0.35s ease; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600;" onmouseover="this.style.backgroundColor='#777'" onmouseout="this.style.backgroundColor='#999'">ยกเลิก</button>
       </div>
     </div>
     <div class="modal-body" style="margin-top: -10px;">
@@ -361,8 +361,8 @@ unset($_SESSION['error']);
     <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
       <h2 id="modal-title" class="modal-title">ตรวจสอบรายชื่อที่จะนำเข้า</h2>
       <div class="modal-actions">
-        <button onclick="confirmImport()" class="btn btn-confirm">ยืนยันการเพิ่ม</button>
-        <button onclick="closeImportModal()" class="btn btn-cancel">ยกเลิก</button>
+        <button onclick="confirmImport()" class="btn btn-confirm" style="border:none;">ยืนยันการเพิ่ม</button>
+        <button onclick="closeImportModal()" class="btn btn-cancel" style="background: #999; color: white; cursor:pointer; transition: background-color 0.35s ease; padding: 10px 20px; border: none; border-radius: 6px; font-weight: 600;" onmouseover="this.style.backgroundColor='#777'" onmouseout="this.style.backgroundColor='#999'">ยกเลิก</button>
       </div>
       <span class="modal-close" onclick="closeImportModal()" role="button" aria-label="Close" style="position: absolute; top: 10px; right: 10px;">&times;</span>
     </div>

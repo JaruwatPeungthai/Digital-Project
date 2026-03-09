@@ -254,7 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php if ($subject_details): ?>
       <div class="footer-section" style="margin-bottom: 20px;">
-        <a href="sessions_by_subject.php?subject_id=<?= $subject_details['subject_id'] ?>" class="button-65">ย้อนกลับ</a>
+        <a href="sessions_by_subject.php?subject_id=<?= $subject_details['subject_id'] ?>" class="button-65" style="display: flex; align-items: center; gap: 8px; width: 140px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M15.287 18.693A.75.75 0 0 0 15.75 18V6a.75.75 0 0 0-1.28-.53l-6 6a.75.75 0 0 0 0 1.06l6 6a.75.75 0 0 0 .817.163" clip-rule="evenodd"/></svg>ย้อนกลับ</a>
       </div>
       <?php endif; ?>
 

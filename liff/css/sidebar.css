@@ -178,3 +178,14 @@ body {
 .sidebar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.5);
 }
+
+/* SVG icon alignment */
+.sidebar-header h2 svg {
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.sidebar-menu .menu-item a svg {
+  vertical-align: middle;
+  margin-right: 8px;
+}
