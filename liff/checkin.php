@@ -1,0 +1,791 @@
+<?php
+session_start();
+include("../config.php");
+include("../liff_config.php");
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>เช็คชื่อเข้า/ออก</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #007469 0%, #005f56 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    max-width: 500px;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #007469 0%, #005f56 100%);
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+  }
+
+  .header h1 {
+    font-size: 24px;
+    margin-bottom: 5px;
+  }
+
+  .header p {
+    font-size: 12px;
+    opacity: 0.9;
+  }
+
+  .content {
+    padding: 30px 20px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007469;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .info-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: #007469;
+    font-size: 13px;
+    text-transform: uppercase;
+  }
+
+  .info-value {
+    color: #333;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+    padding-left: 15px;
+  }
+
+  .action-section {
+    margin-top: 30px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 15px;
+  }
+
+  button {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-checkin {
+    background: linear-gradient(135deg, #007469 0%, #005f56 100%);
+    color: white;
+  }
+
+  .btn-checkin:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,116,105,0.3);
+  }
+
+  .btn-checkin:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-checkin:disabled {
+    background: linear-gradient(135deg, #ccc 0%, #999 100%);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .btn-checkout {
+    background: linear-gradient(135deg, #007469 0%, #005f56 100%);
+    color: white;
+  }
+
+  .btn-checkout:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,116,105,0.3);
+  }
+
+  .btn-checkout:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-checkout:disabled {
+    background: linear-gradient(135deg, #ccc 0%, #999 100%);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .status-message {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    display: none;
+  }
+
+  .status-success {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+    color: #2e7d32;
+  }
+
+  .status-warning {
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+    color: #e65100;
+  }
+
+  .status-info {
+    background: #e3f2fd;
+    border-left: 4px solid #007469;
+    color: #007469;
+  }
+
+  .countdown {
+    text-align: center;
+    background: #fff3e0;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-weight: 600;
+    color: #e65100;
+    display: none;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+
+  .badge-checkin {
+    background: #c8e6c9;
+    color: #2e7d32;
+  }
+
+  .badge-late {
+    background: #ffcdd2;
+    color: #c62828;
+  }
+
+  .badge-checkout {
+    background: #bbdefb;
+    color: #007469;
+  }
+
+  .badge-not-checkout {
+    background: #ffccbc;
+    color: #d84315;
+  }
+
+  .error-message {
+    color: #d32f2f;
+    text-align: center;
+    padding: 20px;
+    background: #ffebee;
+    border-radius: 8px;
+    display: none;
+  }
+
+  /* Modal Popup Styles */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  .modal-popup {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    padding: 30px 20px;
+    text-align: center;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-popup.success {
+    border-left: 5px solid #4caf50;
+  }
+
+  .modal-popup.error {
+    border-left: 5px solid #d32f2f;
+  }
+
+  .modal-popup.warning {
+    border-left: 5px solid #ff9800;
+  }
+
+  .modal-popup.info {
+    border-left: 5px solid #007469;
+  }
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+  }
+
+  .modal-message {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+  }
+
+  .modal-btn-ok {
+    background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+    color: white;
+  }
+
+  .modal-btn-ok:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(76, 175, 80, 0.3);
+  }
+
+  .modal-btn-cancel {
+    background: #f0f0f0;
+    color: #333;
+  }
+
+  .modal-btn-cancel:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>เช็คชื่อเข้า/ออก</h1>
+    <p>ระบบเช็คชื่อแบบ GPS ด้วย LINE</p>
+  </div>
+
+  <div class="content">
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p style="margin-top: 15px; color: #666;">กำลังโหลดข้อมูล...</p>
+    </div>
+
+    <div id="errorContainer" class="error-message"></div>
+
+    <div id="mainContent" style="display: none;">
+      <!-- Student & Session Info -->
+      <div class="info-section">
+        <div class="info-row">
+          <span class="info-label">รายวิชา</span>
+          <span class="info-value" id="subjectName">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">รายละเอียดเนื้อหาในคาบนี้</span>
+          <span class="info-value" id="roomName">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">อาจารย์ผู้สอน</span>
+          <span class="info-value" id="teacherName">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">กลุ่มเรียน</span>
+          <span class="info-value" id="section">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">รหัสนักศึกษา</span>
+          <span class="info-value" id="studentCode">-</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">ชื่อ - นามสกุล</span>
+          <span class="info-value" id="fullName">-</span>
+        </div>
+      </div>
+
+      <!-- Check-in Status -->
+      <div id="checkinStatusMsg" class="status-message status-success"></div>
+
+      <!-- Check-out Status -->
+      <div id="checkoutStatusMsg" class="status-message status-success"></div>
+
+      <!-- Warning Status -->
+      <div id="warningMsg" class="status-message status-warning"></div>
+
+      <!-- Countdown for checkout -->
+      <div id="countdownMsg" class="countdown"></div>
+
+      <!-- Action Buttons -->
+      <div class="action-section">
+        <div class="button-group">
+          <button id="btnCheckin" class="btn-checkin" onclick="performCheckin()">
+            เช็คชื่อเข้า
+          </button>
+        </div>
+
+        <div class="button-group">
+          <button id="btnCheckout" class="btn-checkout" onclick="performCheckout()" disabled>
+            เช็คชื่อออก
+          </button>
+        </div>
+
+        <div class="button-group">
+          <a href="student_dashboard.php" style="flex: 1; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #007469 0%, #005f56 100%); color: white; text-decoration: none; padding: 15px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 15px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 20px rgba(0, 116, 105, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Popup -->
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal-popup" id="modalPopup">
+    <div class="modal-title" id="modalTitle">แจ้งเตือน</div>
+    <div class="modal-message" id="modalMessage"></div>
+    <div class="modal-buttons">
+      <button class="modal-btn modal-btn-ok" id="modalOkBtn" onclick="closeModal()">ตกลง</button>
+      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn" onclick="closeModal()" style="display: none;">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = new URLSearchParams(location.search).get("token");
+  let liffProfile = null;
+  let sessionDetails = {};
+  let currentStatus = {};
+
+  // Modal Popup Functions
+  function showModal(message, type = 'info', title = 'แจ้งเตือน', hasCancel = false) {
+    const overlay = document.getElementById('modalOverlay');
+    const popup = document.getElementById('modalPopup');
+    const titleEl = document.getElementById('modalTitle');
+    const messageEl = document.getElementById('modalMessage');
+    const okBtn = document.getElementById('modalOkBtn');
+    const cancelBtn = document.getElementById('modalCancelBtn');
+
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    // Set popup style based on type
+    popup.className = `modal-popup ${type}`;
+    
+    // Show/hide cancel button
+    cancelBtn.style.display = hasCancel ? 'block' : 'none';
+    
+    overlay.classList.add('active');
+  }
+
+  function closeModal() {
+    const overlay = document.getElementById('modalOverlay');
+    overlay.classList.remove('active');
+  }
+
+  async function initLiff() {
+    try {
+      await liff.init({ liffId: "<?= $LIFF_ID ?>" });
+      await liff.ready;
+
+      if (liff.isLoggedIn()) {
+        liffProfile = await liff.getProfile();
+        await loadSessionDetails();
+        await checkStatus();
+        // Check status every 5 seconds
+        setInterval(checkStatus, 5000);
+      } else {
+        showError("กรุณา login LINE ก่อน");
+        liff.login();
+      }
+    } catch (err) {
+      showError("เกิดข้อผิดพลาด: " + err.message);
+    }
+  }
+
+  async function loadSessionDetails() {
+    if (!token || !liffProfile) return;
+
+    try {
+      const res = await fetch("../api/get_session_details.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: token,
+          line_user_id: liffProfile.userId
+        })
+      });
+
+      const data = await res.json();
+      if (data.error) {
+        showError(data.error);
+        return;
+      }
+
+      sessionDetails = data;
+      updateSessionInfo();
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("mainContent").style.display = "block";
+    } catch (err) {
+      showError("ไม่สามารถดึงข้อมูล: " + err.message);
+    }
+  }
+
+  function updateSessionInfo() {
+    const subjectCode = sessionDetails.subject_code || "-"; // Assuming subject_code is available in sessionDetails
+    const subjectName = sessionDetails.subject_name || "-";
+    const teacherName = sessionDetails.teacher_name || "-"; // Assuming teacher_name is available in sessionDetails
+    const section = sessionDetails.section || "-"; // Assuming section is available in sessionDetails
+
+    document.getElementById("studentCode").textContent = sessionDetails.student_code || "-";
+    document.getElementById("fullName").textContent = sessionDetails.full_name || "-";
+    document.getElementById("subjectName").textContent = `${subjectCode} - ${subjectName}`;
+    document.getElementById("roomName").textContent = sessionDetails.room_name || "-";
+
+    // Add teacher name and section display
+    const teacherNameElement = document.getElementById("teacherName");
+    const sectionElement = document.getElementById("section");
+
+    if (teacherNameElement) {
+        teacherNameElement.textContent = teacherName;
+    }
+
+    if (sectionElement) {
+        sectionElement.textContent = section;
+    }
+  }
+
+  async function checkStatus() {
+    if (!token || !liffProfile) return;
+
+    try {
+      const res = await fetch("../api/check_status.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: token,
+          line_user_id: liffProfile.userId
+        })
+      });
+
+      const data = await res.json();
+      currentStatus = data;
+      updateStatusUI();
+    } catch (err) {
+      console.error("Status check error:", err);
+    }
+  }
+
+  function updateStatusUI() {
+    const btnCheckin = document.getElementById("btnCheckin");
+    const btnCheckout = document.getElementById("btnCheckout");
+    const checkinMsg = document.getElementById("checkinStatusMsg");
+    const checkoutMsg = document.getElementById("checkoutStatusMsg");
+    const warningMsg = document.getElementById("warningMsg");
+    const countdownMsg = document.getElementById("countdownMsg");
+
+    // Reset
+    checkinMsg.style.display = "none";
+    checkoutMsg.style.display = "none";
+    warningMsg.style.display = "none";
+    countdownMsg.style.display = "none";
+
+    if (currentStatus.has_checked_in) {
+      // Show check-in status
+      let badge = currentStatus.checkin_status === "late" 
+        ? '<span class="status-badge badge-late">สาย</span>'
+        : '<span class="status-badge badge-checkin">ตรงเวลา</span>';
+      checkinMsg.innerHTML = `เช็คชื่อเข้าแล้ว เวลา ${currentStatus.checkin_time}${badge}`;
+      checkinMsg.style.display = "block";
+
+      // Disable check-in button
+      btnCheckin.disabled = true;
+
+      if (currentStatus.has_checked_out) {
+        // Show check-out status
+        checkoutMsg.innerHTML = `เช็คชื่อออกแล้ว เวลา ${currentStatus.checkout_time}`;
+        checkoutMsg.style.display = "block";
+        btnCheckout.disabled = true;
+      } else {
+        // Not checked out yet
+        if (currentStatus.can_checkout) {
+          // Enable checkout button
+          btnCheckout.disabled = false;
+        } else {
+          // Show countdown and disable button
+          warningMsg.innerHTML = "รอเวลาเช็คชื่อออก...";
+          warningMsg.style.display = "block";
+          updateCountdown();
+          btnCheckout.disabled = true;
+        }
+      }
+    } else {
+      // Not checked in
+      warningMsg.innerHTML = "กรุณาเช็คชื่อเข้าเสียก่อน";
+      warningMsg.style.display = "block";
+      btnCheckin.disabled = false;
+      btnCheckout.disabled = true;
+    }
+  }
+
+  function updateCountdown() {
+    if (!sessionDetails.checkout_start) return;
+
+    const now = new Date();
+    const checkoutStartTime = new Date(sessionDetails.checkout_start);
+    const timeDiff = checkoutStartTime - now;
+
+    if (timeDiff <= 0) {
+      document.getElementById("countdownMsg").style.display = "none";
+      checkStatus(); // Recheck to enable button
+    } else {
+      const minutes = Math.floor(timeDiff / 60000);
+      const seconds = Math.floor((timeDiff % 60000) / 1000);
+      const countdownMsg = document.getElementById("countdownMsg");
+      countdownMsg.textContent = `เช็คชื่อออกได้ใน ${minutes} นาที ${seconds} วินาที`;
+      countdownMsg.style.display = "block";
+    }
+  }
+
+  async function performCheckin() {
+    const btn = document.getElementById("btnCheckin");
+    btn.disabled = true;
+    btn.textContent = "กำลังเช็คชื่อ...";
+
+    try {
+      if (!navigator.geolocation) {
+        showModal("อุปกรณ์นี้ไม่รองรับ GPS", "error", "ข้อผิดพลาด");
+        btn.disabled = false;
+        btn.textContent = "เช็คชื่อเข้า";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const res = await fetch("../api/checkin.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                token: token,
+                line_user_id: liffProfile.userId,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                accuracy: pos.coords.accuracy
+              })
+            });
+
+            const text = await res.text();
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch {
+              showModal("Response ไม่ใช่ JSON:\n" + text, "error", "ข้อผิดพลาด");
+              btn.disabled = false;
+              btn.textContent = "เช็คชื่อเข้า";
+              return;
+            }
+
+            showModal(data.message, "success", "ระบบเช็คชื่อ");
+            await checkStatus();
+            btn.textContent = "เช็คชื่อเข้า";
+          } catch (err) {
+            showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
+            btn.disabled = false;
+            btn.textContent = "เช็คชื่อเข้า";
+          }
+        },
+        () => {
+          showModal("กรุณาอนุญาตแชร์ตำแหน่ง", "warning", "คำเตือน");
+          btn.disabled = false;
+          btn.textContent = "เช็คชื่อเข้า";
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } catch (err) {
+      showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
+      btn.disabled = false;
+      btn.textContent = "เช็คชื่อเข้า";
+    }
+  }
+
+  async function performCheckout() {
+    const btn = document.getElementById("btnCheckout");
+    btn.disabled = true;
+    btn.textContent = "กำลังเช็คชื่อออก...";
+
+    try {
+      if (!navigator.geolocation) {
+        showModal("อุปกรณ์นี้ไม่รองรับ GPS", "error", "ข้อผิดพลาด");
+        btn.disabled = false;
+        btn.textContent = "เช็คชื่อออก";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            const res = await fetch("../api/checkout.php", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                token: token,
+                line_user_id: liffProfile.userId,
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
+                accuracy: pos.coords.accuracy
+              })
+            });
+
+            const text = await res.text();
+            let data;
+            try {
+              data = JSON.parse(text);
+            } catch {
+              showModal("Response ไม่ใช่ JSON:\n" + text, "error", "ข้อผิดพลาด");
+              btn.disabled = false;
+              btn.textContent = "เช็คชื่อออก";
+              return;
+            }
+
+            showModal(data.message, "success", "ระบบเช็คชื่อ");
+            await checkStatus();
+            btn.textContent = "เช็คชื่อออก";
+          } catch (err) {
+            showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
+            btn.disabled = false;
+            btn.textContent = "เช็คชื่อออก";
+          }
+        },
+        () => {
+          showModal("กรุณาอนุญาตแชร์ตำแหน่ง", "warning", "คำเตือน");
+          btn.disabled = false;
+          btn.textContent = "เช็คชื่อออก";
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } catch (err) {
+      showModal("เกิดข้อผิดพลาด: " + err.message, "error", "ข้อผิดพลาด");
+      btn.disabled = false;
+      btn.textContent = "เช็คชื่อออก";
+    }
+  }
+
+  function showError(message) {
+    document.getElementById("loading").style.display = "none";
+    const errorContainer = document.getElementById("errorContainer");
+    errorContainer.textContent = "" + message;
+    errorContainer.style.display = "block";
+  }
+
+  // Initialize
+  initLiff();
+
+  // Update countdown every second
+  setInterval(updateCountdown, 1000);
+</script>
+
+</body>
+</html>

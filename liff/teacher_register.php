@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<!-- Front-end: edit styles in liff/css/teacher_register.css -->
+<link rel="stylesheet" href="css/teacher_register.css">
+<link rel="stylesheet" href="css/back-button.css">
+  <meta charset="UTF-8">
+  <title>สมัครอาจารย์ | Q locate</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+    }
+    button {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="form-container">
+
+  <img src="pic/logo.jpg" class="logo">
+  <h2>ลงทะเบียนอาจารย์</h2>
+
+  <form class="form-grid" action="../api/teacher_register.php" method="POST" onsubmit="combineName(event)">
+
+    <!-- แถว 1 -->
+    <div class="select-wrapper col-1">
+      <select name="title" required>
+        <option value="">เลือกตำแน่ง</option>
+        <option value="ผศ..ดร.">ผศ.ดร.</option>
+        <option value="รศ.ดร.">รศ.ดร.</option>
+        <option value="ศ.ดร.">ศ.ดร.</option>
+        <option value="อาจารย์">อาจารย์</option>
+      </select>
+    </div>
+
+    <input type="text" placeholder="ชื่อ" name="first_name" class="col-2" required>
+    <input type="text" placeholder="นามสกุล" name="last_name" class="col-3" required>
+    <!-- hidden field will hold combined full name for backend -->
+    <!-- hidden field will hold combined full name for backend -->
+    <input type="hidden" name="name" id="full_name">
+
+    <!-- แถว 2 -->
+    <div class="select-wrapper col-1">
+      <select name="dept" required>
+        <option value="">เลือกสาขา</option>
+        <option value="ธุรกิจ">ธุรกิจ</option>
+      <option value="ออกแบบอนิเมชั่น">ออกแบบอนิเมชั่น</option>
+      <option value="ออกแบบแอพ">ออกแบบแอพ</option>
+      <option value="ออกแบบเกม">ออกแบบเกม</option>
+      <option value="นิเทศ">นิเทศ</option>
+      </select>
+    </div>
+
+    <input type="email" placeholder="Email" name="email" class="col-2-3" required>
+
+    <!-- แถว 3 -->
+    <input type="password" id="password" name="password" placeholder="Password" class="col-2" required>
+    <input type="password" id="confirm_password" placeholder="ยืนยัน Password" class="col-3" required>
+
+    <!-- ปุ่ม -->
+    <button type="submit" class="full-btn">สมัคร</button>
+
+  </form>
+
+  <a href="index.php" class="back-link">← กลับหน้าแรก</a>
+
+<script>
+// combine first and last name into full_name before submitting
+// and validate password fields match
+function combineName(e) {
+  const first = document.querySelector('input[name="first_name"]').value.trim();
+  const last = document.querySelector('input[name="last_name"]').value.trim();
+  document.getElementById('full_name').value = first + (last ? (' ' + last) : '');
+  
+  // validate password and confirm password match
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirm_password').value;
+  
+  if (password !== confirmPassword) {
+    e.preventDefault();
+    alert('รหัสผ่านไม่ตรงกัน กรุณากรอกรหัสผ่านให้ตรงกัน');
+    return false;
+  }
+}
+</script>
+
+</div>
+
+</body>
+</html>

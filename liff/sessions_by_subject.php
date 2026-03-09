@@ -1,6 +1,7 @@
 <?php
 session_start();
 include("../config.php");
+include("../liff_config.php");
 
 if (!isset($_SESSION['teacher_id'])) {
   header("Location: login.php");
@@ -397,8 +398,9 @@ tr:hover {
                 <th>จัดการ</th>
               </tr>
 
+
               <?php foreach ($sessions as $session):
-                $qrUrl = "https://liff.line.me/2008718294-WzVz06TP?token=" . $session['qr_token'];
+                $qrUrl = "https://liff.line.me/" . $LIFF_ID . "?token=" . $session['qr_token'];
                 
                 // ตอนนี้ start_time = checkin_start และ end_time = checkout_deadline
                 $checkinStart = $session['start_time'] ?: $session['checkin_start'];

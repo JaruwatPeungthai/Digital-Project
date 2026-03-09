@@ -1,6 +1,7 @@
 <?php
 session_start();
 include("../config.php");
+include("../liff_config.php");
 
 if (!isset($_SESSION['teacher_id'])) {
   header("Location: login.php");
@@ -116,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if (!$stmt->execute()) {
         $error_msg = "เกิดข้อผิดพลาด: " . $stmt->error;
       } else {
-        $qr_url = "https://liff.line.me/2008718294-WzVz06TP?token=$token";
+        $qr_url = "https://liff.line.me/" . $LIFF_ID . "?token=$token";
 
         // *** new behavior: import all students from the selected subject into
         // the newly created session so that their attendance rows exist and

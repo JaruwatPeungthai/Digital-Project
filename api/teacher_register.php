@@ -18,4 +18,4 @@ $stmt->bind_param(
 );
 
 $stmt->execute();
-header("Location: ../liff/index.html");
+header("Location: ../liff/index.php");

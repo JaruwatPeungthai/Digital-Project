@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 
     <p style="color:red"><?= $error ?? '' ?></p>
-    <a href="index.html" class="back-link">← กลับหน้าแรก</a>
+    <a href="index.php" class="back-link">← กลับหน้าแรก</a>
   </div>
 
 

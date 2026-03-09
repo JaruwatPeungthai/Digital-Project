@@ -1,8 +1,9 @@
 <?php
-$host = "localhost";
-$user = "root";
-$pass = "";
-$dbname = "attendance";
+$host = "localhost"; //ปรับตามIP database server ของคุณ
+$user = "root"; //ปรับตามชื่อผู้ใช้ฐานข้อมูลของคุณ
+$pass = ""; //ปรับตามรหัสผ่านฐานข้อมูลของคุณ
+$dbname = "attendance"; //ปรับตามชื่อฐานข้อมูลของคุณ
+
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
